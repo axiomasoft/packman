@@ -1,0 +1,101 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Packman\Testkit\Support\Database;
+
+use Packman\Attributes\Api;
+use Packman\Testkit\Data\Database\TestDatabaseIdentity;
+use Packman\Testkit\Internal\EnvLookup;
+use PDO;
+use Throwable;
+
+/** Resolves PostgreSQL and SQLite connection identities and PDO handles from PGSQL_* / DB_* env. */
+#[Api(since: '1.0')]
+final class SuiteDatabaseConnection
+{
+    public static function pgsqlIdentity(): TestDatabaseIdentity
+    {
+        $host = EnvLookup::string('PGSQL_HOST', 'DB_HOST') ?? '127.0.0.1';
+        $port = (int) (EnvLookup::string('PGSQL_PORT', 'DB_PORT') ?? '5432');
+        $database = DatabaseLaneEnvironment::isolatedDatabaseName(
+            EnvLookup::string('PGSQL_DATABASE', 'DB_DATABASE') ?? 'packman_test',
+        );
+        $username = EnvLookup::string('PGSQL_USERNAME', 'DB_USERNAME') ?? 'postgres';
+        $schema = EnvLookup::string('PGSQL_SCHEMA') ?? 'public';
+
+        return new TestDatabaseIdentity(
+            driver: 'pgsql',
+            host: $host,
+            port: $port,
+            database: $database,
+            username: $username,
+            schema: $schema,
+        );
+    }
+
+    public static function pgsqlPassword(): string
+    {
+        return EnvLookup::string('PGSQL_PASSWORD', 'DB_PASSWORD') ?? '';
+    }
+
+    public static function pgsqlDsn(?TestDatabaseIdentity $identity = null): string
+    {
+        $target = $identity ?? self::pgsqlIdentity();
+
+        return sprintf(
+            'pgsql:host=%s;port=%d;dbname=%s',
+            $target->host,
+            $target->port,
+            $target->database,
+        );
+    }
+
+    /** @return array<string, mixed> */
+    public static function laravelPgsqlConfig(?TestDatabaseIdentity $identity = null): array
+    {
+        $target = $identity ?? self::pgsqlIdentity();
+
+        return [
+            'driver' => 'pgsql',
+            'host' => $target->host,
+            'port' => $target->port,
+            'database' => $target->database,
+            'username' => $target->username,
+            'password' => self::pgsqlPassword(),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => $target->schema ?? 'public',
+            'sslmode' => 'prefer',
+        ];
+    }
+
+    public static function connectPgsql(?TestDatabaseIdentity $identity = null): PDO
+    {
+        $target = $identity ?? self::pgsqlIdentity();
+        TestDatabaseGuard::assertSafe($target);
+
+        return new PDO(
+            self::pgsqlDsn($target),
+            $target->username,
+            self::pgsqlPassword(),
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_TIMEOUT => 3,
+            ],
+        );
+    }
+
+    public static function canConnectPgsql(): bool
+    {
+        try {
+            self::connectPgsql();
+
+            return true;
+        } catch (Throwable) {
+            return false;
+        }
+    }
+}
