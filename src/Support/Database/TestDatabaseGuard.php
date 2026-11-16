@@ -38,7 +38,7 @@ final class TestDatabaseGuard
         $lowerDatabase = strtolower($database);
         $host = strtolower(trim($identity->host));
 
-        if ($driver === 'sqlite' && ($database === ':memory:' || str_contains($lowerDatabase, 'sqlite') || str_contains($lowerDatabase, 'test'))) {
+        if ($driver === 'sqlite' && $database === ':memory:') {
             return;
         }
 
@@ -54,15 +54,39 @@ final class TestDatabaseGuard
             throw UnsafeTestDatabaseException::refused($identity->driver, $identity->host, $identity->database, 'database name matches a production/staging pattern');
         }
 
-        $optIn = $optInOverride ?? DatabaseLaneEnvironment::destructiveOptIn();
         $hasTestSuffix = str_ends_with($lowerDatabase, '_test') || str_ends_with($lowerDatabase, '_testing');
 
-        if (! $hasTestSuffix && ! $optIn) {
+        if (! $hasTestSuffix) {
             throw UnsafeTestDatabaseException::refused($identity->driver, $identity->host, $identity->database, 'database name must end with _test or _testing');
         }
 
+        $optIn = $optInOverride ?? DatabaseLaneEnvironment::destructiveOptIn();
+
         if (! $optIn && $host !== '' && ! in_array($host, self::SAFE_LOCAL_HOSTS, true) && ! str_starts_with($host, '127.')) {
             throw UnsafeTestDatabaseException::refused($identity->driver, $identity->host, $identity->database, 'non-local host requires explicit PACKMAN_TEST_DESTRUCTIVE_OPT_IN=1');
+        }
+    }
+
+    public static function assertDestructiveSafe(TestDatabaseIdentity $identity, ?bool $optInOverride = null): void
+    {
+        self::assertSafe($identity, $optInOverride);
+
+        $driver = strtolower(trim($identity->driver));
+        $database = trim($identity->database);
+
+        if ($driver === 'sqlite' && $database === ':memory:') {
+            return;
+        }
+
+        $optIn = $optInOverride ?? DatabaseLaneEnvironment::destructiveOptIn();
+
+        if (! $optIn) {
+            throw UnsafeTestDatabaseException::refused(
+                $identity->driver,
+                $identity->host,
+                $identity->database,
+                'destructive schema reset requires explicit PACKMAN_TEST_DESTRUCTIVE_OPT_IN=1',
+            );
         }
     }
 }

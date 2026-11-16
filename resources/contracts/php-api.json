@@ -3416,6 +3416,35 @@
             "uses": [],
             "doc": [],
             "methods": {
+                "assertDestructiveSafe": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "identity",
+                            "type": "Packman\\Testkit\\Data\\Database\\TestDatabaseIdentity",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "optInOverride",
+                            "type": "?bool",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "void",
+                    "doc": []
+                },
                 "assertSafe": {
                     "visibility": "public",
                     "static": true,
