@@ -1,0 +1,37 @@
+{
+    "name": "axiomasoft/packman-schema",
+    "description": "Universal Packman schema governance, schema sets, table ownership, prefix fingerprinting, PostgreSQL constraint naming, and step compiler.",
+    "license": "MIT",
+    "type": "library",
+    "require": {
+        "php": "^8.4",
+        "axiomasoft/packman": "^1.0@dev",
+        "illuminate/console": "^12.0|^13.0",
+        "illuminate/contracts": "^12.0|^13.0",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "psr/clock": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Packman\\Schema\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Packman\\Schema\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "packman": {
+            "error-prefix": "schema"
+        },
+        "laravel": {
+            "providers": [
+                "Packman\\Schema\\Laravel\\SchemaServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
