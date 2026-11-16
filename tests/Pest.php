@@ -4,4 +4,8 @@ declare(strict_types=1);
 
 use Packman\Tests\TestCase;
 
-uses(TestCase::class)->in('../packages/core/tests/Feature');
+uses(TestCase::class)->in(
+    '../packages/core/tests/Feature',
+    '../packages/plugins/tests/Feature',
+    '../packages/schema/tests/Feature',
+);

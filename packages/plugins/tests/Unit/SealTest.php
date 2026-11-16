@@ -1,0 +1,61 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Container\Container;
+use Packman\Config\Exceptions\InvalidConfiguration;
+use Packman\Plugins\Contracts\ExtensionPlugin;
+use Packman\Plugins\Data\PluginManifest;
+use Packman\Plugins\Exceptions\RegistryFrozenException;
+use Packman\Plugins\Internal\PluginCatalog;
+use Packman\Plugins\Internal\PluginDeclarations;
+use Packman\Plugins\Internal\PluginEntry;
+use Packman\Plugins\Internal\PluginGraphCompiler;
+use Packman\Plugins\Laravel\PluginRegistrar;
+use Packman\Plugins\Tests\Fixtures\Greeter;
+use Packman\Plugins\Tests\Fixtures\HelloGreeter;
+
+require_once __DIR__.'/../Fixtures/TestContracts.php';
+
+final class PgOnlyPlugin implements ExtensionPlugin
+{
+    public function manifest(): PluginManifest
+    {
+        return new PluginManifest('acme.pgonly', '1.0.0', databases: ['pgsql']);
+    }
+
+    public function register(PluginRegistrar $registrar): void {}
+}
+
+it('seals PluginCatalog once and keeps deduplicated registration order', function (): void {
+    $catalog = new PluginCatalog;
+    $catalog->builtIn(PgOnlyPlugin::class);
+    $catalog->builtIn(PgOnlyPlugin::class);
+    $catalog->seal();
+
+    expect($catalog->entries())->toHaveCount(1)
+        ->and(static fn () => $catalog->builtIn(PgOnlyPlugin::class))->toThrow(RegistryFrozenException::class, 'frozen');
+});
+
+it('rejects PluginRegistrar mutations after PluginDeclarations are sealed', function (): void {
+    $declarations = new PluginDeclarations;
+    $registrar = new PluginRegistrar($declarations, 'acme.test');
+    $declarations->seal();
+
+    expect(static fn () => $registrar->defineCapability(Greeter::class))->toThrow(RegistryFrozenException::class, 'frozen')
+        ->and(static fn () => $registrar->provides(Greeter::class, HelloGreeter::class))->toThrow(LogicException::class, 'frozen');
+});
+
+it('validates optional resourceRoot and database matrix in PluginManifest', function (): void {
+    expect(static fn () => new PluginManifest('acme.bad', resourceRoot: 'relative/path'))->toThrow(InvalidConfiguration::class, 'resourceRoot')
+        ->and(static fn () => new PluginManifest('acme.bad', resourceRoot: '/tmp/../escape'))->toThrow(InvalidConfiguration::class, 'resourceRoot')
+        ->and(static fn () => new PluginManifest('acme.bad', databases: ['oracle']))->toThrow(InvalidConfiguration::class, 'oracle')
+        ->and(new PluginManifest('acme.good', resourceRoot: __DIR__, databases: ['pgsql', 'sqlite'])->databases)->toBe(['pgsql', 'sqlite']);
+});
+
+it('rejects plugins incompatible with target database engine during compilation', function (): void {
+    $compiler = new PluginGraphCompiler(new Container, database: 'sqlite');
+
+    expect(static fn () => $compiler->compile([PluginEntry::config(PgOnlyPlugin::class, 0)]))
+        ->toThrow(InvalidConfiguration::class, "does not support database driver 'sqlite'");
+});

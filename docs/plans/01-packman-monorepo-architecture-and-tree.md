@@ -126,8 +126,8 @@ The unified ecosystem kernel containing 11 cohesive modules directly under `pack
   - All 11 AST PHPStan rules (`NoDirectSystemTableWriteRule`, `NoEvalRule`, `NoForeignPrefixSqlRule`, `NoFsOutsideModuleRule`, `NoListenNotifyRule`, `NoSessionAdvisoryLockRule`, `NoSetWithoutLocalRule`, `NoSqlPrepareRule`, `NoTempTableRule`, `AbstractDatabaseCallRule`)
 - **All 29 external imports** rebound to `Packman\{Attributes,Context,Data,Config,Errors,Events,Features,Settings,Foundation}\*` and `Packman\Schema\*`. Audit trait wiring (`AuditCapabilityWiring`) is decoupled via post-entity-registry hook so host apps wire observers cleanly.
 - **All 13 hardcoded strings** moved into `ModulesOptions`:
-  - `$packageTypes = ['packman-module', 'module']` (downstream platforms add e.g. `'corex-module'`)
-  - `$extraKeys = [['packman', 'module'], ['module']]` (downstream platforms add e.g. `['corex', 'module']`)
+  - `$packageTypes = ['packman-module', 'packman-plugin', 'module', 'plugin']` (downstream Bitrix/WordPress-style modular platforms add e.g. `'corex-module'`, `'corex-plugin'`)
+  - `$extraKeys = [['packman', 'module'], ['packman', 'plugin'], ['module'], ['plugin']]` (downstream platforms add e.g. `['corex', 'module']`, `['corex', 'plugin']`)
   - `$configRoot = 'modules'`, `$cachePath = 'bootstrap/cache/modules.php'`, `$cachePrefix = 'modules'`, `$lockKey = 'modules:lifecycle-graph'`
   - `$modulesTable = 'mod_modules'`, `$recordsTable = 'mod_records'`, `$lifecycleLogTable = 'mod_lifecycle_log'`
   - `$compilerPackage = 'axiomasoft/packman-modules'`
@@ -137,12 +137,13 @@ The unified ecosystem kernel containing 11 cohesive modules directly under `pack
 
 ### 2.3. `packages/plugins` — `axiomasoft/packman-plugins` (PSR-4: `Packman\Plugins\`)
 
-Unified intra-package plugin, capability & slot engine combining `commerz`, `chatom`, `vaulter`, and `azguard`:
+Unified intra-package stateless code plugin, capability & slot engine combining `commerz`, `chatom`, `vaulter`, and `azguard` (**zero `illuminate/database` dependency — DB records are not required for code plugins**; modular hosts may optionally bind `PluginActivationGate`):
 - **`ExtensionPlugin` (`manifest(): PluginManifest`, `register(PluginRegistrar $registrar): void`):** zero constructor args, zero I/O, zero DB, zero closures.
 - **`PluginManifest`:** `id` (`vendor.name`), SemVer `version`, `requires`, `optional`, `resourceRoot`, `databases`.
+- **`PluginActivationGate` (optional SPI):** Allows DB-backed hosts to gate active plugin IDs; standalone consumers rely on code/config `$disabled` lists with zero DB state.
 - **`CapabilityDefinition` & `CapabilityProvider`:** `Cardinality` (`RequiredSingle`, `OptionalSingle`, `Many`), including `providesFromConfig($contract, $configKey, $default)` (`vaulter`).
 - **`SlotDefinition` & `SlotContribution`:** `SlotKind` (`Guard`, `Restriction`, `Contributor`, `Handler`, `EventSink`, `OutboxConsumer`, `OperationMiddleware`, `PipelineStage`).
-- **`PluginGraphCompiler`:** Seals `PluginRegistrar` after `register()`; runs **Kahn's topological sort** (`commerz`) with deterministic `SORT_STRING` tie-breaking, cycle isolation, **transitive ancestor ownership enforcement**, 9 partitioned sub-compilers + all-at-once `ContributionChecks` accumulation (`chatom`), and DB engine matrix validation.
+- **`PluginGraphCompiler`:** Seals `PluginRegistrar` after `register()`; validates `$disabled` and `PluginActivationGate`; runs **Kahn's topological sort** (`commerz`) with deterministic `SORT_STRING` tie-breaking, cycle isolation, **transitive ancestor ownership enforcement**, all-at-once `ContributionChecks` accumulation (`chatom`), and DB engine matrix validation.
 - **`FrozenContributions` & `ExtensionRegistry`:** Immutable Octane-safe lookup (`get`, `has`, `keys`, `resolve`, `handler`, `handlerClass`).
 
 ---

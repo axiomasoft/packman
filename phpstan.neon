@@ -8,6 +8,11 @@ parameters:
     tmpDir: build/phpstan
     paths:
         - packages/core/src
+        - packages/core/tests/Unit/Extensions/ExtensionInspectorTest.php
+        - packages/plugins/src
+        - packages/plugins/tests/Unit/DeclarativePluginTest.php
+        - packages/schema/src
+        - tests/TestCase.php
     excludePaths:
         analyseAndScan:
             - packages/*/tests/Fixtures/*

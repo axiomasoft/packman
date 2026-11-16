@@ -11,6 +11,7 @@ use Rector\Php82\Rector\Class_\ReadOnlyClassRector;
 use Rector\Php83\Rector\Class_\ReadOnlyAnonymousClassRector;
 use Rector\Set\ValueObject\SetList;
 use RectorLaravel\Rector\FuncCall\UnlinkFuncCallToFileFacadeDeleteRector;
+use RectorLaravel\Rector\MethodCall\ContainerBindConcreteWithClosureOnlyRector;
 use RectorLaravel\Set\LaravelLevelSetList;
 use RectorLaravel\Set\LaravelSetList;
 
@@ -30,6 +31,7 @@ return RectorConfig::configure()
         LocallyCalledStaticMethodToNonStaticRector::class,
         UnlinkFuncCallToFileFacadeDeleteRector::class,
         ExplicitNullableObjectInstanceRector::class,
+        ContainerBindConcreteWithClosureOnlyRector::class,
     ])
     ->withConfiguredRule(ClassPropertyAssignToConstructorPromotionRector::class, [
         ClassPropertyAssignToConstructorPromotionRector::RENAME_PROPERTY => false,

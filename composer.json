@@ -30,7 +30,9 @@
     ],
     "require": {
         "php": "^8.4",
-        "axiomasoft/packman": "^1.0@dev"
+        "axiomasoft/packman": "^1.0@dev",
+        "axiomasoft/packman-plugins": "^1.0@dev",
+        "axiomasoft/packman-schema": "^1.0@dev"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.7",
@@ -55,7 +57,9 @@
     "autoload-dev": {
         "psr-4": {
             "Packman\\Tests\\": "tests/",
-            "Packman\\Core\\Tests\\": "packages/core/tests/"
+            "Packman\\Core\\Tests\\": "packages/core/tests/",
+            "Packman\\Plugins\\Tests\\": "packages/plugins/tests/",
+            "Packman\\Schema\\Tests\\": "packages/schema/tests/"
         }
     },
     "extra": {

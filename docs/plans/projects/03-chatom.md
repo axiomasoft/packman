@@ -9,6 +9,7 @@
 ## 1. Best Practices Extracted from `chatom` into `packman`
 
 1. **`Packman\Plugins` (from `packages/core/src/Plugins/*`, `PollPlugin`, `WebhooksPlugin`, `BroadcastingPlugin`, `SearchPlugin`):**
+   - Strict compile-time code extensions with **zero database activation records** (`$disabled` config list only).
    - Capability-based decoupling (`PluginManifest` with `id`, `resourceRoot`, `databases`, never naming sibling plugins directly).
    - Pure declarative `PluginRegistrar` (`configDefinitions`, `schemaDefinition`, `stage`, `healthCheckDefinition`, `capability`, `driver`, `spaceEntity`, `routeGroup`, `commandDefinitions`, `rebuilderDefinition`, `prunerDefinition`, `purgeMemberDefinition`, `outboxConsumerDefinition`).
    - `PluginGraphCompiler` partitioned into specialized sub-compilers + `ContributionChecks` single-pass error accumulation + DB engine compatibility assertions (`assertDatabases()`, `assertNodeSchemas()`).

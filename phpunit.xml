@@ -14,11 +14,19 @@
         <testsuite name="Core">
             <directory>packages/core/tests</directory>
         </testsuite>
+        <testsuite name="Plugins">
+            <directory>packages/plugins/tests</directory>
+        </testsuite>
+        <testsuite name="Schema">
+            <directory>packages/schema/tests</directory>
+        </testsuite>
     </testsuites>
 
     <source>
         <include>
             <directory>packages/core/src</directory>
+            <directory>packages/plugins/src</directory>
+            <directory>packages/schema/src</directory>
         </include>
     </source>
 

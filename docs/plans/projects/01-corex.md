@@ -59,8 +59,8 @@
 
 | Hardcoded String in `CoreX\Modules` | Source Location | Universal Default in `Packman\Modules` | Configuration in `corex` |
 |:--|:--|:--|:--|
-| `'corex-module'` | `ModuleDiscovery.php:70`, `LifecycleRegistrar.php:98` | `ModulesOptions::$packageTypes = ['packman-module', 'module']` | `corex` config sets `['corex-module', 'module']` |
-| `extra['corex']['module']` | `ModuleDiscovery.php:75,78` | `ModulesOptions::$extraKeys = [['packman', 'module'], ['module']]` | `corex` config includes `['corex', 'module']` |
+| `'corex-module'` | `ModuleDiscovery.php:70`, `LifecycleRegistrar.php:98` | `ModulesOptions::$packageTypes = ['packman-module', 'packman-plugin', 'module', 'plugin']` | `corex` config sets `['corex-module', 'corex-plugin', 'module', 'plugin']` |
+| `extra['corex']['module']` | `ModuleDiscovery.php:75,78` | `ModulesOptions::$extraKeys = [['packman', 'module'], ['packman', 'plugin'], ['module'], ['plugin']]` | `corex` config includes `['corex', 'module']` and `['corex', 'plugin']` |
 | `'corex:modules:compile'` | `CompileModulesCommand.php:28`, `ModulesServiceProvider.php:40` | `'modules:compile'` | `corex` aliases `'corex:modules:compile'` |
 | `'corex:modules:why'` | `ExplainModuleCommand.php:17` | `'modules:why'` | `corex` aliases `'corex:modules:why'` |
 | `'corex:modules:repair'` | `RepairModuleCommand.php:18`, `DatabaseModuleLifecycle.php:137` | `'modules:repair'` | `corex` aliases `'corex:modules:repair'` |
