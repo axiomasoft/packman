@@ -7,6 +7,8 @@ namespace {{ namespace }}\Laravel;
 use Illuminate\Support\ServiceProvider;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
+use Packman\Schema\Contracts\Migration\SchemaSetProvider;
+use {{ namespace }}\Schema\ModuleSchemaSetProvider;
 
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class {{ class_prefix }}ServiceProvider extends ServiceProvider
@@ -14,10 +16,11 @@ final class {{ class_prefix }}ServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../../config/{{ slug }}.php', '{{ config_key }}');
+
+        if (interface_exists(SchemaSetProvider::class)) {
+            $this->app->tag([ModuleSchemaSetProvider::class], SchemaSetProvider::class);
+        }
     }
 
-    public function boot(): void
-    {
-        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
-    }
+    public function boot(): void {}
 }

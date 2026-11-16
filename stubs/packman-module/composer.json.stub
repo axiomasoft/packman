@@ -1,7 +1,7 @@
 {
     "name": "{{ composer_name }}",
     "description": "DB-backed Packman module {{ composer_name }}.",
-    "type": "library",
+    "type": "packman-module",
     "license": "MIT",
     "require": {
         "php": "^8.4",
@@ -21,7 +21,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "{{ namespace_escaped }}Tests\\\\": "tests/"
+            "{{ namespace_escaped }}Tests\\": "tests/"
         }
     },
     "extra": {
@@ -31,7 +31,7 @@
         },
         "laravel": {
             "providers": [
-                "{{ namespace_escaped }}Laravel\\\\{{ class_prefix }}ServiceProvider"
+                "{{ namespace_escaped }}Laravel\\{{ class_prefix }}ServiceProvider"
             ]
         }
     },

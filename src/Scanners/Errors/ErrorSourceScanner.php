@@ -260,34 +260,32 @@ final class ErrorSourceScanner
             }
         }
 
-        if ($providers !== []) {
-            foreach ($enumCases as $caseInfo) {
-                $wire = $caseInfo['wireCode'];
+        foreach ($enumCases as $caseInfo) {
+            $wire = $caseInfo['wireCode'];
 
-                if ($wire !== '' && ! isset($definitionsByCode[$wire])) {
-                    $diagnostics[] = sprintf(
-                        '[%s] ErrorCode case %s::%s ("%s") is missing a ProblemDefinition in package providers.',
-                        $packageName,
-                        $caseInfo['enum'],
-                        $caseInfo['case'],
-                        $wire,
-                    );
-                }
+            if ($wire !== '' && ! isset($definitionsByCode[$wire])) {
+                $diagnostics[] = sprintf(
+                    '[%s] ErrorCode case %s::%s ("%s") is missing a ProblemDefinition in package providers.',
+                    $packageName,
+                    $caseInfo['enum'],
+                    $caseInfo['case'],
+                    $wire,
+                );
             }
+        }
 
-            foreach ($descriptorCodes as $usage) {
-                if (isset($enumCases[$usage['target']])) {
-                    $wire = $enumCases[$usage['target']]['wireCode'];
+        foreach ($descriptorCodes as $usage) {
+            if (isset($enumCases[$usage['target']])) {
+                $wire = $enumCases[$usage['target']]['wireCode'];
 
-                    if (! isset($definitionsByCode[$wire])) {
-                        $diagnostics[] = sprintf(
-                            '[%s] ErrorDescriptor references unregistered code "%s" (%s:%d).',
-                            $packageName,
-                            $wire,
-                            $usage['file'],
-                            $usage['line'],
-                        );
-                    }
+                if (! isset($definitionsByCode[$wire])) {
+                    $diagnostics[] = sprintf(
+                        '[%s] ErrorDescriptor references unregistered code "%s" (%s:%d).',
+                        $packageName,
+                        $wire,
+                        $usage['file'],
+                        $usage['line'],
+                    );
                 }
             }
         }

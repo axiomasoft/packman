@@ -6,6 +6,7 @@ namespace Packman\DevTools\Internal\Schemas;
 
 use JsonException;
 use Opis\JsonSchema\Errors\ErrorFormatter;
+use Opis\JsonSchema\Exceptions\SchemaException;
 use Opis\JsonSchema\Validator;
 use Packman\Attributes\Internal;
 
@@ -37,7 +38,11 @@ final class JsonSchemaValidator
             return ["Invalid JSON schema root: {$schemaPath}"];
         }
 
-        $result = new Validator(max_errors: 10, stop_at_first_error: false)->validate($data, $schema);
+        try {
+            $result = new Validator(max_errors: 10, stop_at_first_error: false)->validate($data, $schema);
+        } catch (SchemaException $exception) {
+            return ["Invalid JSON schema {$schemaPath}: {$exception->getMessage()}"];
+        }
 
         if ($result->isValid()) {
             return [];

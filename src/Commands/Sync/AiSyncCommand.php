@@ -29,7 +29,8 @@ final class AiSyncCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Plan synchronized files without writing to disk.')
+            ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Verify generated AI artifacts match canonical ai/ sources without writing to disk.')
+            ->addOption('check', null, InputOption::VALUE_NONE, 'Alias for --dry-run drift verification.')
             ->addOption('root', null, InputOption::VALUE_REQUIRED, 'Repository root directory.', $this->defaultRootPath);
     }
 
@@ -38,7 +39,7 @@ final class AiSyncCommand extends Command
     {
         $rawRoot = $input->getOption('root');
         $rootPath = is_string($rawRoot) && $rawRoot !== '' ? $rawRoot : $this->defaultRootPath;
-        $dryRun = (bool) $input->getOption('dry-run');
+        $dryRun = (bool) $input->getOption('dry-run') || (bool) $input->getOption('check');
 
         $result = $this->synchronizer->sync($rootPath, $dryRun);
 
@@ -46,9 +47,25 @@ final class AiSyncCommand extends Command
             $output->writeln("<info>SYNC</info> {$file}");
         }
 
+        foreach ($result['pruned'] as $file) {
+            $output->writeln("<comment>PRUNE</comment> {$file}");
+        }
+
         if ($dryRun) {
             foreach ($result['planned'] as $file) {
                 $output->writeln("<comment>PLAN</comment> {$file}");
+            }
+
+            foreach ($result['missing'] as $file) {
+                $output->writeln("<error>MISSING</error> {$file}");
+            }
+
+            foreach ($result['drifted'] as $file) {
+                $output->writeln("<error>DRIFT</error> {$file}");
+            }
+
+            foreach ($result['orphans'] as $file) {
+                $output->writeln("<error>ORPHAN</error> {$file}");
             }
         }
 
@@ -56,8 +73,10 @@ final class AiSyncCommand extends Command
             $output->writeln("<comment>KEEP</comment> {$file}");
         }
 
+        $noteTag = $result['ok'] ? 'info' : 'error';
+
         foreach ($result['notes'] as $note) {
-            $output->writeln("<info>{$note}</info>");
+            $output->writeln("<{$noteTag}>{$note}</{$noteTag}>");
         }
 
         return $result['ok'] ? self::SUCCESS : self::FAILURE;

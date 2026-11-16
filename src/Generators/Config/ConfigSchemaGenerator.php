@@ -10,10 +10,18 @@ use Packman\Config\Data\CompileContext;
 use Packman\DevTools\Internal\Config\SchemaRecordingReader;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\Cast\Array_ as ArrayCast;
+use PhpParser\Node\Expr\Cast\Bool_ as BoolCast;
+use PhpParser\Node\Expr\Cast\Double as FloatCast;
+use PhpParser\Node\Expr\Cast\Int_ as IntCast;
+use PhpParser\Node\Expr\Cast\String_ as StringCast;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\UnaryMinus;
+use PhpParser\Node\Expr\UnaryPlus;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\Float_;
 use PhpParser\Node\Scalar\Int_;
@@ -169,6 +177,12 @@ final class ConfigSchemaGenerator
     /** @return array<string, mixed> */
     private function arrayExprToSchema(Array_ $array): array
     {
+        if ($array->items === []) {
+            return [
+                'type' => ['array', 'object'],
+            ];
+        }
+
         $properties = [];
         $hasStringKeys = false;
 
@@ -178,7 +192,7 @@ final class ConfigSchemaGenerator
             }
 
             $hasStringKeys = true;
-            $properties[$item->key->value] = $this->exprToSchema($item->value);
+            $properties[$item->key->value] = $this->itemExprToSchema($item);
         }
 
         if (! $hasStringKeys) {
@@ -194,6 +208,33 @@ final class ConfigSchemaGenerator
             'properties' => $properties,
             'additionalProperties' => false,
         ];
+    }
+
+    /** @return array<string, mixed> */
+    private function itemExprToSchema(ArrayItem $item): array
+    {
+        if ($item->value instanceof Array_ && $item->value->items === []) {
+            $doc = $item->getDocComment()?->getText();
+
+            if (is_string($doc) && preg_match('/@var\s+array<string,\s*bool>/', $doc) === 1) {
+                return [
+                    'anyOf' => [
+                        [
+                            'type' => 'array',
+                            'maxItems' => 0,
+                        ],
+                        [
+                            'type' => 'object',
+                            'additionalProperties' => [
+                                'type' => 'boolean',
+                            ],
+                        ],
+                    ],
+                ];
+            }
+        }
+
+        return $this->exprToSchema($item->value);
     }
 
     /** @return array<string, mixed> */
@@ -215,6 +256,46 @@ final class ConfigSchemaGenerator
             return ['type' => 'number', 'default' => $expr->value];
         }
 
+        if ($expr instanceof UnaryMinus) {
+            if ($expr->expr instanceof Int_) {
+                return ['type' => 'integer', 'default' => -$expr->expr->value];
+            }
+
+            if ($expr->expr instanceof Float_) {
+                return ['type' => 'number', 'default' => -$expr->expr->value];
+            }
+        }
+
+        if ($expr instanceof UnaryPlus) {
+            if ($expr->expr instanceof Int_) {
+                return ['type' => 'integer', 'default' => $expr->expr->value];
+            }
+
+            if ($expr->expr instanceof Float_) {
+                return ['type' => 'number', 'default' => $expr->expr->value];
+            }
+        }
+
+        if ($expr instanceof BoolCast) {
+            return $this->castSchema('boolean', $expr->expr, static fn (mixed $v): bool => (bool) $v);
+        }
+
+        if ($expr instanceof IntCast) {
+            return $this->castSchema('integer', $expr->expr, static fn (mixed $v): int => is_numeric($v) || is_bool($v) ? (int) $v : 0);
+        }
+
+        if ($expr instanceof FloatCast) {
+            return $this->castSchema('number', $expr->expr, static fn (mixed $v): float => is_numeric($v) || is_bool($v) ? (float) $v : 0.0);
+        }
+
+        if ($expr instanceof StringCast) {
+            return $this->castSchema('string', $expr->expr, static fn (mixed $v): string => is_scalar($v) ? (string) $v : '');
+        }
+
+        if ($expr instanceof ArrayCast) {
+            return ['type' => ['array', 'object']];
+        }
+
         if ($expr instanceof ConstFetch) {
             $name = strtolower($expr->name->toString());
 
@@ -222,19 +303,44 @@ final class ConfigSchemaGenerator
                 'true' => ['type' => 'boolean', 'default' => true],
                 'false' => ['type' => 'boolean', 'default' => false],
                 'null' => ['type' => ['string', 'null'], 'default' => null],
-                default => ['type' => 'string'],
+                default => ['type' => ['string', 'integer', 'number', 'boolean', 'null']],
             };
         }
 
         if ($expr instanceof FuncCall && $expr->name instanceof Name) {
             $fn = strtolower($expr->name->toString());
 
-            if ($fn === 'env' && isset($expr->args[1]) && $expr->args[1] instanceof Arg) {
-                return $this->exprToSchema($expr->args[1]->value);
+            if ($fn === 'env') {
+                if (isset($expr->args[1]) && $expr->args[1] instanceof Arg) {
+                    return $this->exprToSchema($expr->args[1]->value);
+                }
+
+                return [
+                    'type' => ['string', 'integer', 'number', 'boolean', 'null'],
+                    'default' => null,
+                ];
             }
         }
 
-        return [];
+        return [
+            'type' => ['string', 'integer', 'number', 'boolean', 'array', 'object', 'null'],
+        ];
+    }
+
+    /**
+     * @param  callable(mixed): mixed  $coerce
+     * @return array<string, mixed>
+     */
+    private function castSchema(string $jsonType, Expr $innerExpr, callable $coerce): array
+    {
+        $inner = $this->exprToSchema($innerExpr);
+        $schema = ['type' => $jsonType];
+
+        if (array_key_exists('default', $inner) && ($inner['default'] === null || is_scalar($inner['default']))) {
+            $schema['default'] = $coerce($inner['default']);
+        }
+
+        return $schema;
     }
 
     /** @return array<string, mixed> */

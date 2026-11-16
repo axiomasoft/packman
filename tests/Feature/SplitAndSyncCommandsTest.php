@@ -38,15 +38,22 @@ it('synchronizes canonical ai/ pack into .claude, valid Codex v0.169+ TOML, .gem
         $ws->write('.claude/agents/code-reviewer-reviewer-overrides.md', $overrideContent);
 
         $dryReport = (new EcosystemAiSynchronizer)->sync($ws->root, dryRun: true);
-        expect($dryReport['ok'])->toBeTrue()
+        expect($dryReport['ok'])->toBeFalse()
             ->and($dryReport['status'])->toBe('dry_run')
             ->and($dryReport['written'])->toBe([])
             ->and($dryReport['planned'])->toContain('.codex/agents/code-reviewer.toml')
+            ->and($dryReport['missing'])->toContain('.codex/agents/code-reviewer.toml')
             ->and($dryReport['preserved'])->toContain('.claude/agents/code-reviewer-reviewer-overrides.md');
 
         $app = ApplicationFactory::create($ws->root);
         $tester = new CommandTester($app->find('ai:sync'));
+        expect($tester->execute(['--root' => $ws->root, '--dry-run' => true]))->toBe(1)
+            ->and($tester->getDisplay())->toContain('.codex/agents/code-reviewer.toml')
+            ->and($tester->execute(['--root' => $ws->root, '--check' => true]))->toBe(1);
+
         expect($tester->execute(['--root' => $ws->root]))->toBe(0);
+        expect($tester->execute(['--root' => $ws->root, '--dry-run' => true]))->toBe(0)
+            ->and($tester->execute(['--root' => $ws->root, '--check' => true]))->toBe(0);
 
         $toml = (string) file_get_contents($ws->path('.codex/agents/code-reviewer.toml'));
         expect($toml)
@@ -60,6 +67,52 @@ it('synchronizes canonical ai/ pack into .claude, valid Codex v0.169+ TOML, .gem
             ->and(is_file($ws->path('.claude/agent-pack.lock.json')))->toBeTrue()
             ->and((string) file_get_contents($ws->path('AGENTS.md')))->toContain('code-reviewer')
             ->and((string) file_get_contents($ws->path('.claude/agents/code-reviewer-reviewer-overrides.md')))->toBe($overrideContent);
+
+        // Missing generated artifact must fail --dry-run / --check
+        unlink($ws->path('.codex/agents/code-reviewer.toml'));
+        expect($tester->execute(['--root' => $ws->root, '--dry-run' => true]))->toBe(1)
+            ->and($tester->getDisplay())->toContain('MISSING .codex/agents/code-reviewer.toml');
+
+        // Re-sync then mutate AGENTS.md -> drifted artifact must fail --check / --dry-run
+        expect($tester->execute(['--root' => $ws->root]))->toBe(0);
+        $ws->write('AGENTS.md', "# Drifted\n");
+        expect($tester->execute(['--root' => $ws->root, '--check' => true]))->toBe(1)
+            ->and($tester->getDisplay())->toContain('DRIFT AGENTS.md');
+
+        // Re-sync then plant stale orphan artifacts across managed output directories -> --dry-run/--check fails, live ai:sync prunes them while preserving reviewer overrides
+        expect($tester->execute(['--root' => $ws->root]))->toBe(0);
+        $ws->write('.claude/rules/obsolete.md', "# Stale rule\n");
+        $ws->write('.gemini/rules/obsolete.md', "# Stale gemini rule\n");
+        $ws->write('.claude/agents/stale-agent.md', "# Stale claude agent\n");
+        $ws->write('.codex/agents/stale-agent.toml', "name = \"stale-agent\"\n");
+
+        $orphanDryReport = (new EcosystemAiSynchronizer)->sync($ws->root, dryRun: true);
+        expect($orphanDryReport['ok'])->toBeFalse()
+            ->and($orphanDryReport['orphans'])->toBe([
+                '.claude/agents/stale-agent.md',
+                '.claude/rules/obsolete.md',
+                '.codex/agents/stale-agent.toml',
+                '.gemini/rules/obsolete.md',
+            ])
+            ->and($orphanDryReport['preserved'])->toContain('.claude/agents/code-reviewer-reviewer-overrides.md');
+
+        expect($tester->execute(['--root' => $ws->root, '--dry-run' => true]))->toBe(1)
+            ->and($tester->getDisplay())
+            ->toContain('ORPHAN .claude/rules/obsolete.md')
+            ->toContain('ORPHAN .gemini/rules/obsolete.md');
+        expect($tester->execute(['--root' => $ws->root, '--check' => true]))->toBe(1);
+
+        expect($tester->execute(['--root' => $ws->root]))->toBe(0)
+            ->and($tester->getDisplay())->toContain('PRUNE .claude/rules/obsolete.md');
+
+        expect(is_file($ws->path('.claude/rules/obsolete.md')))->toBeFalse()
+            ->and(is_file($ws->path('.gemini/rules/obsolete.md')))->toBeFalse()
+            ->and(is_file($ws->path('.claude/agents/stale-agent.md')))->toBeFalse()
+            ->and(is_file($ws->path('.codex/agents/stale-agent.toml')))->toBeFalse()
+            ->and((string) file_get_contents($ws->path('.claude/agents/code-reviewer-reviewer-overrides.md')))->toBe($overrideContent);
+
+        expect($tester->execute(['--root' => $ws->root, '--dry-run' => true]))->toBe(0)
+            ->and($tester->execute(['--root' => $ws->root, '--check' => true]))->toBe(0);
     } finally {
         $ws->cleanup();
     }
