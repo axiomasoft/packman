@@ -29,6 +29,12 @@
         <testsuite name="Filament">
             <directory>packages/filament/tests</directory>
         </testsuite>
+        <testsuite name="Testkit">
+            <directory>packages/testkit/tests</directory>
+        </testsuite>
+        <testsuite name="DevTools">
+            <directory>packages/devtools/tests</directory>
+        </testsuite>
     </testsuites>
 
     <source>
@@ -39,6 +45,8 @@
             <directory>packages/schema/src</directory>
             <directory>packages/panels/src</directory>
             <directory>packages/filament/src</directory>
+            <directory>packages/testkit/src</directory>
+            <directory>packages/devtools/src</directory>
         </include>
     </source>
 

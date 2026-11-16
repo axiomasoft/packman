@@ -1,0 +1,37 @@
+{
+    "name": "{{ composer_name }}",
+    "description": "Stateless Packman code plugin {{ composer_name }}.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "axiomasoft/packman": "^1.0@dev",
+        "axiomasoft/packman-plugins": "^1.0@dev",
+        "illuminate/support": "^12.0|^13.0"
+    },
+    "require-dev": {
+        "axiomasoft/packman-testkit": "^1.0@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "{{ namespace_escaped }}": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "{{ namespace_escaped }}Tests\\\\": "tests/"
+        }
+    },
+    "extra": {
+        "packman": {
+            "profile": "packman-plugin"
+        },
+        "laravel": {
+            "providers": [
+                "{{ namespace_escaped }}Laravel\\\\{{ class_prefix }}ServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

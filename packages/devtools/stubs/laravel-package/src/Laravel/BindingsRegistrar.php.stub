@@ -1,0 +1,24 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }}\Laravel;
+
+use Illuminate\Foundation\Application;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
+use Packman\Foundation\Contracts\PackageRegistrar;
+
+#[Spi(kind: SpiKind::Call, since: '1.0')]
+final readonly class {{ class_prefix }}BindingsRegistrar implements PackageRegistrar
+{
+    public function register(Application $app): void
+    {
+        // Register package container bindings here.
+    }
+
+    public function boot(Application $app): void
+    {
+        // Boot package integrations here.
+    }
+}

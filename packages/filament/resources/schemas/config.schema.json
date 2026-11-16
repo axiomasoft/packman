@@ -1,0 +1,57 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/packman-filament configuration",
+    "type": "object",
+    "properties": {
+        "packman-filament": {
+            "type": "object",
+            "properties": {
+                "abilities": {
+                    "type": "array"
+                },
+                "enforce": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "exclude": {
+                    "type": "object",
+                    "properties": {
+                        "pages": {
+                            "type": "array"
+                        },
+                        "resources": {
+                            "type": "array"
+                        },
+                        "widgets": {
+                            "type": "array"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "guard_panel": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "default": null
+                },
+                "navigation_group": {
+                    "type": "string",
+                    "default": "Packman"
+                },
+                "persistent_middleware": {
+                    "type": "array"
+                },
+                "refuse_unverifiable_downloads": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "resources": {
+                    "type": "array"
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

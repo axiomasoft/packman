@@ -1,0 +1,11 @@
+<?php
+
+declare(strict_types=1);
+
+use {{ namespace }}\Data\{{ class_prefix }}Options;
+use {{ namespace }}\Internal\Default{{ class_prefix }};
+
+it('executes default contract cleanly', function (): void {
+    $service = new Default{{ class_prefix }};
+    expect($service->execute(new {{ class_prefix }}Options))->toBe('{{ slug }}:enabled');
+});

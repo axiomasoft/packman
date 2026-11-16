@@ -1,0 +1,9 @@
+<?php
+
+declare(strict_types=1);
+
+use {{ namespace }}\Laravel\{{ class_prefix }}ServiceProvider;
+
+it('registers {{ composer_name }} service provider', function (): void {
+    expect(class_exists({{ class_prefix }}ServiceProvider::class))->toBeTrue();
+});

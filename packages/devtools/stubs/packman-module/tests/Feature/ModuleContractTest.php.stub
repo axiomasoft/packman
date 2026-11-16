@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }}\Tests\Feature;
+
+use Packman\Modules\Contracts\Definition\ModuleDefinition;
+use Packman\Testkit\Concerns\Conformance\ModuleContractTests;
+use Packman\Testkit\PackageTestCase;
+use {{ namespace }}\{{ class_prefix }}Module;
+
+final class {{ class_prefix }}ModuleTest extends PackageTestCase
+{
+    use ModuleContractTests;
+
+    protected function moduleUnderTest(): ModuleDefinition
+    {
+        return new {{ class_prefix }}Module;
+    }
+}

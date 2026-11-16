@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }}\Internal;
+
+use Packman\Attributes\Internal;
+use {{ namespace }}\Contracts\{{ class_prefix }}Contract;
+use {{ namespace }}\Data\{{ class_prefix }}Options;
+
+#[Internal]
+final readonly class Default{{ class_prefix }} implements {{ class_prefix }}Contract
+{
+    public function execute({{ class_prefix }}Options $options): string
+    {
+        return $options->enabled ? '{{ slug }}:enabled' : '{{ slug }}:disabled';
+    }
+}

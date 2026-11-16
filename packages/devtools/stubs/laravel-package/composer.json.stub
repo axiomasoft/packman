@@ -1,0 +1,34 @@
+{
+    "name": "{{ composer_name }}",
+    "description": "Packman laravel-package {{ composer_name }}.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "axiomasoft/packman": "^1.0@dev",
+        "illuminate/contracts": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "{{ namespace_escaped }}": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "{{ namespace_escaped }}Tests\\\\": "tests/"
+        }
+    },
+    "extra": {
+        "packman": {
+            "profile": "laravel-package"
+        },
+        "laravel": {
+            "providers": [
+                "{{ namespace_escaped }}Laravel\\\\{{ class_prefix }}ServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

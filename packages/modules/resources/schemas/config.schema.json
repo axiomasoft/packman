@@ -1,0 +1,71 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/packman-modules configuration",
+    "type": "object",
+    "properties": {
+        "modules": {
+            "type": "object",
+            "properties": {
+                "cache": {
+                    "type": "object",
+                    "properties": {
+                        "prefix": {
+                            "type": "string",
+                            "default": "modules"
+                        },
+                        "store": [],
+                        "ttl": []
+                    },
+                    "additionalProperties": false
+                },
+                "cache_path": {
+                    "type": "string",
+                    "default": "bootstrap/cache/modules.php"
+                },
+                "compile_command": {
+                    "type": "string",
+                    "default": "modules:compile"
+                },
+                "compiler_package": {
+                    "type": "string",
+                    "default": "axiomasoft/packman-modules"
+                },
+                "connection": [],
+                "extra_keys": {
+                    "type": "array"
+                },
+                "lock_key": {
+                    "type": "string",
+                    "default": "modules:lifecycle-graph"
+                },
+                "package_types": {
+                    "type": "array"
+                },
+                "registry_schema": {
+                    "type": "string",
+                    "default": "packman-registry/1"
+                },
+                "tables": {
+                    "type": "object",
+                    "properties": {
+                        "lifecycle_log": {
+                            "type": "string",
+                            "default": "mod_lifecycle_log"
+                        },
+                        "modules": {
+                            "type": "string",
+                            "default": "mod_modules"
+                        },
+                        "records": {
+                            "type": "string",
+                            "default": "mod_records"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

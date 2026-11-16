@@ -1,0 +1,84 @@
+{
+    "schema": "packman-error-codes/1",
+    "package": "axiomasoft/packman-modules",
+    "codes": [
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "CompilationException",
+            "code": "modules.compilation_failed"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "ModuleEnableFailedException",
+            "code": "modules.enable_failed"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "EntityNotFound",
+            "code": "modules.entity_not_found"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "HasEnabledDependentsException",
+            "code": "modules.has_enabled_dependents"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "InvalidManifestException",
+            "code": "modules.invalid_manifest"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "InvalidRegistryPoint",
+            "code": "modules.invalid_registry_point"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "InvalidStateTransitionException",
+            "code": "modules.invalid_state_transition"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "MissingDependencyException",
+            "code": "modules.missing_dependency"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "ModuleNotFound",
+            "code": "modules.module_not_found"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "RegistryFrozen",
+            "code": "modules.registry_frozen"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "RegistryInputUnavailable",
+            "code": "modules.registry_input_unavailable"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "StaleRegistryRevision",
+            "code": "modules.stale_registry_revision"
+        },
+        {
+            "package": "axiomasoft/packman-modules",
+            "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
+            "case": "ModuleUpgradeFailedException",
+            "code": "modules.upgrade_failed"
+        }
+    ]
+}

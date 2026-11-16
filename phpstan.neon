@@ -15,6 +15,11 @@ parameters:
         - packages/schema/src
         - packages/panels/src
         - packages/filament/src
+        - packages/testkit/src
+        - packages/testkit/tests/Feature/PackageTestCaseTest.php
+        - packages/testkit/tests/Feature/PluginContractTestsTest.php
+        - packages/testkit/tests/Feature/ModuleContractTestsTest.php
+        - packages/devtools/src
         - packages/filament/tests/Support/FilamentTestOrderResource.php
         - packages/filament/tests/Support/FilamentTestProductsRelationManager.php
         - packages/filament/tests/Support/FilamentTestReportsPage.php

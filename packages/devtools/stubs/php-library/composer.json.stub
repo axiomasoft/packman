@@ -1,0 +1,27 @@
+{
+    "name": "{{ composer_name }}",
+    "description": "Packman php-library package {{ composer_name }}.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "axiomasoft/packman": "^1.0@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "{{ namespace_escaped }}": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "{{ namespace_escaped }}Tests\\\\": "tests/"
+        }
+    },
+    "extra": {
+        "packman": {
+            "profile": "php-library"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

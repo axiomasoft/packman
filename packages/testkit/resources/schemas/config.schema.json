@@ -1,0 +1,25 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/packman-testkit configuration",
+    "type": "object",
+    "properties": {
+        "sections": {
+            "type": "object",
+            "properties": {
+                "report_test.channel": {
+                    "type": "string",
+                    "default": "strict",
+                    "minLength": 1,
+                    "description": "Reporting channel identifier."
+                },
+                "report_test.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables fixture reporting section."
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

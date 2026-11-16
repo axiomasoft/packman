@@ -1,0 +1,9 @@
+# {{ composer_name }}
+
+Pure PHP library package (`php-library` profile).
+
+## Usage
+
+```php
+use {{ namespace }}\Internal\Default{{ class_prefix }};
+```
