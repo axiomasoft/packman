@@ -14,6 +14,9 @@
         <testsuite name="Core">
             <directory>packages/core/tests</directory>
         </testsuite>
+        <testsuite name="Modules">
+            <directory>packages/modules/tests</directory>
+        </testsuite>
         <testsuite name="Plugins">
             <directory>packages/plugins/tests</directory>
         </testsuite>
@@ -25,6 +28,7 @@
     <source>
         <include>
             <directory>packages/core/src</directory>
+            <directory>packages/modules/src</directory>
             <directory>packages/plugins/src</directory>
             <directory>packages/schema/src</directory>
         </include>

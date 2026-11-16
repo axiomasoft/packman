@@ -9,6 +9,7 @@ parameters:
     paths:
         - packages/core/src
         - packages/core/tests/Unit/Extensions/ExtensionInspectorTest.php
+        - packages/modules/src
         - packages/plugins/src
         - packages/plugins/tests/Unit/DeclarativePluginTest.php
         - packages/schema/src

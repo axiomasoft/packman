@@ -15,8 +15,12 @@ use Packman\Doctor\Laravel\DoctorRegistrar;
 use Packman\Errors\Internal\PackageProblemDefinitions;
 use Packman\Errors\Laravel\ErrorsRegistrar;
 use Packman\Errors\Laravel\ProblemDefinitions;
+use Packman\Features\Contracts\FeatureFlagsInterface;
+use Packman\Features\Internal\NullFeatureFlags;
 use Packman\Foundation\Concerns\RegistersPackageRegistrars;
 use Packman\Foundation\Contracts\PackageRegistrar;
+use Packman\Foundation\Internal\SystemClock;
+use Psr\Clock\ClockInterface;
 
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class PackmanServiceProvider extends ServiceProvider
@@ -33,6 +37,9 @@ final class PackmanServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
+        $this->app->singletonIf(ClockInterface::class, SystemClock::class);
+        $this->app->singletonIf(FeatureFlagsInterface::class, NullFeatureFlags::class);
+
         ProblemDefinitions::register(
             app: $this->app,
             composerManifest: __DIR__.'/../composer.json',

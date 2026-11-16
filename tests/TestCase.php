@@ -8,6 +8,12 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Override;
+use Packman\Context\Contracts\ActorResolverInterface;
+use Packman\Context\Contracts\ContextResolverInterface;
+use Packman\Context\Contracts\ContextScopeInterface;
+use Packman\Context\Data\ActorRef;
+use Packman\Context\Data\ScopeRef;
+use Packman\Modules\ModulesServiceProvider;
 use Packman\PackmanServiceProvider;
 use Packman\Plugins\Laravel\PluginsServiceProvider;
 use Packman\Schema\Laravel\SchemaServiceProvider;
@@ -31,6 +37,7 @@ abstract class TestCase extends OrchestraTestCase
             PackmanServiceProvider::class,
             SchemaServiceProvider::class,
             PluginsServiceProvider::class,
+            ModulesServiceProvider::class,
         ];
     }
 
@@ -51,6 +58,21 @@ abstract class TestCase extends OrchestraTestCase
         $this->isolatedDatabasePaths[] = $path;
         $app->useDatabasePath($path);
         $app->useBootstrapPath($path.'/bootstrap');
+
+        $app->singletonIf(ContextResolverInterface::class, static fn (): ContextResolverInterface => new readonly class implements ContextResolverInterface
+        {
+            public function current(): ContextScopeInterface
+            {
+                return new ScopeRef('acct-test');
+            }
+        });
+        $app->singletonIf(ActorResolverInterface::class, static fn (): ActorResolverInterface => new readonly class implements ActorResolverInterface
+        {
+            public function current(): ActorRef
+            {
+                return new ActorRef('system');
+            }
+        });
 
         $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
 

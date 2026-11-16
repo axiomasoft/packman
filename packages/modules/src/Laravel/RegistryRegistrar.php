@@ -1,0 +1,131 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Packman\Modules\Laravel;
+
+use Illuminate\Contracts\Cache\Factory as CacheFactory;
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Override;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
+use Packman\Foundation\Concerns\RegistersNothingOnBoot;
+use Packman\Foundation\Contracts\PackageRegistrar;
+use Packman\Modules\Contracts\EntityRegistry;
+use Packman\Modules\Contracts\FieldCastRegistry;
+use Packman\Modules\Contracts\ManifestSectionCompiler;
+use Packman\Modules\Contracts\ModuleActivationGate;
+use Packman\Modules\Contracts\ModuleRegistry;
+use Packman\Modules\Contracts\ModuleRegistryCache;
+use Packman\Modules\Contracts\ModuleStateReader;
+use Packman\Modules\Contracts\RegistryIntrospection;
+use Packman\Modules\Internal\Compiler\FieldCastMap;
+use Packman\Modules\Internal\Compiler\RegistryCompiler;
+use Packman\Modules\Internal\Discovery\ModuleDiscovery;
+use Packman\Modules\Internal\Gate\AllowAllActivationGate;
+use Packman\Modules\Internal\InMemoryEntityRegistry;
+use Packman\Modules\Internal\ReadRegistryIntrospection;
+use Packman\Modules\Internal\Registry\CompiledModuleRegistry;
+use Packman\Modules\Internal\Registry\RepositoryModuleRegistryCache;
+use Packman\Modules\Internal\Support\ModulesOptions;
+
+#[Spi(kind: SpiKind::Call, since: '1.0')]
+final class RegistryRegistrar implements PackageRegistrar
+{
+    use RegistersNothingOnBoot;
+
+    private const string INSTALLED_JSON = 'vendor/composer/installed.json';
+
+    #[Override]
+    public function register(Application $app): void
+    {
+        $app->singleton(ModulesOptions::class, static function (Application $app): ModulesOptions {
+            $config = $app->make(Repository::class);
+            $primary = (array) $config->get('modules', []);
+            $scoped = (array) $config->get('packman.modules', []);
+
+            return ModulesOptions::fromArray(array_replace_recursive($primary, $scoped));
+        });
+
+        $app->singleton(FieldCastRegistry::class, FieldCastMap::class);
+        $app->when(RegistryCompiler::class)->needs('$sections')->giveTagged(ManifestSectionCompiler::class);
+        $app->when(RegistryCompiler::class)->needs('$installedJsonPath')->give(static fn (Application $app): string => $app->basePath(self::INSTALLED_JSON));
+        $app->when(RegistryCompiler::class)->needs('$compilerPackage')->give(static fn (Application $app): string => $app->make(ModulesOptions::class)->compilerPackage);
+
+        // Bind the concrete singleton first so module providers can resolve
+        // it directly to call register() (not part of the read-only contract),
+        // then alias the contract to the same instance.
+        $app->singleton(InMemoryEntityRegistry::class, static fn (Application $app): InMemoryEntityRegistry => new InMemoryEntityRegistry(
+            moduleActive: static fn (string $module, mixed $ctx): bool => $app
+                ->make(ModuleRegistry::class)
+                ->isActive($module, $ctx),
+        ));
+        $app->singleton(
+            EntityRegistry::class,
+            static fn (Application $app): InMemoryEntityRegistry => $app->make(InMemoryEntityRegistry::class),
+        );
+
+        // No fallback modules by default — real deploys scan installed.json;
+        // tests/testbench rebind this with an injected class list.
+        $app->singleton(ModuleDiscovery::class, static function (Application $app): ModuleDiscovery {
+            $options = $app->make(ModulesOptions::class);
+
+            return new ModuleDiscovery(
+                installedJsonPath: $app->basePath(self::INSTALLED_JSON),
+                packageTypes: $options->packageTypes,
+                extraKeys: $options->extraKeys,
+            );
+        });
+
+        // Boxed default: billing/entitlement gate is an application concern.
+        $app->singleton(ModuleActivationGate::class, AllowAllActivationGate::class);
+
+        // Registry cache WITHOUT tags: store/ttl/prefix from Options.
+        $app->singleton(ModuleRegistryCache::class, static fn (Application $app): RepositoryModuleRegistryCache => new RepositoryModuleRegistryCache(
+            store: $app->make(CacheFactory::class)->store($app->make(ModulesOptions::class)->cacheStore),
+            options: $app->make(ModulesOptions::class),
+        ));
+
+        $app->singleton(ModuleRegistry::class, function (Application $app): CompiledModuleRegistry {
+            $options = $app->make(ModulesOptions::class);
+
+            return new CompiledModuleRegistry(
+                cachePath: $app->basePath($options->cachePath),
+                stateReader: $app->make(ModuleStateReader::class),
+                cache: $app->make(ModuleRegistryCache::class),
+                versionResolver: fn (mixed $ctx): int => $this->registryVersion($app),
+                failIfMissing: $app->environment('production'),
+                compileCommand: $options->compileCommand,
+            );
+        });
+
+        $app->singleton(RegistryIntrospection::class, static function (Application $app): ReadRegistryIntrospection {
+            $options = $app->make(ModulesOptions::class);
+
+            return new ReadRegistryIntrospection(
+                registry: $app->make(ModuleRegistry::class),
+                activationGate: $app->make(ModuleActivationGate::class),
+                cachePath: $app->basePath($options->cachePath),
+                failIfMissing: $app->environment('production'),
+                installedJsonPath: $app->basePath(self::INSTALLED_JSON),
+            );
+        });
+    }
+
+    /**
+     * Monotonic registry epoch: the count of applied lifecycle transitions in `mod_lifecycle_log`.
+     */
+    private function registryVersion(Application $app): int
+    {
+        $options = $app->make(ModulesOptions::class);
+
+        if (! Schema::connection($options->connection)->hasTable($options->lifecycleLogTable)) {
+            return 0;
+        }
+
+        return DB::connection($options->connection)->table($options->lifecycleLogTable)->count();
+    }
+}

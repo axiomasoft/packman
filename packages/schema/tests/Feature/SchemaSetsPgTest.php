@@ -126,6 +126,7 @@ it('refuses PostgreSQL module migrations when ModuleMigrationBoundary is missing
         ]),
     ]);
     app()->instance(SchemaSets::class, $registry);
+    app()->offsetUnset(ModuleMigrationBoundary::class);
     config(['packman.schema.module_prerequisite_set' => null]);
     app()->forgetInstance(SchemaMigrator::class);
 
