@@ -33,6 +33,12 @@ final class PluginCatalog
         return $this->builtIn !== [];
     }
 
+    /** @return list<class-string<ExtensionPlugin>> */
+    public function builtInClasses(): array
+    {
+        return array_keys($this->builtIn);
+    }
+
     public function seal(): self
     {
         $this->sealed = true;

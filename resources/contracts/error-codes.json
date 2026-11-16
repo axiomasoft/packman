@@ -6,25 +6,45 @@
             "package": "axiomasoft/packman-plugins",
             "enum": "Packman\\Plugins\\Enums\\PluginErrorCode",
             "case": "InvalidGraph",
-            "code": "plugins.invalid_graph"
+            "code": "plugins.invalid_graph",
+            "type": "urn:packman:problem:plugins.invalid_graph",
+            "status": 500,
+            "title": "Invalid plugin extension graph.",
+            "retryable": false,
+            "category": "internal"
         },
         {
             "package": "axiomasoft/packman-plugins",
             "enum": "Packman\\Plugins\\Enums\\PluginErrorCode",
             "case": "MissingExtension",
-            "code": "plugins.missing_extension"
+            "code": "plugins.missing_extension",
+            "type": "urn:packman:problem:plugins.missing_extension",
+            "status": 422,
+            "title": "Required plugin extension is missing.",
+            "retryable": false,
+            "category": "unsupported"
         },
         {
             "package": "axiomasoft/packman-plugins",
             "enum": "Packman\\Plugins\\Enums\\PluginErrorCode",
             "case": "RegistryFrozen",
-            "code": "plugins.registry_frozen"
+            "code": "plugins.registry_frozen",
+            "type": "urn:packman:problem:plugins.registry_frozen",
+            "status": 500,
+            "title": "Plugin registry is frozen.",
+            "retryable": false,
+            "category": "internal"
         },
         {
             "package": "axiomasoft/packman-plugins",
             "enum": "Packman\\Plugins\\Enums\\PluginErrorCode",
             "case": "UnsupportedContribution",
-            "code": "plugins.unsupported_contribution"
+            "code": "plugins.unsupported_contribution",
+            "type": "urn:packman:problem:plugins.unsupported_contribution",
+            "status": 422,
+            "title": "Unsupported plugin contribution.",
+            "retryable": false,
+            "category": "unsupported"
         }
     ]
 }

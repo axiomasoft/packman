@@ -14,6 +14,7 @@ use Packman\Attributes\SpiKind;
 use Packman\Config\Contracts\OptionsFactory;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Doctor\Contracts\HealthCheck;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
 use Packman\Foundation\Contracts\PackageRegistrar;
 use Packman\Plugins\Contracts\Contributions\Capabilities;
 use Packman\Plugins\Contracts\Contributions\Contributions;
@@ -27,6 +28,9 @@ use Packman\Plugins\Internal\Graph\PluginCatalog;
 use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
 use Packman\Plugins\Laravel\Console\ExtensionsCommand;
 use Packman\Schema\Contracts\Compiler\SchemaOwnership;
+use ReflectionClass;
+use Throwable;
+use WeakMap;
 
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class ExtensionRegistrar implements PackageRegistrar
@@ -108,6 +112,14 @@ final class ExtensionRegistrar implements PackageRegistrar
         $app->alias(FrozenContributions::class, Contributions::class);
         $app->alias(FrozenContributions::class, PluginInspector::class);
 
+        $app->beforeResolving(OptionsFactory::class, static function (string $abstract, array $parameters, mixed $container): void {
+            if (! $container instanceof Application || $container->bound($abstract)) {
+                return;
+            }
+
+            self::registerPluginOptions($container);
+        });
+
         $app->afterResolving(FrozenContributions::class, static function (FrozenContributions $contributions, Application $app): void {
             self::wirePluginFacets($app, $contributions);
         });
@@ -125,8 +137,82 @@ final class ExtensionRegistrar implements PackageRegistrar
 
     public function boot(Application $app): void
     {
+        self::registerPluginOptions($app);
+
         if ($app->runningInConsole()) {
             Artisan::starting(self::registerCommands(...));
+        }
+    }
+
+    private static function registerPluginOptions(Application $app): void
+    {
+        $classes = [];
+
+        if ($app->bound(PluginCatalog::class)) {
+            foreach ($app->make(PluginCatalog::class)->builtInClasses() as $pluginClass) {
+                $classes[] = $pluginClass;
+            }
+        }
+
+        $disabled = [];
+
+        if ($app->bound(Repository::class)) {
+            $config = $app->make(Repository::class);
+            $configured = $config->get('packman.plugins', []);
+
+            if (is_array($configured)) {
+                foreach ($configured as $pluginClass) {
+                    if (is_string($pluginClass) && $pluginClass !== '') {
+                        $classes[] = $pluginClass;
+                    }
+                }
+            }
+
+            $rawDisabled = $config->get('packman.disabled_plugins', []);
+
+            if (is_array($rawDisabled)) {
+                foreach ($rawDisabled as $id) {
+                    if (is_string($id) && $id !== '') {
+                        $disabled[$id] = true;
+                    }
+                }
+            }
+        }
+
+        foreach (array_values(array_unique($classes)) as $pluginClass) {
+            if (! class_exists($pluginClass) || ! is_subclass_of($pluginClass, WithConfiguration::class)) {
+                continue;
+            }
+
+            $reflection = new ReflectionClass($pluginClass);
+            $constructor = $reflection->getConstructor();
+
+            if ($reflection->isAbstract() || ($constructor !== null && $constructor->getNumberOfRequiredParameters() > 0)) {
+                continue;
+            }
+
+            try {
+                $plugin = $reflection->newInstance();
+            } catch (Throwable) {
+                continue;
+            }
+
+            if ($plugin instanceof ExtensionPlugin && $disabled !== []) {
+                try {
+                    if (isset($disabled[$plugin->manifest()->id])) {
+                        continue;
+                    }
+                } catch (Throwable) {
+                    continue;
+                }
+            }
+
+            self::bindPluginConfiguration(
+                app: $app,
+                configRoot: $plugin->configRoot(),
+                defaultConfigPath: $plugin->defaultConfigPath(),
+                optionsClass: $plugin->optionsClass(),
+            );
         }
     }
 
@@ -142,26 +228,12 @@ final class ExtensionRegistrar implements PackageRegistrar
             }
 
             if ($facet->hasConfiguration && $facet->configRoot !== null && $facet->configRoot !== '') {
-                $configRoot = $facet->configRoot;
-
-                if ($facet->defaultConfigPath !== null && is_file($facet->defaultConfigPath) && $app->bound(Repository::class)) {
-                    $configRepo = $app->make(Repository::class);
-                    $defaults = require $facet->defaultConfigPath;
-
-                    if (is_array($defaults)) {
-                        $existing = $configRepo->get($configRoot, []);
-                        $configRepo->set($configRoot, array_replace_recursive($defaults, is_array($existing) ? $existing : []));
-                    }
-                }
-
-                if ($facet->optionsClass !== null && is_subclass_of($facet->optionsClass, OptionsFactory::class)) {
-                    $optionsClass = $facet->optionsClass;
-                    $app->singletonIf($optionsClass, static function (Application $app) use ($optionsClass, $configRoot): OptionsFactory {
-                        $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get($configRoot, []) : [];
-
-                        return $optionsClass::fromArray(is_array($raw) ? $raw : [], $configRoot);
-                    });
-                }
+                self::bindPluginConfiguration(
+                    app: $app,
+                    configRoot: $facet->configRoot,
+                    defaultConfigPath: $facet->defaultConfigPath,
+                    optionsClass: $facet->optionsClass,
+                );
             }
 
             if ($facet->hasSchema && $facet->tableNouns !== []) {
@@ -196,6 +268,64 @@ final class ExtensionRegistrar implements PackageRegistrar
                 });
             }
         }
+    }
+
+    private static function bindPluginConfiguration(
+        Application $app,
+        string $configRoot,
+        ?string $defaultConfigPath,
+        ?string $optionsClass,
+    ): void {
+        if ($configRoot === '') {
+            return;
+        }
+
+        if (
+            $defaultConfigPath !== null
+            && is_file($defaultConfigPath)
+            && $app->bound(Repository::class)
+            && self::markConfigDefaultsMerged($app, $configRoot, $defaultConfigPath)
+        ) {
+            $configRepo = $app->make(Repository::class);
+            $defaults = require $defaultConfigPath;
+
+            if (is_array($defaults)) {
+                $existing = $configRepo->get($configRoot, []);
+                $configRepo->set($configRoot, array_replace_recursive($defaults, is_array($existing) ? $existing : []));
+            }
+        }
+
+        if ($optionsClass !== null && is_subclass_of($optionsClass, OptionsFactory::class)) {
+            $app->singletonIf($optionsClass, static function (Application $app) use ($optionsClass, $configRoot): OptionsFactory {
+                $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get($configRoot, []) : [];
+
+                return $optionsClass::fromArray(is_array($raw) ? $raw : [], $configRoot);
+            });
+        }
+    }
+
+    private static function markConfigDefaultsMerged(Application $app, string $configRoot, string $defaultConfigPath): bool
+    {
+        /** @var WeakMap<Application, array<string, true>>|null $merged */
+        static $merged = null;
+
+        if (! $merged instanceof WeakMap) {
+            /** @var WeakMap<Application, array<string, true>> $map */
+            $map = new WeakMap;
+            $merged = $map;
+        }
+
+        $entries = $merged->offsetExists($app) ? $merged->offsetGet($app) : [];
+        $key = $configRoot.'|'.$defaultConfigPath;
+
+        if (isset($entries[$key])) {
+            return false;
+        }
+
+        $entries[$key] = true;
+        $merged->offsetSet($app, $entries);
+
+        return true;
     }
 
     private static function registerCommands(Artisan $artisan): void

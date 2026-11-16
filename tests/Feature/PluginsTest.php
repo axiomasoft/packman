@@ -8,6 +8,9 @@ use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Doctor\Contracts\DoctorRegistryContract;
 use Packman\Doctor\Data\DoctorContext;
+use Packman\Errors\Contracts\ProblemRegistry;
+use Packman\Errors\Data\ProblemDefinition;
+use Packman\Errors\Enums\ErrorCategory;
 use Packman\Extensions\Concerns\Composition\ContributesToSlots;
 use Packman\Extensions\Concerns\Composition\ProvidesCapabilities;
 use Packman\Extensions\Concerns\Configuration\Configurable;
@@ -32,8 +35,12 @@ use Packman\Plugins\Contracts\Registry\PluginInspector;
 use Packman\Plugins\Data\Contributions\ContributionKind;
 use Packman\Plugins\Data\Plugin\PluginManifest;
 use Packman\Plugins\Enums\Plugin\PluginSource;
+use Packman\Plugins\Enums\PluginErrorCode;
+use Packman\Plugins\Exceptions\Graph\InvalidExtensionGraphException;
+use Packman\Plugins\Exceptions\Graph\MissingExtensionException;
 use Packman\Plugins\Exceptions\Registry\UnsupportedContribution;
 use Packman\Plugins\Internal\Contributions\ExtensionRegistry;
+use Packman\Plugins\Internal\Contributions\FrozenContributions;
 use Packman\Plugins\Internal\Graph\PluginEntry;
 use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
 use Packman\Plugins\Laravel\ExtensionRegistrar;
@@ -45,8 +52,11 @@ use Packman\Plugins\Tests\Fixtures\HelloGreeter;
 use Packman\Plugins\Tests\Fixtures\HolaGreeter;
 use Packman\Plugins\Tests\Fixtures\NotAGreeter;
 use Packman\Schema\Contracts\Compiler\SchemaOwnership;
+use Packman\Testkit\Concerns\Assertions\AssertsRegisteredErrors;
 
 require_once __DIR__.'/../Fixtures/TestContracts.php';
+
+uses(AssertsRegisteredErrors::class);
 
 abstract class PlgBase implements ExtensionPlugin
 {
@@ -577,4 +587,46 @@ it('hydrates capabilities, slots, options, schema nouns, diagnostics, and DB fla
         ->and(app(ComposedPluginOptions::class)->mode)->toBe('strict')
         ->and(app(SchemaOwnership::class)->ownerOf('widgets'))->toBe('acme.composed')
         ->and(array_map(static fn (DoctorCheck $c): string => $c->key(), app(DoctorRegistryContract::class)->matching(['composed'])))->toBe(['composed.ok']);
+});
+
+it('registers all PluginErrorCode cases in the runtime ProblemRegistry', function (): void {
+    $registry = resolve(ProblemRegistry::class);
+
+    $this->assertAllErrorCodesRegistered($registry, PluginErrorCode::class);
+
+    $missing = $registry->fromWire('plugins.missing_extension');
+
+    expect($missing)->toBeInstanceOf(ProblemDefinition::class)
+        ->and($missing->code)->toBe(PluginErrorCode::MissingExtension)
+        ->and($missing->type)->toBe('urn:packman:problem:plugins.missing_extension')
+        ->and($missing->defaultStatus)->toBe(422)
+        ->and($missing->category)->toBe(ErrorCategory::Unsupported)
+        ->and($registry->owner(PluginErrorCode::MissingExtension))->toBe('axiomasoft/packman-plugins');
+
+    $this->assertCodedExceptionRegistered($registry, MissingExtensionException::capability(Greeter::class), 422);
+    $this->assertCodedExceptionRegistered($registry, new UnsupportedContribution('greeter', 'x', 'unknown'), 422);
+    $this->assertCodedExceptionRegistered($registry, InvalidExtensionGraphException::fromProblems(['cycle']), 500);
+});
+
+it('resolves configured plugin WithConfiguration optionsClass before FrozenContributions or Contributions are resolved', function (): void {
+    config([
+        'packman.plugins' => [ComposedFacetPlugin::class],
+        'acme_composed' => ['mode' => 'strict'],
+    ]);
+
+    expect(app()->resolved(FrozenContributions::class))->toBeFalse()
+        ->and(app()->resolved(Contributions::class))->toBeFalse();
+
+    $options = app(ComposedPluginOptions::class);
+
+    expect($options)->toBeInstanceOf(ComposedPluginOptions::class)
+        ->and($options->mode)->toBe('strict')
+        ->and(app(ComposedPluginOptions::class))->toBe($options)
+        ->and(app()->resolved(FrozenContributions::class))->toBeFalse()
+        ->and(app()->resolved(Contributions::class))->toBeFalse();
+
+    $contributions = app(Contributions::class);
+
+    expect($contributions)->toBeInstanceOf(FrozenContributions::class)
+        ->and(app(ComposedPluginOptions::class))->toBe($options);
 });

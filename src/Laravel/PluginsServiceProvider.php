@@ -7,7 +7,9 @@ namespace Packman\Plugins\Laravel;
 use Illuminate\Support\ServiceProvider;
 use Override;
 use Packman\Attributes\Api;
+use Packman\Errors\Laravel\ProblemDefinitions;
 use Packman\Foundation\Concerns\RegistersPackageRegistrars;
+use Packman\Plugins\Internal\Errors\PluginsProblemDefinitions;
 
 #[Api(since: '1.0')]
 final class PluginsServiceProvider extends ServiceProvider
@@ -26,6 +28,13 @@ final class PluginsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../../config/packman-plugins.php', 'packman.plugins');
+
+        ProblemDefinitions::register(
+            app: $this->app,
+            composerManifest: __DIR__.'/../../composer.json',
+            provider: PluginsProblemDefinitions::class,
+        );
+
         $this->registerRegistrars();
     }
 
