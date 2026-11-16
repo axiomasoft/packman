@@ -6,15 +6,15 @@ namespace Packman\Plugins\Laravel;
 
 use Packman\Attributes\Api;
 use Packman\Config\Exceptions\InvalidConfiguration;
-use Packman\Plugins\Data\CapabilityDefinition;
-use Packman\Plugins\Data\CapabilityProvider;
-use Packman\Plugins\Data\ContributionKind;
-use Packman\Plugins\Data\SlotContribution;
-use Packman\Plugins\Data\SlotDefinition;
-use Packman\Plugins\Enums\Cardinality;
-use Packman\Plugins\Enums\SlotKind;
-use Packman\Plugins\Exceptions\RegistryFrozenException;
-use Packman\Plugins\Internal\PluginDeclarations;
+use Packman\Plugins\Data\Capabilities\CapabilityDefinition;
+use Packman\Plugins\Data\Capabilities\CapabilityProvider;
+use Packman\Plugins\Data\Contributions\ContributionKind;
+use Packman\Plugins\Data\Contributions\SlotContribution;
+use Packman\Plugins\Data\Contributions\SlotDefinition;
+use Packman\Plugins\Enums\Contributions\Cardinality;
+use Packman\Plugins\Enums\Contributions\SlotKind;
+use Packman\Plugins\Exceptions\Registry\RegistryFrozenException;
+use Packman\Plugins\Internal\Graph\PluginDeclarations;
 
 /**
  * Passed to `ExtensionPlugin::register()`. Records pure declarations and seals when `register()` returns.

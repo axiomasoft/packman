@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Packman\Plugins\Contracts\ExtensionPlugin;
-use Packman\Plugins\Data\PluginManifest;
-use Packman\Plugins\Internal\ContributionChecks;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Internal\Contributions\ContributionChecks;
 use Packman\Plugins\Laravel\PluginRegistrar;
 use Packman\Plugins\Tests\Fixtures\Greeter;
 use Packman\Plugins\Tests\Fixtures\HelloGreeter;

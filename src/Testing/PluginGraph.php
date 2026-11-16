@@ -7,13 +7,13 @@ namespace Packman\Plugins\Testing;
 use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Api;
 use Packman\Config\Exceptions\InvalidConfiguration;
-use Packman\Plugins\Contracts\Contributions;
-use Packman\Plugins\Contracts\ExtensionPlugin;
-use Packman\Plugins\Contracts\PluginActivationGate;
-use Packman\Plugins\Contracts\PluginInspector;
-use Packman\Plugins\Internal\FrozenContributions;
-use Packman\Plugins\Internal\PluginEntry;
-use Packman\Plugins\Internal\PluginGraphCompiler;
+use Packman\Plugins\Contracts\Contributions\Contributions;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Contracts\Registry\PluginActivationGate;
+use Packman\Plugins\Contracts\Registry\PluginInspector;
+use Packman\Plugins\Internal\Contributions\FrozenContributions;
+use Packman\Plugins\Internal\Graph\PluginEntry;
+use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
 
 /**
  * Compiles a plugin set deterministically without booting providers. For plugin contract tests and tooling.

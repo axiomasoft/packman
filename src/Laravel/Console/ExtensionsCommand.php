@@ -7,7 +7,7 @@ namespace Packman\Plugins\Laravel\Console;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Container\Container;
 use Packman\Config\Exceptions\InvalidConfiguration;
-use Packman\Plugins\Contracts\PluginInspector;
+use Packman\Plugins\Contracts\Registry\PluginInspector;
 
 /** @internal */
 final class ExtensionsCommand extends Command

@@ -8,6 +8,7 @@ use Illuminate\Console\Application as Artisan;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Foundation\Application as FoundationApplication;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Config\Contracts\OptionsFactory;
@@ -15,18 +16,18 @@ use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Doctor\Contracts\HealthCheck;
 use Packman\Doctor\Internal\DoctorRegistry;
 use Packman\Foundation\Contracts\PackageRegistrar;
-use Packman\Plugins\Contracts\Capabilities;
-use Packman\Plugins\Contracts\Contributions;
-use Packman\Plugins\Contracts\ExtensionPlugin;
-use Packman\Plugins\Contracts\PluginActivationGate;
-use Packman\Plugins\Contracts\PluginInspector;
-use Packman\Plugins\Internal\CapabilitiesRegistry;
-use Packman\Plugins\Internal\ExtensionRegistry;
-use Packman\Plugins\Internal\FrozenContributions;
-use Packman\Plugins\Internal\PluginCatalog;
-use Packman\Plugins\Internal\PluginGraphCompiler;
+use Packman\Plugins\Contracts\Contributions\Capabilities;
+use Packman\Plugins\Contracts\Contributions\Contributions;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Contracts\Registry\PluginActivationGate;
+use Packman\Plugins\Contracts\Registry\PluginInspector;
+use Packman\Plugins\Internal\Capabilities\CapabilitiesRegistry;
+use Packman\Plugins\Internal\Contributions\ExtensionRegistry;
+use Packman\Plugins\Internal\Contributions\FrozenContributions;
+use Packman\Plugins\Internal\Graph\PluginCatalog;
+use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
 use Packman\Plugins\Laravel\Console\ExtensionsCommand;
-use Packman\Schema\Contracts\SchemaOwnership;
+use Packman\Schema\Contracts\Compiler\SchemaOwnership;
 
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class ExtensionRegistrar implements PackageRegistrar
@@ -41,6 +42,35 @@ final class ExtensionRegistrar implements PackageRegistrar
         foreach ($plugins as $plugin) {
             $catalog->builtIn($plugin);
         }
+    }
+
+    public static function hasPendingPlugins(Application $app): bool
+    {
+        if (
+            $app->resolved(FrozenContributions::class)
+            || $app->resolved(PluginInspector::class)
+            || ! $app->bound(FrozenContributions::class)
+        ) {
+            return true;
+        }
+
+        if ($app instanceof FoundationApplication && array_key_exists(PluginInspector::class, $app->getBindings())) {
+            return true;
+        }
+
+        if ($app->bound(PluginCatalog::class) && $app->make(PluginCatalog::class)->hasBuiltIn()) {
+            return true;
+        }
+
+        if ($app->bound(Repository::class)) {
+            $configured = $app->make(Repository::class)->get('packman.plugins', []);
+
+            if (is_array($configured) && $configured !== []) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function register(Application $app): void
