@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://axiomasoft.dev/schemas/packman/doctor-v1.schema.json",
+  "title": "packman:doctor --json output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "ok", "production", "generated_at", "summary", "checks", "slices", "exit_code"],
+  "properties": {
+    "schema": { "const": "packman.doctor/v1" },
+    "ok": { "type": "boolean" },
+    "production": { "type": "boolean" },
+    "generated_at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$" },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "warning", "error", "skipped"],
+      "properties": {
+        "ok": { "type": "integer", "minimum": 0 },
+        "warning": { "type": "integer", "minimum": 0 },
+        "error": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "title", "status", "findings"],
+        "properties": {
+          "key": { "type": "string", "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)*$" },
+          "title": { "type": "string" },
+          "status": { "enum": ["ok", "warning", "error", "skipped"] },
+          "findings": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["status", "severity", "code", "message", "remediation", "slice", "evidence"],
+              "properties": {
+                "status": { "enum": ["ok", "warning", "error", "skipped"] },
+                "severity": { "enum": ["info", "warning", "error"] },
+                "code": { "type": "string", "minLength": 1 },
+                "message": { "type": "string" },
+                "remediation": { "type": "string" },
+                "slice": { "type": ["string", "null"] },
+                "evidence": {
+                  "type": "object",
+                  "maxProperties": 20,
+                  "additionalProperties": { "type": ["string", "number", "boolean", "null"], "maxLength": 200 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "slices": { "type": "object" },
+    "exit_code": { "enum": [0, 1] }
+  }
+}

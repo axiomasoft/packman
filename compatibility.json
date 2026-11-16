@@ -1,0 +1,36 @@
+{
+    "schema": "urn:packman:compatibility:1",
+    "major": 1,
+    "artifacts": [
+        {
+            "id": "api.core",
+            "path": "packages/core/resources/contracts/php-api.json",
+            "kind": "api"
+        },
+        {
+            "id": "api.schema",
+            "path": "packages/schema/resources/contracts/php-api.json",
+            "kind": "api"
+        },
+        {
+            "id": "api.plugins",
+            "path": "packages/plugins/resources/contracts/php-api.json",
+            "kind": "api"
+        },
+        {
+            "id": "api.modules",
+            "path": "packages/modules/resources/contracts/php-api.json",
+            "kind": "api"
+        },
+        {
+            "id": "api.panels",
+            "path": "packages/panels/resources/contracts/php-api.json",
+            "kind": "api"
+        },
+        {
+            "id": "api.filament",
+            "path": "packages/filament/resources/contracts/php-api.json",
+            "kind": "api"
+        }
+    ]
+}

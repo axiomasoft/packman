@@ -1,0 +1,40 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "blank_line_before_statement": {
+            "statements": [
+                "break",
+                "continue",
+                "declare",
+                "if",
+                "return",
+                "throw",
+                "try"
+            ]
+        },
+        "global_namespace_import": {
+            "import_classes": true
+        },
+        "trailing_comma_in_multiline": {
+            "elements": [
+                "arguments",
+                "arrays",
+                "match",
+                "parameters"
+            ]
+        }
+    },
+    "exclude": [
+        "build",
+        "vendor",
+        "fixtures",
+        "packages/devtools/stubs",
+        "packages/devtools/tests/Fixtures",
+        "packages/modules/tests/PHPStan/data",
+        "packages/modules/tests/Stubs"
+    ],
+    "notPath": [
+        "/^packages\\/[^\\/]+\\/database\\/migrations\\//",
+        "/^packages\\/devtools\\/tests\\/Fixtures\\//"
+    ]
+}

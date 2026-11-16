@@ -1,0 +1,10 @@
+{
+    "profile": "laravel-package",
+    "composer_type": "library",
+    "allow_laravel_required": true,
+    "allowed_directories": ["Builder", "Checks", "Concerns", "Console", "Contracts", "Data", "Enums", "Events", "Exceptions", "Forms", "Internal", "Laravel", "SavedViews", "Security", "Testing", "Scaffold", "Surface", "Errors", "Generators", "Gates", "Rector", "Distribution", "AiSync"],
+    "provider_max_lines": 80,
+    "require_php_api_manifest": true,
+    "require_readme": true,
+    "require_changelog": true
+}

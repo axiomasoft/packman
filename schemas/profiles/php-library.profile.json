@@ -1,0 +1,10 @@
+{
+    "profile": "php-library",
+    "composer_type": "library",
+    "allow_laravel_required": false,
+    "allowed_directories": ["Contracts", "Data", "Enums", "Exceptions", "Internal", "Support", "Attributes", "Context", "Errors", "Doctor", "Events", "Features", "Settings", "Config", "Foundation", "Laravel"],
+    "provider_max_lines": 80,
+    "require_php_api_manifest": true,
+    "require_readme": true,
+    "require_changelog": true
+}

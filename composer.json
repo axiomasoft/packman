@@ -1,0 +1,96 @@
+{
+    "name": "axiomasoft/packman-monorepo",
+    "description": "Development monorepo for Packman — universal ecosystem foundation kernel, modules, plugins, schema, panels, filament integration, testkit, and devtools.",
+    "license": "MIT",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Dmitry Vostrikov",
+            "email": "dv.vostrikov@gmail.com"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/*",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/packman": "1.0.x-dev",
+                    "axiomasoft/packman-schema": "1.0.x-dev",
+                    "axiomasoft/packman-plugins": "1.0.x-dev",
+                    "axiomasoft/packman-modules": "1.0.x-dev",
+                    "axiomasoft/packman-panels": "1.0.x-dev",
+                    "axiomasoft/packman-filament": "1.0.x-dev",
+                    "axiomasoft/packman-testkit": "1.0.x-dev",
+                    "axiomasoft/packman-devtools": "1.0.x-dev"
+                }
+            }
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "axiomasoft/packman": "^1.0@dev"
+    },
+    "require-dev": {
+        "driftingly/rector-laravel": "^2.7",
+        "filament/filament": "^5.0",
+        "larastan/larastan": "^3.12",
+        "laravel/framework": "^13.0",
+        "laravel/pint": "^1.32",
+        "livewire/livewire": "^4.0",
+        "mockery/mockery": "^1.6",
+        "nette/neon": "^3.4",
+        "nikic/php-parser": "^5.4",
+        "opis/json-schema": "^2.4",
+        "orchestra/testbench": "^11.3",
+        "pestphp/pest": "^5.2",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpdoc-parser": "^2.3",
+        "phpstan/phpstan": "^2.2.16 <2.3.6",
+        "phpstan/phpstan-strict-rules": "^2.0.12",
+        "rector/rector": "^2.6",
+        "symfony/yaml": "^7.2|^8.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Packman\\Tests\\": "tests/",
+            "Packman\\Core\\Tests\\": "packages/core/tests/"
+        }
+    },
+    "extra": {
+        "phpstan/extension-installer": {
+            "ignore": [
+                "larastan/larastan",
+                "nesbot/carbon",
+                "pestphp/pest",
+                "phpstan/phpstan-strict-rules"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "process-timeout": 1200,
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "scripts": {
+        "lint": "vendor/bin/pint",
+        "lint:check": "vendor/bin/pint --test",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=1G --no-progress",
+        "refactor": "vendor/bin/rector process",
+        "refactor:check": "vendor/bin/rector process --dry-run",
+        "test": "vendor/bin/pest --exclude-group=pg",
+        "test:pg": "vendor/bin/pest --group=pg",
+        "test:arch": "vendor/bin/pest --testsuite=Arch",
+        "gate": "@php bin/packman gate",
+        "php-api": "@php bin/packman php-api --check",
+        "error-codes": "@php bin/packman error-codes --check",
+        "config-schema": "@php bin/packman config-schema --check",
+        "ai:sync": "@php bin/packman ai:sync --dry-run"
+    }
+}

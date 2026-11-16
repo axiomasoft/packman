@@ -1,0 +1,34 @@
+{
+    "packages/core": {
+        "repo": "axiomasoft/packman",
+        "name": "axiomasoft/packman"
+    },
+    "packages/modules": {
+        "repo": "axiomasoft/packman-modules",
+        "name": "axiomasoft/packman-modules"
+    },
+    "packages/plugins": {
+        "repo": "axiomasoft/packman-plugins",
+        "name": "axiomasoft/packman-plugins"
+    },
+    "packages/schema": {
+        "repo": "axiomasoft/packman-schema",
+        "name": "axiomasoft/packman-schema"
+    },
+    "packages/panels": {
+        "repo": "axiomasoft/packman-panels",
+        "name": "axiomasoft/packman-panels"
+    },
+    "packages/filament": {
+        "repo": "axiomasoft/packman-filament",
+        "name": "axiomasoft/packman-filament"
+    },
+    "packages/testkit": {
+        "repo": "axiomasoft/packman-testkit",
+        "name": "axiomasoft/packman-testkit"
+    },
+    "packages/devtools": {
+        "repo": "axiomasoft/packman-devtools",
+        "name": "axiomasoft/packman-devtools"
+    }
+}

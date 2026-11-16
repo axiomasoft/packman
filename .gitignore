@@ -1,0 +1,13 @@
+/vendor/
+/build/
+/.phpunit.cache/
+/packages/*/vendor/
+/packages/*/.phpunit.cache/
+/fixtures/*/vendor/
+/fixtures/*/.phpunit.cache/
+/composer.lock
+/fixtures/*/composer.lock
+.DS_Store
+*.sqlite
+*.sqlite-journal
+*.log

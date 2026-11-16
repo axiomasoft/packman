@@ -1,0 +1,19 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - phar://phpstan.phar/conf/bleedingEdge.neon
+
+parameters:
+    level: max
+    tmpDir: build/phpstan
+    paths:
+        - packages/core/src
+    excludePaths:
+        analyseAndScan:
+            - packages/*/tests/Fixtures/*
+            - packages/*/tests/Stubs/*
+            - packages/modules/tests/PHPStan/data/*
+            - packages/devtools/stubs/*
+    checkModelProperties: true
+    checkPhpDocMissingReturn: true
+    reportUnmatchedIgnoredErrors: true
