@@ -1,0 +1,30 @@
+{
+    "schema": "packman-error-codes/1",
+    "package": "axiomasoft/packman-plugins",
+    "codes": [
+        {
+            "package": "axiomasoft/packman-plugins",
+            "enum": "Packman\\Plugins\\Enums\\PluginErrorCode",
+            "case": "InvalidGraph",
+            "code": "plugins.invalid_graph"
+        },
+        {
+            "package": "axiomasoft/packman-plugins",
+            "enum": "Packman\\Plugins\\Enums\\PluginErrorCode",
+            "case": "MissingExtension",
+            "code": "plugins.missing_extension"
+        },
+        {
+            "package": "axiomasoft/packman-plugins",
+            "enum": "Packman\\Plugins\\Enums\\PluginErrorCode",
+            "case": "RegistryFrozen",
+            "code": "plugins.registry_frozen"
+        },
+        {
+            "package": "axiomasoft/packman-plugins",
+            "enum": "Packman\\Plugins\\Enums\\PluginErrorCode",
+            "case": "UnsupportedContribution",
+            "code": "plugins.unsupported_contribution"
+        }
+    ]
+}

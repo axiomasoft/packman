@@ -11,6 +11,9 @@
         "illuminate/contracts": "^12.0|^13.0",
         "illuminate/support": "^12.0|^13.0"
     },
+    "suggest": {
+        "axiomasoft/packman-schema": "Optional schema ownership integration for plugins declaring owned schema nouns."
+    },
     "autoload": {
         "psr-4": {
             "Packman\\Plugins\\": "src/"

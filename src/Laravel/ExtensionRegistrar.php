@@ -14,7 +14,6 @@ use Packman\Attributes\SpiKind;
 use Packman\Config\Contracts\OptionsFactory;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Doctor\Contracts\HealthCheck;
-use Packman\Doctor\Internal\DoctorRegistry;
 use Packman\Foundation\Contracts\PackageRegistrar;
 use Packman\Plugins\Contracts\Contributions\Capabilities;
 use Packman\Plugins\Contracts\Contributions\Contributions;
@@ -32,6 +31,10 @@ use Packman\Schema\Contracts\Compiler\SchemaOwnership;
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class ExtensionRegistrar implements PackageRegistrar
 {
+    private const string DOCTOR_CHECK_TAG = 'packman.doctor_checks';
+
+    private const string HEALTH_CHECK_TAG = 'packman.health_checks';
+
     /** @param class-string<ExtensionPlugin> ...$plugins */
     public static function builtIn(string ...$plugins): void
     {
@@ -168,10 +171,10 @@ final class ExtensionRegistrar implements PackageRegistrar
             foreach ($facet->healthChecks as $checkClass) {
                 if (is_subclass_of($checkClass, DoctorCheck::class)) {
                     $app->singletonIf($checkClass);
-                    $app->tag([$checkClass], DoctorRegistry::TAG);
+                    $app->tag([$checkClass], self::DOCTOR_CHECK_TAG);
                 } elseif (is_subclass_of($checkClass, HealthCheck::class)) {
                     $app->singletonIf($checkClass);
-                    $app->tag([$checkClass], DoctorRegistry::HEALTH_CHECK_TAG);
+                    $app->tag([$checkClass], self::HEALTH_CHECK_TAG);
                 }
             }
         }
