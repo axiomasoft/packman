@@ -1,0 +1,193 @@
+{
+    "schema": "packman-error-codes/1",
+    "package": "axiomasoft/packman",
+    "codes": [
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "DuplicateCode",
+            "code": "packman.duplicate_code",
+            "type": "urn:packman:problem:packman.duplicate_code",
+            "status": 500,
+            "title": "Duplicate error code.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "DuplicateType",
+            "code": "packman.duplicate_type",
+            "type": "urn:packman:problem:packman.duplicate_type",
+            "status": 500,
+            "title": "Duplicate problem type.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "ForeignPrefix",
+            "code": "packman.foreign_prefix",
+            "type": "urn:packman:problem:packman.foreign_prefix",
+            "status": 500,
+            "title": "Foreign error prefix.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "InternalError",
+            "code": "packman.internal_error",
+            "type": "urn:packman:problem:packman.internal_error",
+            "status": 500,
+            "title": "Internal error.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "InvalidConfiguration",
+            "code": "packman.invalid_configuration",
+            "type": "urn:packman:problem:packman.invalid_configuration",
+            "status": 500,
+            "title": "Invalid configuration.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "InvalidDefinition",
+            "code": "packman.invalid_definition",
+            "type": "urn:packman:problem:packman.invalid_definition",
+            "status": 500,
+            "title": "Invalid error definition.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "InvalidScopePayload",
+            "code": "packman.invalid_scope_payload",
+            "type": "urn:packman:problem:packman.invalid_scope_payload",
+            "status": 422,
+            "title": "Invalid scope payload.",
+            "retryable": false,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "InvalidStatus",
+            "code": "packman.invalid_status",
+            "type": "urn:packman:problem:packman.invalid_status",
+            "status": 500,
+            "title": "Invalid error status.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "RegistryFrozen",
+            "code": "packman.registry_frozen",
+            "type": "urn:packman:problem:packman.registry_frozen",
+            "status": 500,
+            "title": "Problem registry is frozen.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "SchemaDuplicateMigration",
+            "code": "packman.schema_duplicate_migration",
+            "type": "urn:packman:problem:packman.schema_duplicate_migration",
+            "status": 500,
+            "title": "Duplicate schema migration.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "SchemaDuplicateSet",
+            "code": "packman.schema_duplicate_set",
+            "type": "urn:packman:problem:packman.schema_duplicate_set",
+            "status": 500,
+            "title": "Duplicate schema set.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "SchemaInvalidSet",
+            "code": "packman.schema_invalid_set",
+            "type": "urn:packman:problem:packman.schema_invalid_set",
+            "status": 500,
+            "title": "Schema set is invalid.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "SchemaUnknownSet",
+            "code": "packman.schema_unknown_set",
+            "type": "urn:packman:problem:packman.schema_unknown_set",
+            "status": 404,
+            "title": "Unknown schema set.",
+            "retryable": false,
+            "category": "not_found"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "SchemaUnsupportedDriver",
+            "code": "packman.schema_unsupported_driver",
+            "type": "urn:packman:problem:packman.schema_unsupported_driver",
+            "status": 422,
+            "title": "Unsupported database driver.",
+            "retryable": false,
+            "category": "unsupported"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "ScopeUnavailable",
+            "code": "packman.scope_unavailable",
+            "type": "urn:packman:problem:packman.scope_unavailable",
+            "status": 409,
+            "title": "Scope context unavailable.",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "UnknownCode",
+            "code": "packman.unknown_code",
+            "type": "urn:packman:problem:packman.unknown_code",
+            "status": 500,
+            "title": "Unknown error code.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman",
+            "enum": "Packman\\Errors\\Enums\\CoreErrorCode",
+            "case": "UnsupportedScope",
+            "code": "packman.unsupported_scope",
+            "type": "urn:packman:problem:packman.unsupported_scope",
+            "status": 422,
+            "title": "Unsupported scope.",
+            "retryable": false,
+            "category": "unsupported"
+        }
+    ]
+}
