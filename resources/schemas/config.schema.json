@@ -7,7 +7,10 @@
             "type": "object",
             "properties": {
                 "acknowledged_dangerous_modes": {
-                    "type": "array"
+                    "type": [
+                        "array",
+                        "object"
+                    ]
                 },
                 "errors": {
                     "type": "object",
@@ -22,7 +25,10 @@
                 "unsafe": {
                     "type": "object",
                     "properties": {
-                        "allow_in_production": []
+                        "allow_in_production": {
+                            "type": "boolean",
+                            "default": false
+                        }
                     },
                     "additionalProperties": false
                 }
