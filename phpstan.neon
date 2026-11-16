@@ -13,6 +13,12 @@ parameters:
         - packages/plugins/src
         - packages/plugins/tests/Unit/DeclarativePluginTest.php
         - packages/schema/src
+        - packages/panels/src
+        - packages/filament/src
+        - packages/filament/tests/Support/FilamentTestOrderResource.php
+        - packages/filament/tests/Support/FilamentTestProductsRelationManager.php
+        - packages/filament/tests/Support/FilamentTestReportsPage.php
+        - packages/filament/tests/Support/FilamentTestStatsWidget.php
         - tests/TestCase.php
     excludePaths:
         analyseAndScan:

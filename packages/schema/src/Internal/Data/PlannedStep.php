@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Internal\Data;
 
-use Packman\Schema\Contracts\SchemaStep;
+use Packman\Schema\Contracts\Compiler\SchemaStep;
 
 /** One (space x component x step) = one migration. */
 final readonly class PlannedStep

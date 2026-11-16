@@ -3,15 +3,15 @@
 declare(strict_types=1);
 
 use Illuminate\Container\Container;
-use Packman\Plugins\Contracts\ExtensionPlugin;
-use Packman\Plugins\Data\PluginManifest;
-use Packman\Plugins\Data\SlotContribution;
-use Packman\Plugins\Enums\Cardinality;
-use Packman\Plugins\Enums\SlotKind;
-use Packman\Plugins\Exceptions\MissingExtensionException;
-use Packman\Plugins\Internal\ExtensionRegistry;
-use Packman\Plugins\Internal\PluginEntry;
-use Packman\Plugins\Internal\PluginGraphCompiler;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Contributions\SlotContribution;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Enums\Contributions\Cardinality;
+use Packman\Plugins\Enums\Contributions\SlotKind;
+use Packman\Plugins\Exceptions\Graph\MissingExtensionException;
+use Packman\Plugins\Internal\Contributions\ExtensionRegistry;
+use Packman\Plugins\Internal\Graph\PluginEntry;
+use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
 use Packman\Plugins\Laravel\PluginRegistrar;
 use Packman\Plugins\Tests\Fixtures\FirstStep;
 use Packman\Plugins\Tests\Fixtures\Greeter;

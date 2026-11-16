@@ -6,8 +6,8 @@ namespace Packman\Modules\Internal\Lifecycle;
 
 use Illuminate\Database\ConnectionResolverInterface;
 use Packman\Context\Contracts\ContextScopeInterface;
-use Packman\Modules\Contracts\ModuleStateReader;
-use Packman\Modules\Enums\ModuleState;
+use Packman\Modules\Contracts\Registry\ModuleStateReader;
+use Packman\Modules\Enums\Lifecycle\ModuleState;
 use stdClass;
 
 /**

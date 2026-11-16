@@ -8,10 +8,10 @@ use Closure;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Context\Contracts\ContextScopeInterface;
-use Packman\Modules\Contracts\EntityRegistry;
-use Packman\Modules\Data\EntityDefinition;
-use Packman\Modules\Enums\Capability;
-use Packman\Modules\Internal\InMemoryEntityRegistry;
+use Packman\Modules\Contracts\Entities\EntityRegistry;
+use Packman\Modules\Data\Entities\EntityDefinition;
+use Packman\Modules\Enums\Entities\Capability;
+use Packman\Modules\Internal\Entities\InMemoryEntityRegistry;
 
 /**
  * In-memory EntityRegistry. Module providers register() their entities at

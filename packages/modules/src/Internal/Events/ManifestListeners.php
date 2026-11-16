@@ -7,8 +7,8 @@ namespace Packman\Modules\Internal\Events;
 use Illuminate\Events\Dispatcher;
 use Packman\Context\Contracts\ContextResolverInterface;
 use Packman\Context\Exceptions\ScopeUnavailableException;
-use Packman\Modules\Contracts\ModuleRegistry;
-use Packman\Modules\Data\CompiledRegistry;
+use Packman\Modules\Contracts\Registry\ModuleRegistry;
+use Packman\Modules\Data\Compiler\CompiledRegistry;
 
 final class ManifestListeners
 {

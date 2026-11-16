@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Packman\Plugins\Tests\Unit;
 
 use Packman\Plugins\Concerns\RegistersNothing;
-use Packman\Plugins\Contracts\ExtensionPlugin;
-use Packman\Plugins\Data\PluginManifest;
-use Packman\Plugins\Internal\PluginDeclarations;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Internal\Graph\PluginDeclarations;
 use Packman\Plugins\Laravel\PluginRegistrar;
 use PHPUnit\Framework\TestCase;
 

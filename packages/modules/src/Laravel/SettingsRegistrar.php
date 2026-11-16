@@ -10,7 +10,7 @@ use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Foundation\Concerns\RegistersNothingOnBoot;
 use Packman\Foundation\Contracts\PackageRegistrar;
-use Packman\Modules\Contracts\ModuleRegistry;
+use Packman\Modules\Contracts\Registry\ModuleRegistry;
 use Packman\Modules\Internal\Settings\CompiledSettingDefaultsProvider;
 use Packman\Settings\Contracts\SettingDefaultsProviderInterface;
 

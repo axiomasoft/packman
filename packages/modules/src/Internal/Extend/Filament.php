@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Extend;
 
-use Packman\Modules\Contracts\Extender;
+use Packman\Modules\Contracts\Compiler\Extender;
 
 /**
  * 4. Filament resources/pages/widgets, or a tab bolted onto ANOTHER

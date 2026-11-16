@@ -8,12 +8,12 @@ use Illuminate\Container\Container;
 use InvalidArgumentException;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Modules\Data\CompiledRegistry;
-use Packman\Modules\Data\ExtensionStamp;
-use Packman\Modules\Data\InstalledPackageVersion;
-use Packman\Modules\Data\ModuleManifest;
-use Packman\Modules\Exceptions\CompilationException;
-use Packman\Modules\Exceptions\RegistryFrozen;
+use Packman\Modules\Data\Compiler\CompiledRegistry;
+use Packman\Modules\Data\Compiler\ExtensionStamp;
+use Packman\Modules\Data\Compiler\InstalledPackageVersion;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Exceptions\Compiler\CompilationException;
+use Packman\Modules\Exceptions\Entities\RegistryFrozen;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
 use Throwable;
 

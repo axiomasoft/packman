@@ -284,6 +284,11 @@ Unified intra-package stateless code plugin, capability & slot engine combining 
 │   │   │   ├── Errors/{Contracts/DescribesError.php,Contracts/ErrorCode.php,Contracts/ProblemDefinitionProvider.php,Contracts/ProblemRegistry.php,Data/ErrorDescriptor.php,Data/ProblemDefinition.php,Enums/CoreErrorCode.php,Enums/ErrorCategory.php,Enums/UnavailabilityReason.php,Exceptions/CodedException.php,Exceptions/ProblemRegistryException.php,Internal/CompiledProblemRegistry.php,Internal/PackageProblemDefinitions.php,Internal/ProblemContribution.php,Laravel/ErrorsRegistrar.php,Laravel/ProblemDefinitions.php,Laravel/ProblemRegistryFactory.php}
 │   │   │   ├── Doctor/{Contracts/DoctorCheck.php,Contracts/DoctorRegistryContract.php,Contracts/HealthCheck.php,Data/CheckResult.php,Data/DoctorFinding.php,Data/DoctorReport.php,Enums/CheckStatus.php,Enums/Severity.php,Checks/ConfigValidCheck.php,Checks/SchemaStatusCheck.php,Internal/DoctorRegistry.php,Internal/DoctorReportBuilder.php,Laravel/DoctorRegistrar.php,Laravel/Console/DoctorCommand.php}
 │   │   │   ├── Events/DomainEvent.php
+│   │   │   ├── Extensions/
+│   │   │   │   ├── ExtensionInspector.php
+│   │   │   │   ├── Concerns/{Configuration/{Configurable,InteractsWithDatabaseSettings}.php,Persistence/{RegistersInDatabase,OwnsSchema}.php,Composition/{ProvidesCapabilities,ContributesToSlots,ProvidesPanels}.php,Runtime/{HasLifecycleHooks,ProvidesDiagnostics,DeclaresFeatureFlags}.php}
+│   │   │   │   ├── Contracts/{Configuration/{WithConfiguration,WithDatabaseSettings}.php,Persistence/{WithDatabaseRegistration,WithSchema}.php,Composition/{WithCapabilities,WithSlots,WithPanels}.php,Runtime/{WithLifecycleHooks,WithDiagnostics,WithFeatureFlags}.php}
+│   │   │   │   └── Data/ExtensionFacetProfile.php
 │   │   │   ├── Features/{Contracts/FeatureFlagsInterface.php,Data/FeatureFlagDefinition.php}
 │   │   │   └── Settings/Contracts/SettingDefaultsProviderInterface.php
 │   │   └── tests/{Unit,Feature}/
@@ -292,20 +297,54 @@ Unified intra-package stateless code plugin, capability & slot engine combining 
 │   │   ├── composer.json
 │   │   ├── README.md
 │   │   ├── CHANGELOG.md
-│   │   ├── extension.neon                              # PHPStan configuration for the 9 Packman\Modules\PHPStan\Rules\*
+│   │   ├── extension.neon                              # PHPStan configuration for the 9 Packman\Modules\PHPStan\Rules\{Boundaries,Pooling}\*
 │   │   ├── config/modules.php
 │   │   ├── database/migrations/tenant/                 # mod_modules, mod_records, mod_lifecycle_log migrations (registered via ModulesSchemaSets)
 │   │   ├── resources/contracts/php-api.json
 │   │   ├── src/
 │   │   │   ├── ModulesServiceProvider.php
-│   │   │   ├── Contracts/                              # 18 contracts (DisableHook, EnableHook, EntityRegistry, Extender, FieldCastRegistry, ManifestSectionCompiler, ModuleActivationGate, ModuleCompilation, ModuleDefinition, ModuleDiscovery, ModuleLifecycle, ModuleRegistrar, ModuleRegistry, ModuleRegistryCache, ModuleStateReader, PurgeHook, RecordsRegistrar, RegistryIntrospection)
-│   │   │   ├── Data/                                   # 18 DTOs (Api, CompiledEntityField, CompiledModule, CompiledRegistry, Entity, EntityDefinition, EntityField, ExtensionReplacement, ExtensionStamp, FieldDefinition, InstalledPackageVersion, ModuleExplanation, ModuleManifest, ModuleRuntimeContext, ModuleStatus, NormalizedExtension, Permissions, RegistryMap)
-│   │   │   ├── Enums/                                  # Capability, DisableReason, ModuleErrorCode, ModuleState
-│   │   │   ├── Events/                                 # ModuleArchived, ModuleDisabled, ModuleEnabled, ModulePurged, ModuleUpgraded
-│   │   │   ├── Exceptions/                             # All 13 Compilation/Lifecycle exceptions
-│   │   │   ├── Internal/                               # InMemoryEntityRegistry, ReadRegistryIntrospection, ServiceProviderModuleRegistrar, ModulesSchemaSets, Commands/*, Compiler/*, Definition/*, Discovery/*, Events/*, Extend/{Filament,Menu,Routes,Workflow}, Gate/*, Lifecycle/*, Registry/*, Settings/*, Support/{ModulesConfigSection,ModulesOptions}
+│   │   │   ├── Contracts/
+│   │   │   │   ├── Compiler/{Extender,FieldCastRegistry,ManifestSectionCompiler,ModuleCompilation}.php
+│   │   │   │   ├── Definition/{ModuleDefinition,ModuleDiscovery,ModuleRegistrar}.php
+│   │   │   │   ├── Entities/{EntityRegistry,EntityRegistryHook}.php
+│   │   │   │   ├── Lifecycle/{DisableHook,EnableHook,ModuleActivationGate,ModuleLifecycle,PurgeHook,RecordsRegistrar}.php
+│   │   │   │   └── Registry/{ModuleRegistry,ModuleRegistryCache,ModuleStateReader,RegistryIntrospection}.php
+│   │   │   ├── Data/
+│   │   │   │   ├── Compiler/{CompiledEntityField,CompiledModule,CompiledRegistry,ExtensionReplacement,ExtensionStamp,InstalledPackageVersion,NormalizedExtension}.php
+│   │   │   │   ├── Entities/{Entity,EntityDefinition,EntityField,FieldDefinition}.php
+│   │   │   │   ├── Extenders/{Api,Permissions}.php
+│   │   │   │   ├── Lifecycle/{ModuleManifest,ModuleRuntimeContext,ModuleStatus}.php
+│   │   │   │   └── Registry/{ModuleExplanation,RegistryMap}.php
+│   │   │   ├── Enums/
+│   │   │   │   ├── ModuleErrorCode.php
+│   │   │   │   ├── Entities/Capability.php
+│   │   │   │   └── Lifecycle/{DisableReason,ModuleState}.php
+│   │   │   ├── Events/Lifecycle/{ModuleArchived,ModuleDisabled,ModuleEnabled,ModulePurged,ModuleUpgraded}.php
+│   │   │   ├── Exceptions/
+│   │   │   │   ├── Compiler/{CompilationException,InvalidManifestException}.php
+│   │   │   │   ├── Entities/{EntityNotFound,RegistryFrozen}.php
+│   │   │   │   ├── Lifecycle/{HasEnabledDependentsException,InvalidStateTransitionException,MissingDependencyException,ModuleEnableFailedException,ModuleUpgradeFailedException}.php
+│   │   │   │   └── Registry/{InvalidRegistryPoint,ModuleNotFound,RegistryInputUnavailable,StaleRegistryRevision}.php
+│   │   │   ├── Internal/
+│   │   │   │   ├── Commands/*
+│   │   │   │   ├── Compiler/*
+│   │   │   │   ├── Definition/*
+│   │   │   │   ├── Discovery/*
+│   │   │   │   ├── Entities/InMemoryEntityRegistry.php
+│   │   │   │   ├── Events/*
+│   │   │   │   ├── Extend/{Filament,Menu,Routes,Workflow}.php
+│   │   │   │   ├── Gate/*
+│   │   │   │   ├── Lifecycle/*
+│   │   │   │   ├── Registration/ServiceProviderModuleRegistrar.php
+│   │   │   │   ├── Registry/{ArrayModuleStateReader,CompiledModuleRegistry,ReadRegistryIntrospection,RepositoryModuleRegistryCache}.php
+│   │   │   │   ├── Schema/ModulesSchemaSets.php
+│   │   │   │   ├── Settings/*
+│   │   │   │   └── Support/{ModulesConfigSection,ModulesOptions}.php
 │   │   │   ├── Laravel/                                # ModulesRegistrar, LifecycleRegistrar, ModulesBootRegistrar, RegistryRegistrar, SettingsRegistrar
-│   │   │   ├── PHPStan/Rules/                          # All 11 AST safety files (9 concrete rules + AbstractDatabaseCallRule + Support/DatabaseCall)
+│   │   │   ├── PHPStan/Rules/
+│   │   │   │   ├── Boundaries/{NoDirectSystemTableWriteRule,NoForeignPrefixSqlRule,NoFsOutsideModuleRule}.php
+│   │   │   │   ├── Pooling/{AbstractDatabaseCallRule,NoEvalRule,NoListenNotifyRule,NoSessionAdvisoryLockRule,NoSetWithoutLocalRule,NoSqlPrepareRule,NoTempTableRule}.php
+│   │   │   │   └── Support/DatabaseCall.php
 │   │   │   └── Testing/                                # ArrayEntityRegistry, ExtensionContract
 │   │   └── tests/{Unit,Feature,PHPStan,Stubs,Fixtures}/
 │   │
@@ -315,12 +354,26 @@ Unified intra-package stateless code plugin, capability & slot engine combining 
 │   │   ├── CHANGELOG.md
 │   │   ├── resources/contracts/php-api.json
 │   │   ├── src/
-│   │   │   ├── Contracts/{CapabilityProvider.php,Contributions.php,ExtensionPlugin.php,PluginInspector.php}
-│   │   │   ├── Data/{CapabilityDefinition.php,ContributionDescription.php,PluginDescription.php,PluginManifest.php,SlotContribution.php,SlotDefinition.php}
-│   │   │   ├── Enums/{Cardinality.php,ContributionKind.php,PluginSource.php,SlotKind.php}
-│   │   │   ├── Exceptions/{InvalidExtensionGraphException.php,MissingExtensionException.php,RegistryFrozenException.php,UnsupportedContribution.php}
-│   │   │   ├── Internal/{ContributionChecks.php,ExtensionRegistry.php,FrozenContributions.php,PluginCatalog.php,PluginDeclarations.php,PluginEntry.php,PluginGraphCompiler.php,PluginNode.php}
-│   │   │   ├── Laravel/{ExtensionRegistrar.php,PluginRegistrar.php,PluginsServiceProvider.php,Console/ExtensionsCommand.php}
+│   │   │   ├── Concerns/RegistersNothing.php
+│   │   │   ├── Contracts/
+│   │   │   │   ├── Contributions/{Capabilities,Contributions}.php
+│   │   │   │   └── Registry/{ExtensionPlugin,PluginActivationGate,PluginInspector}.php
+│   │   │   ├── Data/
+│   │   │   │   ├── Capabilities/{CapabilityDefinition,CapabilityProvider}.php
+│   │   │   │   ├── Contributions/{ContributionDescription,ContributionKind,SlotContribution,SlotDefinition}.php
+│   │   │   │   └── Plugin/{PluginDescription,PluginManifest}.php
+│   │   │   ├── Enums/
+│   │   │   │   ├── PluginErrorCode.php
+│   │   │   │   ├── Contributions/{Cardinality,SlotKind}.php
+│   │   │   │   └── Plugin/PluginSource.php
+│   │   │   ├── Exceptions/
+│   │   │   │   ├── Graph/{InvalidExtensionGraphException,MissingExtensionException}.php
+│   │   │   │   └── Registry/{RegistryFrozenException,UnsupportedContribution}.php
+│   │   │   ├── Internal/
+│   │   │   │   ├── Capabilities/CapabilitiesRegistry.php
+│   │   │   │   ├── Contributions/{ContributionChecks,ExtensionRegistry,FrozenContributions}.php
+│   │   │   │   └── Graph/{PluginCatalog,PluginDeclarations,PluginEntry,PluginGraphCompiler,PluginNode}.php
+│   │   │   ├── Laravel/{ExtensionRegistrar,PluginRegistrar,PluginsServiceProvider,Console/ExtensionsCommand.php}
 │   │   │   └── Testing/PluginGraph.php
 │   │   └── tests/{Unit,Feature}/
 │   │
@@ -330,12 +383,24 @@ Unified intra-package stateless code plugin, capability & slot engine combining 
 │   │   ├── CHANGELOG.md
 │   │   ├── resources/contracts/php-api.json
 │   │   ├── src/
-│   │   │   ├── Contracts/{SchemaComponent.php,SchemaMigrator.php,SchemaOwnership.php,SchemaSetProvider.php,SchemaSets.php,SchemaStep.php}
-│   │   │   ├── Data/{ConstraintNames.php,SchemaFingerprint.php,SchemaMigrationStatus.php,SchemaSet.php}
-│   │   │   ├── Enums/{SchemaLifecycle.php,SchemaScope.php}
-│   │   │   ├── Exceptions/SchemaSetException.php
-│   │   │   ├── Internal/{DefaultSchemaMigrator.php,SchemaCompiler.php,SchemaOwnershipRegistry.php,Commands/MigrateSchemaCommand.php,Commands/SchemaStatusCommand.php}
-│   │   │   └── Laravel/{DatabaseRegistrar.php,PackmanMigration.php,SchemaServiceProvider.php}
+│   │   │   ├── SpaceSchema.php
+│   │   │   ├── Contracts/
+│   │   │   │   ├── Compiler/{RetiresSteps,SchemaComponent,SchemaOwnership,SchemaStep}.php
+│   │   │   │   └── Migration/{ModuleMigrationBoundary,SchemaMigrator,SchemaSetProvider,SchemaSets}.php
+│   │   │   ├── Data/
+│   │   │   │   ├── Compiler/{ConstraintNames,SchemaFingerprint,SchemaSpace,TableNames}.php
+│   │   │   │   └── Migration/{SchemaMigrationStatus,SchemaSet}.php
+│   │   │   ├── Enums/{IdStrategy,SchemaLifecycle,SchemaScope}.php
+│   │   │   ├── Exceptions/{InvalidSchemaException,SchemaSetException}.php
+│   │   │   ├── Internal/
+│   │   │   │   ├── Commands/{MigrateSchemaCommand,SchemaStatusCommand}.php
+│   │   │   │   ├── Compiler/{SchemaCompiler,SchemaOwnershipRegistry}.php
+│   │   │   │   ├── Contracts/SchemaWriter.php
+│   │   │   │   ├── Data/{CompiledSchema,PlannedStep,SchemaObject}.php
+│   │   │   │   ├── Migration/{DefaultSchemaMigrator,TaggedSchemaSets}.php
+│   │   │   │   └── Services/*
+│   │   │   ├── Laravel/{DatabaseRegistrar,PackmanMigration,SchemaServiceProvider}.php
+│   │   │   └── Testing/MigratesSchemaSets.php
 │   │   └── tests/{Unit,Feature}/
 │   │
 │   ├── panels/                                         # [5] axiomasoft/packman-panels (Packman\Panels\)
@@ -346,11 +411,32 @@ Unified intra-package stateless code plugin, capability & slot engine combining 
 │   │   ├── database/migrations/tenant/
 │   │   ├── resources/contracts/php-api.json
 │   │   ├── src/
-│   │   │   ├── Contracts/{PanelCatalogue.php,PanelProvider.php,PanelRegistry.php}
-│   │   │   ├── Data/{EntityReference.php,PanelAccess.php,PanelContext.php,PanelDescriptor.php,PanelFormData.php,PanelReference.php,PanelSlot.php}
-│   │   │   ├── Builder/{Panel.php,PanelBuilder.php}
-│   │   │   ├── Internal/{InMemoryPanelCatalogue.php,ModulePanelCatalogue.php,EntityViewSchemaProvider.php,PanelAdmission.php,PanelCatalog.php,PanelCompiler.php,PanelRecipe.php,PanelRegistryImpl.php,PanelsOptions.php,PanelsSchemaSets.php}
-│   │   │   ├── Laravel/{PanelsServiceProvider.php,PanelsBindingsRegistrar.php}
+│   │   │   ├── Builder/{Panel,PanelBuilder,PanelProvider}.php
+│   │   │   ├── Contracts/
+│   │   │   │   ├── Admission/{PanelAdmissionGate,PanelAdmitter,PanelPolicyResolver}.php
+│   │   │   │   ├── Registry/{PanelCatalogue,PanelPlugin,PanelProvider,PanelRegistry}.php
+│   │   │   │   └── Subjects/{PanelFormProjector,PanelSubjectResolver,SubjectChainResolver}.php
+│   │   │   ├── Data/
+│   │   │   │   ├── Admission/{AdmissionResult,PanelAccess,PermissionDefinition}.php
+│   │   │   │   ├── Panel/{PanelContext,PanelDescriptor,PanelFormData,PanelPluginContext,PanelReference,PanelSettings,PanelSlot}.php
+│   │   │   │   └── Subjects/{EntityReference,SubjectChain,SubjectDescriptor,SubjectNode}.php
+│   │   │   ├── Enums/
+│   │   │   │   ├── PanelErrorCode.php
+│   │   │   │   ├── Admission/{AssignmentScopeMode,TenantMode}.php
+│   │   │   │   └── Panel/{Reads,StateRefresh}.php
+│   │   │   ├── Exceptions/
+│   │   │   │   ├── PanelException.php
+│   │   │   │   ├── Definition/{DefaultPanelConflictException,DefinitionException,DuplicatePanelException,InvalidPanelIdException,PluginConflictException,PrefixConflictException,UnknownSlotException}.php
+│   │   │   │   ├── Permissions/{DuplicatePermissionException,DuplicateRoleException,PolicyConflictException,UnknownPermissionException}.php
+│   │   │   │   ├── Registry/{RegistryFrozenException,UnknownPanelException}.php
+│   │   │   │   ├── SavedViews/SavedViewException.php
+│   │   │   │   └── Subjects/SubjectResolutionFailed.php
+│   │   │   ├── Internal/
+│   │   │   │   ├── Admission/{PanelAdmission,PanelsProblemDefinitions}.php
+│   │   │   │   ├── Catalogue/{CanonicalMetadata,InMemoryPanelCatalogue,ModulePanelCatalogue,PanelCatalog,PanelCompiler,PanelFingerprint,PanelRecipe,PanelRegistryImpl}.php
+│   │   │   │   ├── Configuration/{PanelsOptions,PanelsSchemaSets}.php
+│   │   │   │   └── Subjects/{EntityViewSchemaProvider,PanelFormProjection,PanelSubjects}.php
+│   │   │   ├── Laravel/{PanelExtensionBridge,PanelsBindingsRegistrar,PanelsServiceProvider}.php
 │   │   │   └── SavedViews/{Contracts/*,Data/*,Internal/*,Laravel/*}
 │   │   └── tests/{Unit,Feature}/
 │   │
@@ -358,13 +444,28 @@ Unified intra-package stateless code plugin, capability & slot engine combining 
 │   │   ├── composer.json
 │   │   ├── README.md
 │   │   ├── CHANGELOG.md
+│   │   ├── config/packman-filament.php
 │   │   ├── resources/contracts/php-api.json
 │   │   ├── src/
-│   │   │   ├── Contracts/FilamentPanelPlugin.php
+│   │   │   ├── PackmanFilamentPlugin.php
+│   │   │   ├── PackmanFilamentServiceProvider.php
+│   │   │   ├── Concerns/Authorization/{AuthorizesPage,AuthorizesRelationManager,AuthorizesResource,AuthorizesWidget}.php
+│   │   │   ├── Contracts/{FilamentPanelPlugin,FilamentSurfaceGate}.php
+│   │   │   ├── Enums/FilamentErrorCode.php
+│   │   │   ├── Exceptions/
+│   │   │   │   ├── FilamentException.php
+│   │   │   │   └── Binding/{BindingAuthorizationException,BindingConflictException,InvalidBindingStateException}.php
 │   │   │   ├── Forms/BindingEditor.php
-│   │   │   ├── Security/{AuthorizesActions.php,RefusesEditableColumns.php,RefusesSurfaceBoot.php,RefusesSurfaceCalls.php,RefusesUnverifiableDownload.php}
-│   │   │   └── PackmanFilamentServiceProvider.php
-│   │   └── tests/Feature/
+│   │   │   ├── Internal/
+│   │   │   │   ├── Configuration/FilamentOptions.php
+│   │   │   │   ├── Errors/FilamentProblemDefinitions.php
+│   │   │   │   ├── Reflection/ClassTraits.php
+│   │   │   │   └── Surface/{DefaultFilamentSurfaceGate,FilamentContext}.php
+│   │   │   ├── Laravel/{FilamentBindingsRegistrar,FilamentSecurityRegistrar}.php
+│   │   │   └── Security/
+│   │   │       ├── Authorization/{AuthorizesActions,AuthorizesExports,FilamentGate}.php
+│   │   │       └── Surface/{RefusesEditableColumns,RefusesSurfaceBoot,RefusesSurfaceCalls,RefusesUnverifiableDownload}.php
+│   │   └── tests/{Feature,Unit,Support,Fixtures}/
 │   │
 │   ├── testkit/                                        # [7] axiomasoft/packman-testkit (Packman\Testkit\, require-dev)
 │   │   ├── composer.json

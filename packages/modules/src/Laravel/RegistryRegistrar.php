@@ -14,21 +14,22 @@ use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Foundation\Concerns\RegistersNothingOnBoot;
 use Packman\Foundation\Contracts\PackageRegistrar;
-use Packman\Modules\Contracts\EntityRegistry;
-use Packman\Modules\Contracts\FieldCastRegistry;
-use Packman\Modules\Contracts\ManifestSectionCompiler;
-use Packman\Modules\Contracts\ModuleActivationGate;
-use Packman\Modules\Contracts\ModuleRegistry;
-use Packman\Modules\Contracts\ModuleRegistryCache;
-use Packman\Modules\Contracts\ModuleStateReader;
-use Packman\Modules\Contracts\RegistryIntrospection;
+use Packman\Modules\Contracts\Compiler\FieldCastRegistry;
+use Packman\Modules\Contracts\Compiler\ManifestSectionCompiler;
+use Packman\Modules\Contracts\Definition\ModuleDiscovery as ModuleDiscoveryContract;
+use Packman\Modules\Contracts\Entities\EntityRegistry;
+use Packman\Modules\Contracts\Lifecycle\ModuleActivationGate;
+use Packman\Modules\Contracts\Registry\ModuleRegistry;
+use Packman\Modules\Contracts\Registry\ModuleRegistryCache;
+use Packman\Modules\Contracts\Registry\ModuleStateReader;
+use Packman\Modules\Contracts\Registry\RegistryIntrospection;
 use Packman\Modules\Internal\Compiler\FieldCastMap;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
 use Packman\Modules\Internal\Discovery\ModuleDiscovery;
+use Packman\Modules\Internal\Entities\InMemoryEntityRegistry;
 use Packman\Modules\Internal\Gate\AllowAllActivationGate;
-use Packman\Modules\Internal\InMemoryEntityRegistry;
-use Packman\Modules\Internal\ReadRegistryIntrospection;
 use Packman\Modules\Internal\Registry\CompiledModuleRegistry;
+use Packman\Modules\Internal\Registry\ReadRegistryIntrospection;
 use Packman\Modules\Internal\Registry\RepositoryModuleRegistryCache;
 use Packman\Modules\Internal\Support\ModulesOptions;
 
@@ -79,6 +80,7 @@ final class RegistryRegistrar implements PackageRegistrar
                 extraKeys: $options->extraKeys,
             );
         });
+        $app->alias(ModuleDiscovery::class, ModuleDiscoveryContract::class);
 
         // Boxed default: billing/entitlement gate is an application concern.
         $app->singleton(ModuleActivationGate::class, AllowAllActivationGate::class);

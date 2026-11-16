@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Tests\Stubs\Lifecycle;
 
-use Packman\Modules\Contracts\ModuleDefinition;
-use Packman\Modules\Data\ModuleManifest;
+use Packman\Modules\Contracts\Definition\ModuleDefinition;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
 use Packman\Modules\Internal\Definition\ModuleDependency;
 
 /**

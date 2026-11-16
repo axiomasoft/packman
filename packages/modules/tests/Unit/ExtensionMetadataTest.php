@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Packman\Modules\Data\ExtensionStamp;
-use Packman\Modules\Data\ModuleManifest;
-use Packman\Modules\Exceptions\InvalidManifestException;
+use Packman\Modules\Data\Compiler\ExtensionStamp;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Exceptions\Compiler\InvalidManifestException;
 use Packman\Modules\Internal\Compiler\InstalledPackages;
 
 it('reads installed version metadata and prefers the source reference', function (): void {

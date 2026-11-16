@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Registry;
 
 use Packman\Context\Contracts\ContextScopeInterface;
-use Packman\Modules\Contracts\ModuleStateReader;
+use Packman\Modules\Contracts\Registry\ModuleStateReader;
 
 /**
  * Fake reader for tests and the boxed default — no database. The

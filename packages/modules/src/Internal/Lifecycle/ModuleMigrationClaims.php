@@ -14,7 +14,7 @@ use Illuminate\Events\Dispatcher;
 use Illuminate\Events\QueuedClosure;
 use Illuminate\Support\Testing\Fakes\EventFake;
 use LogicException;
-use Packman\Modules\Contracts\RecordsRegistrar;
+use Packman\Modules\Contracts\Lifecycle\RecordsRegistrar;
 use stdClass;
 use Throwable;
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Compiler;
 
-use Packman\Modules\Data\InstalledPackageVersion;
+use Packman\Modules\Data\Compiler\InstalledPackageVersion;
 
 /**
  * The real composer dependency graph {@see RegistryCompiler::compile()}

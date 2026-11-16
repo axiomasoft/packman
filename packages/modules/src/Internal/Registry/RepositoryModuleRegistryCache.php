@@ -6,7 +6,7 @@ namespace Packman\Modules\Internal\Registry;
 
 use Closure;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
-use Packman\Modules\Contracts\ModuleRegistryCache;
+use Packman\Modules\Contracts\Registry\ModuleRegistryCache;
 use Packman\Modules\Internal\Support\ModulesOptions;
 
 /**

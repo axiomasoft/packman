@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Tests\Stubs\Lifecycle;
 
-use Packman\Modules\Contracts\ModuleDefinition;
-use Packman\Modules\Data\ModuleManifest;
+use Packman\Modules\Contracts\Definition\ModuleDefinition;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
 
 /**
  * Migrations path has a second file that always throws — exercises AC-7

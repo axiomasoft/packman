@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Illuminate\Database\Eloquent\Model;
 use Packman\Data\Laravel\JsonDocuments;
 use Packman\Features\Data\FeatureFlagDefinition;
-use Packman\Modules\Data\CompiledRegistry;
-use Packman\Modules\Data\Entity;
-use Packman\Modules\Data\FieldDefinition;
-use Packman\Modules\Data\ModuleManifest;
-use Packman\Modules\Data\Permissions;
-use Packman\Modules\Exceptions\CompilationException;
+use Packman\Modules\Data\Compiler\CompiledRegistry;
+use Packman\Modules\Data\Entities\Entity;
+use Packman\Modules\Data\Entities\FieldDefinition;
+use Packman\Modules\Data\Extenders\Permissions;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Exceptions\Compiler\CompilationException;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
 use Packman\Modules\Internal\Extend\Menu;
 

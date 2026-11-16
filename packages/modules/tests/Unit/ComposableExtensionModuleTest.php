@@ -2,23 +2,30 @@
 
 declare(strict_types=1);
 
-use Packman\Extensions\Concerns\Configurable;
-use Packman\Extensions\Concerns\DeclaresFeatureFlags;
-use Packman\Extensions\Concerns\HasLifecycleHooks;
-use Packman\Extensions\Concerns\InteractsWithDatabaseSettings;
-use Packman\Extensions\Concerns\OwnsSchema;
-use Packman\Extensions\Concerns\RegistersInDatabase;
-use Packman\Extensions\Contracts\WithConfiguration;
-use Packman\Extensions\Contracts\WithDatabaseRegistration;
-use Packman\Extensions\Contracts\WithDatabaseSettings;
-use Packman\Extensions\Contracts\WithFeatureFlags;
-use Packman\Extensions\Contracts\WithLifecycleHooks;
-use Packman\Extensions\Contracts\WithSchema;
+use Packman\Context\Contracts\ContextScopeInterface;
+use Packman\Extensions\Concerns\Configuration\Configurable;
+use Packman\Extensions\Concerns\Configuration\InteractsWithDatabaseSettings;
+use Packman\Extensions\Concerns\Persistence\OwnsSchema;
+use Packman\Extensions\Concerns\Persistence\RegistersInDatabase;
+use Packman\Extensions\Concerns\Runtime\DeclaresFeatureFlags;
+use Packman\Extensions\Concerns\Runtime\HasLifecycleHooks;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Configuration\WithDatabaseSettings;
+use Packman\Extensions\Contracts\Persistence\WithDatabaseRegistration;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
+use Packman\Extensions\Contracts\Runtime\WithFeatureFlags;
+use Packman\Extensions\Contracts\Runtime\WithLifecycleHooks;
 use Packman\Features\Data\FeatureFlagDefinition;
-use Packman\Modules\Contracts\ModuleDefinition;
-use Packman\Modules\Data\ModuleManifest;
+use Packman\Modules\Contracts\Definition\ModuleDefinition;
+use Packman\Modules\Contracts\Registry\ModuleRegistry;
+use Packman\Modules\Data\Compiler\CompiledModule;
+use Packman\Modules\Data\Compiler\CompiledRegistry;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Exceptions\Compiler\CompilationException;
+use Packman\Modules\Exceptions\Registry\ModuleNotFound;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
 use Packman\Modules\Internal\Discovery\ModuleDiscovery;
+use Packman\Modules\Internal\Settings\CompiledSettingDefaultsProvider;
 use Packman\Modules\Tests\Stubs\Lifecycle\StubDisableHook;
 use Packman\Modules\Tests\Stubs\Lifecycle\StubEnableHook;
 use Packman\Modules\Tests\Stubs\Lifecycle\StubPurgeHook;
@@ -155,4 +162,143 @@ it('discovers modules across configurable packageTypes and extraKeys in installe
     } finally {
         @unlink((string) $installedJson);
     }
+});
+
+final class CustomNamespaceSettingsModule extends ModuleDefinition implements WithDatabaseSettings
+{
+    use InteractsWithDatabaseSettings;
+
+    public function manifest(): ModuleManifest
+    {
+        return ModuleManifest::make('acme/custom-settings')
+            ->title('Custom Settings')
+            ->tablePrefix('cst');
+    }
+
+    public function settingsNamespace(): string
+    {
+        return 'custom-settings';
+    }
+
+    public function defaultSettings(): array
+    {
+        return [
+            'endpoint' => 'https://api.example.test',
+            'api_secret' => 's3cr3t',
+        ];
+    }
+
+    public function sensitiveSettings(): array
+    {
+        return ['api_secret'];
+    }
+}
+
+final class EmptyNamespaceSettingsModule extends ModuleDefinition implements WithDatabaseSettings
+{
+    use InteractsWithDatabaseSettings;
+
+    public function manifest(): ModuleManifest
+    {
+        return ModuleManifest::make('acme/empty-ns-settings')
+            ->title('Empty Namespace Settings')
+            ->tablePrefix('ens');
+    }
+
+    public function settingsNamespace(): string
+    {
+        return '';
+    }
+
+    public function defaultSettings(): array
+    {
+        return ['mode' => 'safe'];
+    }
+}
+
+final class CollidingNamespaceSettingsModule extends ModuleDefinition implements WithDatabaseSettings
+{
+    use InteractsWithDatabaseSettings;
+
+    public function manifest(): ModuleManifest
+    {
+        return ModuleManifest::make('acme/colliding-settings')
+            ->title('Colliding Settings')
+            ->tablePrefix('col');
+    }
+
+    public function settingsNamespace(): string
+    {
+        return 'custom-settings';
+    }
+
+    public function defaultSettings(): array
+    {
+        return ['endpoint' => 'https://conflict.example.test'];
+    }
+}
+
+it('preserves non-empty WithDatabaseSettings::settingsNamespace() and falls back to tablePrefix when empty', function (): void {
+    $manifests = (new ModuleDiscovery(fallbackModules: [
+        CustomNamespaceSettingsModule::class,
+        EmptyNamespaceSettingsModule::class,
+    ]))->discover();
+
+    expect($manifests[0]->settingsNamespace)->toBe('custom-settings')
+        ->and($manifests[1]->settingsNamespace)->toBeNull();
+
+    $compiled = (new RegistryCompiler)->compile($manifests, []);
+
+    expect($compiled->settings)->toHaveCount(3)
+        ->and($compiled->settings[0]->namespace)->toBe('custom-settings')
+        ->and($compiled->settings[0]->definition->key)->toBe('endpoint')
+        ->and($compiled->settings[0]->definition->default)->toBe('https://api.example.test')
+        ->and($compiled->settings[1]->namespace)->toBe('custom-settings')
+        ->and($compiled->settings[1]->definition->key)->toBe('api_secret')
+        ->and($compiled->settings[1]->definition->sensitive)->toBeTrue()
+        ->and($compiled->settings[2]->namespace)->toBe('ens')
+        ->and($compiled->settings[2]->definition->key)->toBe('mode');
+
+    $registryStub = new readonly class($compiled) implements ModuleRegistry
+    {
+        public function __construct(private CompiledRegistry $compiled) {}
+
+        public function all(): array
+        {
+            return [];
+        }
+
+        public function get(string $name): CompiledModule
+        {
+            throw ModuleNotFound::forName($name);
+        }
+
+        public function active(ContextScopeInterface $ctx): array
+        {
+            return [];
+        }
+
+        public function isActive(string $name, ContextScopeInterface $ctx): bool
+        {
+            return false;
+        }
+
+        public function compiled(): CompiledRegistry
+        {
+            return $this->compiled;
+        }
+    };
+
+    $provider = new CompiledSettingDefaultsProvider($registryStub);
+    expect($provider->defaultFor('custom-settings', 'endpoint'))->toBe('https://api.example.test')
+        ->and($provider->isSensitive('custom-settings', 'api_secret'))->toBeTrue()
+        ->and($provider->defaultFor('ens', 'mode'))->toBe('safe');
+
+    $colliding = (new ModuleDiscovery(fallbackModules: [
+        CustomNamespaceSettingsModule::class,
+        CollidingNamespaceSettingsModule::class,
+    ]))->discover();
+
+    expect(fn () => (new RegistryCompiler)->compile($colliding, []))
+        ->toThrow(CompilationException::class, 'custom-settings:endpoint');
 });

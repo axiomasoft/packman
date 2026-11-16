@@ -6,7 +6,7 @@ namespace Packman\Plugins\Concerns;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Plugins\Contracts\ExtensionPlugin;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Laravel\PluginRegistrar;
 
 /**

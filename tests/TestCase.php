@@ -13,8 +13,10 @@ use Packman\Context\Contracts\ContextResolverInterface;
 use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Context\Data\ActorRef;
 use Packman\Context\Data\ScopeRef;
+use Packman\Filament\PackmanFilamentServiceProvider;
 use Packman\Modules\ModulesServiceProvider;
 use Packman\PackmanServiceProvider;
+use Packman\Panels\Laravel\PanelsServiceProvider;
 use Packman\Plugins\Laravel\PluginsServiceProvider;
 use Packman\Schema\Laravel\SchemaServiceProvider;
 use Packman\Schema\Testing\MigratesSchemaSets;
@@ -38,6 +40,8 @@ abstract class TestCase extends OrchestraTestCase
             SchemaServiceProvider::class,
             PluginsServiceProvider::class,
             ModulesServiceProvider::class,
+            PanelsServiceProvider::class,
+            PackmanFilamentServiceProvider::class,
         ];
     }
 

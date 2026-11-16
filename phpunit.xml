@@ -23,6 +23,12 @@
         <testsuite name="Schema">
             <directory>packages/schema/tests</directory>
         </testsuite>
+        <testsuite name="Panels">
+            <directory>packages/panels/tests</directory>
+        </testsuite>
+        <testsuite name="Filament">
+            <directory>packages/filament/tests</directory>
+        </testsuite>
     </testsuites>
 
     <source>
@@ -31,6 +37,8 @@
             <directory>packages/modules/src</directory>
             <directory>packages/plugins/src</directory>
             <directory>packages/schema/src</directory>
+            <directory>packages/panels/src</directory>
+            <directory>packages/filament/src</directory>
         </include>
     </source>
 

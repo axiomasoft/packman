@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Packman\Schema\Contracts\SchemaStep;
-use Packman\Schema\Data\SchemaSpace;
+use Packman\Schema\Contracts\Compiler\SchemaStep;
+use Packman\Schema\Data\Compiler\SchemaSpace;
 use Packman\Schema\Enums\IdStrategy;
 use Packman\Schema\Exceptions\InvalidSchemaException;
-use Packman\Schema\Internal\SchemaCompiler;
+use Packman\Schema\Internal\Compiler\SchemaCompiler;
 use Packman\Schema\Tests\Fixtures\FixtureComponent;
 use Packman\Schema\Tests\Fixtures\FixtureStep;
 

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Commands;
 
 use Illuminate\Console\Command;
-use Packman\Modules\Data\CompiledModule;
-use Packman\Modules\Exceptions\CompilationException;
-use Packman\Modules\Exceptions\InvalidManifestException;
+use Packman\Modules\Data\Compiler\CompiledModule;
+use Packman\Modules\Exceptions\Compiler\CompilationException;
+use Packman\Modules\Exceptions\Compiler\InvalidManifestException;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
 use Packman\Modules\Internal\Discovery\ModuleDiscovery;
 use Packman\Modules\Internal\Registry\CompiledModuleRegistry;
@@ -29,6 +29,15 @@ final class CompileModulesCommand extends Command
     protected $signature = 'modules:compile';
 
     protected $description = 'Discover module manifests, validate and compile their extenders.';
+
+    public function __construct(private readonly ?ModulesOptions $options = null)
+    {
+        if ($options !== null) {
+            $this->signature = $options->compileCommand;
+        }
+
+        parent::__construct();
+    }
 
     public function handle(ModuleDiscovery $discovery, RegistryCompiler $compiler, ?ModulesOptions $options = null): int
     {
@@ -53,6 +62,7 @@ final class CompileModulesCommand extends Command
         $this->components->info(sprintf('Compiled %d entity definition(s).', count($compiled->entities)));
 
         $relativeCachePath = CompiledModuleRegistry::CACHE_PATH;
+        $options ??= $this->options;
 
         if ($options !== null) {
             $relativeCachePath = $options->cachePath;

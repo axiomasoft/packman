@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Packman\Schema\Contracts\SchemaMigrator;
-use Packman\Schema\Contracts\SchemaSets;
-use Packman\Schema\Data\SchemaSet;
+use Packman\Schema\Contracts\Migration\SchemaMigrator;
+use Packman\Schema\Contracts\Migration\SchemaSets;
+use Packman\Schema\Data\Migration\SchemaSet;
 use Packman\Schema\Enums\SchemaLifecycle;
 use Packman\Schema\Enums\SchemaScope;
 use Packman\Schema\Exceptions\SchemaSetException;
-use Packman\Schema\Internal\TaggedSchemaSets;
+use Packman\Schema\Internal\Migration\TaggedSchemaSets;
 use Packman\Schema\Tests\Fixtures\FixtureSchemaSets;
 
 /**

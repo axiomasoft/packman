@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
-use Packman\Modules\Data\ModuleManifest;
-use Packman\Modules\Exceptions\InvalidManifestException;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Exceptions\Compiler\InvalidManifestException;
+use Packman\Modules\Internal\Commands\CompileModulesCommand;
 use Packman\Modules\Internal\Definition\ModuleDependency;
 use Packman\Modules\Internal\Discovery\ModuleDiscovery;
 use Packman\Modules\Internal\Settings\DefaultSettingDefinition;
+use Packman\Modules\Internal\Support\ModulesOptions;
 use Packman\Modules\ModulesServiceProvider;
 use Packman\Modules\Tests\Stubs\StubModuleDefinition;
 
@@ -119,6 +121,25 @@ it('modules:compile reports discovered manifests from the bound ModuleDiscovery'
     );
 
     $exitCode = Artisan::call('modules:compile');
+
+    expect($exitCode)->toBe(0)
+        ->and(Artisan::output())->toContain('Discovered 1 module manifest(s).');
+});
+
+it('registers and executes CompileModulesCommand under a custom modules.compile_command configuration', function (): void {
+    config()->set('modules.compile_command', 'acme:modules:compile');
+    $this->app->forgetInstance(ModulesOptions::class);
+    $this->app->register(ModulesServiceProvider::class, force: true);
+    $this->app->instance(
+        ModuleDiscovery::class,
+        new ModuleDiscovery(fallbackModules: [StubModuleDefinition::class]),
+    );
+
+    expect(new CompileModulesCommand()->getName())->toBe('modules:compile')
+        ->and(Artisan::all())->toHaveKey('acme:modules:compile')
+        ->and(Artisan::all())->not->toHaveKey('modules:compile');
+
+    $exitCode = Artisan::call('acme:modules:compile');
 
     expect($exitCode)->toBe(0)
         ->and(Artisan::output())->toContain('Discovered 1 module manifest(s).');

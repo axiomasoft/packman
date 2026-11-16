@@ -14,13 +14,13 @@ use Override;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Foundation\Contracts\PackageRegistrar;
-use Packman\Modules\Contracts\EntityRegistry;
-use Packman\Modules\Contracts\EntityRegistryHook;
-use Packman\Modules\Contracts\ModuleRegistry;
+use Packman\Modules\Contracts\Entities\EntityRegistry;
+use Packman\Modules\Contracts\Entities\EntityRegistryHook;
+use Packman\Modules\Contracts\Registry\ModuleRegistry;
 use Packman\Modules\Internal\Commands\CompileModulesCommand;
 use Packman\Modules\Internal\Commands\ExplainModuleCommand;
 use Packman\Modules\Internal\Commands\RepairModuleCommand;
-use Packman\Modules\Internal\InMemoryEntityRegistry;
+use Packman\Modules\Internal\Entities\InMemoryEntityRegistry;
 use Packman\Modules\Internal\Registry\CompiledModuleRegistry;
 use Packman\Modules\Internal\Support\ModulesOptions;
 
