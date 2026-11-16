@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Packman\Extensions\Concerns;
+namespace Packman\Extensions\Concerns\Configuration;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Config\Contracts\ConfigSection;
 use Packman\Config\Contracts\OptionsFactory;
-use Packman\Extensions\Contracts\WithConfiguration;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
 
 /**
  * Default implementation for {@see WithConfiguration}; override `configRoot()` and whichever configuration facets your extension supplies.

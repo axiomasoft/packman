@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Extensions\Concerns;
+namespace Packman\Extensions\Concerns\Configuration;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Extensions\Contracts\WithDatabaseSettings;
+use Packman\Extensions\Contracts\Configuration\WithDatabaseSettings;
 
 /**
  * Default implementation for {@see WithDatabaseSettings}; override `settingsNamespace()` and `defaultSettings()` / `sensitiveSettings()`.

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Extensions\Concerns;
+namespace Packman\Extensions\Concerns\Runtime;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Extensions\Contracts\WithLifecycleHooks;
+use Packman\Extensions\Contracts\Runtime\WithLifecycleHooks;
 
 /**
  * Default implementation for {@see WithLifecycleHooks}.

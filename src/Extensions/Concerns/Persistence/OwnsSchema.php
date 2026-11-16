@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Extensions\Concerns;
+namespace Packman\Extensions\Concerns\Persistence;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Extensions\Contracts\WithSchema;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
 
 /**
  * Default implementation for {@see WithSchema}.

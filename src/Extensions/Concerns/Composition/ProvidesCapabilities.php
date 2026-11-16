@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Extensions\Concerns;
+namespace Packman\Extensions\Concerns\Composition;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Extensions\Contracts\WithCapabilities;
+use Packman\Extensions\Contracts\Composition\WithCapabilities;
 
 /**
  * Default implementation for {@see WithCapabilities}.

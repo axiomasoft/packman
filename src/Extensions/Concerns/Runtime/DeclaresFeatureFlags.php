@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Extensions\Concerns;
+namespace Packman\Extensions\Concerns\Runtime;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Extensions\Contracts\WithFeatureFlags;
+use Packman\Extensions\Contracts\Runtime\WithFeatureFlags;
 use Packman\Features\Data\FeatureFlagDefinition;
 
 /**

@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Packman\Extensions;
 
 use Packman\Attributes\Api;
-use Packman\Extensions\Contracts\WithCapabilities;
-use Packman\Extensions\Contracts\WithConfiguration;
-use Packman\Extensions\Contracts\WithDatabaseRegistration;
-use Packman\Extensions\Contracts\WithDatabaseSettings;
-use Packman\Extensions\Contracts\WithDiagnostics;
-use Packman\Extensions\Contracts\WithFeatureFlags;
-use Packman\Extensions\Contracts\WithLifecycleHooks;
-use Packman\Extensions\Contracts\WithPanels;
-use Packman\Extensions\Contracts\WithSchema;
-use Packman\Extensions\Contracts\WithSlots;
+use Packman\Extensions\Contracts\Composition\WithCapabilities;
+use Packman\Extensions\Contracts\Composition\WithPanels;
+use Packman\Extensions\Contracts\Composition\WithSlots;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Configuration\WithDatabaseSettings;
+use Packman\Extensions\Contracts\Persistence\WithDatabaseRegistration;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
+use Packman\Extensions\Contracts\Runtime\WithDiagnostics;
+use Packman\Extensions\Contracts\Runtime\WithFeatureFlags;
+use Packman\Extensions\Contracts\Runtime\WithLifecycleHooks;
 use Packman\Extensions\Data\ExtensionFacetProfile;
 
 /**

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Extensions\Concerns;
+namespace Packman\Extensions\Concerns\Composition;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Extensions\Contracts\WithPanels;
+use Packman\Extensions\Contracts\Composition\WithPanels;
 
 /**
  * Default implementation for {@see WithPanels}.

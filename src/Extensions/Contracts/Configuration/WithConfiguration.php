@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packman\Extensions\Contracts;
+namespace Packman\Extensions\Contracts\Configuration;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;

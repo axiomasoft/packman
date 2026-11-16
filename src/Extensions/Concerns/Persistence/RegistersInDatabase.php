@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Extensions\Concerns;
+namespace Packman\Extensions\Concerns\Persistence;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Extensions\Contracts\WithDatabaseRegistration;
+use Packman\Extensions\Contracts\Persistence\WithDatabaseRegistration;
 
 /**
  * Default opt-in implementation for {@see WithDatabaseRegistration} (stateful Bitrix/WordPress-style DB registration).
