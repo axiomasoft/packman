@@ -1,0 +1,83 @@
+{
+    "schema": "packman-error-codes/1",
+    "package": "axiomasoft/packman-filament",
+    "codes": [
+        {
+            "package": "axiomasoft/packman-filament",
+            "enum": "Packman\\Filament\\Enums\\FilamentErrorCode",
+            "case": "AuthorizationDenied",
+            "code": "filament.authorization_denied",
+            "type": "urn:packman:problem:filament.authorization_denied",
+            "status": 403,
+            "title": "Filament action authorization denied.",
+            "retryable": false,
+            "category": "authorization"
+        },
+        {
+            "package": "axiomasoft/packman-filament",
+            "enum": "Packman\\Filament\\Enums\\FilamentErrorCode",
+            "case": "InvalidConfiguration",
+            "code": "filament.invalid_configuration",
+            "type": "urn:packman:problem:filament.invalid_configuration",
+            "status": 500,
+            "title": "Invalid Filament plugin configuration.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman-filament",
+            "enum": "Packman\\Filament\\Enums\\FilamentErrorCode",
+            "case": "InvalidContext",
+            "code": "filament.invalid_context",
+            "type": "urn:packman:problem:filament.invalid_context",
+            "status": 403,
+            "title": "Invalid or tampered Filament context.",
+            "retryable": false,
+            "category": "authorization"
+        },
+        {
+            "package": "axiomasoft/packman-filament",
+            "enum": "Packman\\Filament\\Enums\\FilamentErrorCode",
+            "case": "NonEditableField",
+            "code": "filament.non_editable_field",
+            "type": "urn:packman:problem:filament.non_editable_field",
+            "status": 403,
+            "title": "Field cannot be edited.",
+            "retryable": false,
+            "category": "authorization"
+        },
+        {
+            "package": "axiomasoft/packman-filament",
+            "enum": "Packman\\Filament\\Enums\\FilamentErrorCode",
+            "case": "PolicyConflict",
+            "code": "filament.policy_conflict",
+            "type": "urn:packman:problem:filament.policy_conflict",
+            "status": 409,
+            "title": "Binding policy state conflict.",
+            "retryable": true,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-filament",
+            "enum": "Packman\\Filament\\Enums\\FilamentErrorCode",
+            "case": "SurfaceRefused",
+            "code": "filament.surface_refused",
+            "type": "urn:packman:problem:filament.surface_refused",
+            "status": 403,
+            "title": "Filament surface access refused.",
+            "retryable": false,
+            "category": "authorization"
+        },
+        {
+            "package": "axiomasoft/packman-filament",
+            "enum": "Packman\\Filament\\Enums\\FilamentErrorCode",
+            "case": "ValidationFailed",
+            "code": "filament.validation_failed",
+            "type": "urn:packman:problem:filament.validation_failed",
+            "status": 422,
+            "title": "Invalid binding submission.",
+            "retryable": false,
+            "category": "validation"
+        }
+    ]
+}
