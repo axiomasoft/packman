@@ -1,0 +1,82 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/packman-panels configuration",
+    "type": "object",
+    "properties": {
+        "packman-panels": {
+            "type": "object",
+            "properties": {
+                "defaults": {
+                    "type": "object",
+                    "properties": {
+                        "cache": {
+                            "type": "object",
+                            "properties": {
+                                "generation": {
+                                    "type": "integer",
+                                    "default": 1
+                                },
+                                "store": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "default": null
+                                },
+                                "ttl": {
+                                    "type": "integer",
+                                    "default": 300
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "consistency": {
+                            "type": "object",
+                            "properties": {
+                                "reads": {
+                                    "type": "string",
+                                    "default": "primary"
+                                },
+                                "state_refresh": {
+                                    "type": "string",
+                                    "default": "request"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "resource_prefix": {
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "trace_decisions": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "provider_tag": {
+                    "type": "string",
+                    "default": "packman.panels.providers"
+                },
+                "views": {
+                    "type": "object",
+                    "properties": {
+                        "connection": [],
+                        "scopes_table": {
+                            "type": "string",
+                            "default": "sys_saved_view_scopes"
+                        },
+                        "table": {
+                            "type": "string",
+                            "default": "sys_saved_views"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

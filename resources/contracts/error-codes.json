@@ -1,0 +1,226 @@
+{
+    "schema": "packman-error-codes/1",
+    "package": "axiomasoft/packman-panels",
+    "codes": [
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "DefaultPanelConflict",
+            "code": "panels.default_panel_conflict",
+            "type": "urn:packman:problem:panels.default_panel_conflict",
+            "status": 409,
+            "title": "Conflicting default panels.",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "DefinitionError",
+            "code": "panels.definition_error",
+            "type": "urn:packman:problem:panels.definition_error",
+            "status": 422,
+            "title": "Invalid panel definition.",
+            "retryable": false,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "DuplicatePanel",
+            "code": "panels.duplicate_panel",
+            "type": "urn:packman:problem:panels.duplicate_panel",
+            "status": 409,
+            "title": "Duplicate panel registration.",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "DuplicatePermission",
+            "code": "panels.duplicate_permission",
+            "type": "urn:packman:problem:panels.duplicate_permission",
+            "status": 409,
+            "title": "Duplicate panel permission.",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "DuplicateRole",
+            "code": "panels.duplicate_role",
+            "type": "urn:packman:problem:panels.duplicate_role",
+            "status": 409,
+            "title": "Duplicate panel role.",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "InvalidConfiguration",
+            "code": "panels.invalid_configuration",
+            "type": "urn:packman:problem:panels.invalid_configuration",
+            "status": 500,
+            "title": "Invalid panels configuration.",
+            "retryable": false,
+            "category": "internal"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "InvalidPanelId",
+            "code": "panels.invalid_panel_id",
+            "type": "urn:packman:problem:panels.invalid_panel_id",
+            "status": 422,
+            "title": "Invalid panel identifier.",
+            "retryable": false,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "InvalidPermissionKey",
+            "code": "panels.invalid_permission_key",
+            "type": "urn:packman:problem:panels.invalid_permission_key",
+            "status": 422,
+            "title": "Invalid permission key.",
+            "retryable": false,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "InvalidSavedView",
+            "code": "panels.invalid_saved_view",
+            "type": "urn:packman:problem:panels.invalid_saved_view",
+            "status": 422,
+            "title": "Invalid saved view input.",
+            "retryable": false,
+            "category": "validation"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "PluginConflict",
+            "code": "panels.plugin_conflict",
+            "type": "urn:packman:problem:panels.plugin_conflict",
+            "status": 409,
+            "title": "Conflicting panel plugin settings.",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "PolicyConflict",
+            "code": "panels.policy_conflict",
+            "type": "urn:packman:problem:panels.policy_conflict",
+            "status": 409,
+            "title": "Panel policy conflict.",
+            "retryable": true,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "PrefixConflict",
+            "code": "panels.prefix_conflict",
+            "type": "urn:packman:problem:panels.prefix_conflict",
+            "status": 409,
+            "title": "Conflicting panel resource prefixes.",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "RegistryFrozen",
+            "code": "panels.registry_frozen",
+            "type": "urn:packman:problem:panels.registry_frozen",
+            "status": 409,
+            "title": "Panel registry is frozen.",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "SavedViewAccessDenied",
+            "code": "panels.saved_view_access_denied",
+            "type": "urn:packman:problem:panels.saved_view_access_denied",
+            "status": 403,
+            "title": "Saved view action denied.",
+            "retryable": false,
+            "category": "authorization"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "SavedViewConflict",
+            "code": "panels.saved_view_conflict",
+            "type": "urn:packman:problem:panels.saved_view_conflict",
+            "status": 409,
+            "title": "Saved view revision conflict.",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "SavedViewNotFound",
+            "code": "panels.saved_view_not_found",
+            "type": "urn:packman:problem:panels.saved_view_not_found",
+            "status": 404,
+            "title": "Saved view not found.",
+            "retryable": false,
+            "category": "not_found"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "SubjectResolutionFailed",
+            "code": "panels.subject_resolution_failed",
+            "type": "urn:packman:problem:panels.subject_resolution_failed",
+            "status": 409,
+            "title": "Subject chain resolution failed.",
+            "retryable": false,
+            "category": "conflict"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "UnknownPanel",
+            "code": "panels.unknown_panel",
+            "type": "urn:packman:problem:panels.unknown_panel",
+            "status": 404,
+            "title": "Unknown panel.",
+            "retryable": false,
+            "category": "not_found"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "UnknownPermission",
+            "code": "panels.unknown_permission",
+            "type": "urn:packman:problem:panels.unknown_permission",
+            "status": 404,
+            "title": "Unknown panel permission.",
+            "retryable": false,
+            "category": "not_found"
+        },
+        {
+            "package": "axiomasoft/packman-panels",
+            "enum": "Packman\\Panels\\Enums\\PanelErrorCode",
+            "case": "UnknownSlot",
+            "code": "panels.unknown_slot",
+            "type": "urn:packman:problem:panels.unknown_slot",
+            "status": 404,
+            "title": "Unknown panel slot.",
+            "retryable": false,
+            "category": "not_found"
+        }
+    ]
+}
