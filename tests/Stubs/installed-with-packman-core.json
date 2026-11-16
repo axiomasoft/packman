@@ -1,0 +1,12 @@
+{
+    "packages": [
+        {
+            "name": "axiomasoft/packman-modules",
+            "version": "dev-main"
+        },
+        {
+            "name": "axiomasoft/packman",
+            "version": "dev-main"
+        }
+    ]
+}

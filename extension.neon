@@ -1,0 +1,61 @@
+parameters:
+    packmanModules:
+        # Module PSR-4 namespace => manifest tablePrefix (table ownership isolation).
+        modulePrefixes: []
+        # Module PSR-4 namespaces scanned by filesystem isolation rules.
+        moduleNamespaces: []
+        # System table owner namespaces allowed to write sys_*/mod_* directly.
+        systemTableNamespaces:
+            - Packman\
+            - Packman\Modules\
+
+parametersSchema:
+    packmanModules: structure([
+        modulePrefixes: arrayOf(string(), string())
+        moduleNamespaces: listOf(string())
+        systemTableNamespaces: listOf(string())
+    ])
+
+services:
+    -
+        class: Packman\Modules\PHPStan\Rules\NoSetWithoutLocalRule
+        tags:
+            - phpstan.rules.rule
+    -
+        class: Packman\Modules\PHPStan\Rules\NoSessionAdvisoryLockRule
+        tags:
+            - phpstan.rules.rule
+    -
+        class: Packman\Modules\PHPStan\Rules\NoListenNotifyRule
+        tags:
+            - phpstan.rules.rule
+    -
+        class: Packman\Modules\PHPStan\Rules\NoTempTableRule
+        tags:
+            - phpstan.rules.rule
+    -
+        class: Packman\Modules\PHPStan\Rules\NoSqlPrepareRule
+        tags:
+            - phpstan.rules.rule
+    -
+        class: Packman\Modules\PHPStan\Rules\NoEvalRule
+        tags:
+            - phpstan.rules.rule
+    -
+        class: Packman\Modules\PHPStan\Rules\NoForeignPrefixSqlRule
+        arguments:
+            modulePrefixes: %packmanModules.modulePrefixes%
+        tags:
+            - phpstan.rules.rule
+    -
+        class: Packman\Modules\PHPStan\Rules\NoFsOutsideModuleRule
+        arguments:
+            moduleNamespaces: %packmanModules.moduleNamespaces%
+        tags:
+            - phpstan.rules.rule
+    -
+        class: Packman\Modules\PHPStan\Rules\NoDirectSystemTableWriteRule
+        arguments:
+            systemTableNamespaces: %packmanModules.systemTableNamespaces%
+        tags:
+            - phpstan.rules.rule

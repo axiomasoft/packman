@@ -1,0 +1,15 @@
+{
+  "expect": "pass",
+  "modules": [
+    {"name": "example/alpha", "prefix": "alp", "entity": "alp.thing", "version": "1.0.0"},
+    {
+      "name": "example/beta",
+      "prefix": "bet",
+      "entity": "bet.thing",
+      "version": "2.0.0",
+      "replacements": [
+        {"point": "entity", "target": "alp.thing", "replacement": "bet.thing"}
+      ]
+    }
+  ]
+}

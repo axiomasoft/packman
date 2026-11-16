@@ -1,0 +1,46 @@
+{
+    "name": "axiomasoft/packman-modules",
+    "description": "Universal Packman Composer-discovered DB-backed platform module and plugin compiler, lifecycle FSM, schema ownership claims, and PHPStan boundary rules.",
+    "license": "MIT",
+    "type": "library",
+    "require": {
+        "php": "^8.4",
+        "axiomasoft/packman": "^1.0@dev",
+        "axiomasoft/packman-schema": "^1.0@dev",
+        "illuminate/console": "^12.0|^13.0",
+        "illuminate/container": "^12.0|^13.0",
+        "illuminate/contracts": "^12.0|^13.0",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/events": "^12.0|^13.0",
+        "illuminate/queue": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "psr/clock": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Packman\\Modules\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Packman\\Modules\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "packman": {
+            "error-prefix": "modules"
+        },
+        "laravel": {
+            "providers": [
+                "Packman\\Modules\\ModulesServiceProvider"
+            ]
+        },
+        "phpstan": {
+            "includes": [
+                "extension.neon"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

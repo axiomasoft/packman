@@ -1,0 +1,23 @@
+{
+  "expect": "pass",
+  "modules": [
+    {
+      "name": "example/alpha",
+      "prefix": "alp",
+      "entity": "alp.thing",
+      "version": "1.0.0",
+      "reference": "alpha-a1",
+      "menu": [
+        {"handle": "home", "label": "Home"},
+        {"handle": "things", "label": "Things", "after": "home"}
+      ]
+    },
+    {
+      "name": "example/beta",
+      "prefix": "bet",
+      "entity": "bet.thing",
+      "version": "2.0.0",
+      "reference": "beta-b1"
+    }
+  ]
+}

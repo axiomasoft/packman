@@ -1,0 +1,8 @@
+{
+  "expect": "fail",
+  "contains": ["alp.thing", "example/alpha", "example/beta"],
+  "modules": [
+    {"name": "example/alpha", "prefix": "alp", "entity": "alp.thing", "version": "1.0.0"},
+    {"name": "example/beta", "prefix": "bet", "entity": "alp.thing", "version": "2.0.0"}
+  ]
+}
