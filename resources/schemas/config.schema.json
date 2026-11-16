@@ -1,0 +1,29 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "axiomasoft/packman-schema configuration",
+    "type": "object",
+    "properties": {
+        "packman-schema": {
+            "type": "object",
+            "properties": {
+                "connection": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "default": null
+                },
+                "module_prerequisite_set": {
+                    "type": "string",
+                    "default": "axiomasoft/packman-modules:tenant"
+                },
+                "table_prefix": {
+                    "type": "string",
+                    "default": "pmn_"
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}
