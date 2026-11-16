@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Tests\Unit;
 
-use Packman\Schema\Data\SchemaSet;
+use Packman\Schema\Data\Migration\SchemaSet;
 use Packman\Schema\Enums\SchemaLifecycle;
 use Packman\Schema\Enums\SchemaScope;
 use Packman\Schema\Exceptions\SchemaSetException;

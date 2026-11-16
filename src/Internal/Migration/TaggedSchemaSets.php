@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Schema\Internal;
+namespace Packman\Schema\Internal\Migration;
 
-use Packman\Schema\Contracts\SchemaSetProvider;
-use Packman\Schema\Contracts\SchemaSets;
-use Packman\Schema\Data\SchemaSet;
+use Packman\Schema\Contracts\Migration\SchemaSetProvider;
+use Packman\Schema\Contracts\Migration\SchemaSets;
+use Packman\Schema\Data\Migration\SchemaSet;
 use Packman\Schema\Enums\SchemaLifecycle;
 use Packman\Schema\Enums\SchemaScope;
 use Packman\Schema\Exceptions\SchemaSetException;

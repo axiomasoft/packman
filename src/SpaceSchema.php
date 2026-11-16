@@ -11,7 +11,7 @@ use Illuminate\Database\Schema\ColumnDefinition;
 use LogicException;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Schema\Data\SchemaSpace;
+use Packman\Schema\Data\Compiler\SchemaSpace;
 use Packman\Schema\Enums\IdStrategy;
 use Packman\Schema\Internal\Contracts\SchemaWriter;
 use Packman\Schema\Internal\Data\SchemaObject;

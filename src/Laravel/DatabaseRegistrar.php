@@ -12,18 +12,18 @@ use Illuminate\Database\Connection;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Foundation\Contracts\PackageRegistrar;
-use Packman\Schema\Contracts\ModuleMigrationBoundary;
-use Packman\Schema\Contracts\SchemaMigrator;
-use Packman\Schema\Contracts\SchemaOwnership;
-use Packman\Schema\Contracts\SchemaSetProvider;
-use Packman\Schema\Contracts\SchemaSets;
-use Packman\Schema\Data\TableNames;
+use Packman\Schema\Contracts\Compiler\SchemaOwnership;
+use Packman\Schema\Contracts\Migration\ModuleMigrationBoundary;
+use Packman\Schema\Contracts\Migration\SchemaMigrator;
+use Packman\Schema\Contracts\Migration\SchemaSetProvider;
+use Packman\Schema\Contracts\Migration\SchemaSets;
+use Packman\Schema\Data\Compiler\TableNames;
 use Packman\Schema\Exceptions\SchemaSetException;
 use Packman\Schema\Internal\Commands\MigrateSchemaCommand;
 use Packman\Schema\Internal\Commands\SchemaStatusCommand;
-use Packman\Schema\Internal\DefaultSchemaMigrator;
-use Packman\Schema\Internal\SchemaOwnershipRegistry;
-use Packman\Schema\Internal\TaggedSchemaSets;
+use Packman\Schema\Internal\Compiler\SchemaOwnershipRegistry;
+use Packman\Schema\Internal\Migration\DefaultSchemaMigrator;
+use Packman\Schema\Internal\Migration\TaggedSchemaSets;
 
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class DatabaseRegistrar implements PackageRegistrar

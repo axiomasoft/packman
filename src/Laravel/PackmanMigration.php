@@ -15,8 +15,8 @@ use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Database\Schema\ForeignKeyDefinition;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Schema\Data\ConstraintNames;
-use Packman\Schema\Data\TableNames;
+use Packman\Schema\Data\Compiler\ConstraintNames;
+use Packman\Schema\Data\Compiler\TableNames;
 
 /**
  * Base migration class: resolves physical table names via `TableNames`, names constraints through `ConstraintNames`

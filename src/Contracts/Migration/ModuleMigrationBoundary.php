@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packman\Schema\Contracts;
+namespace Packman\Schema\Contracts\Migration;
 
 use Closure;
 use Illuminate\Database\Connection;

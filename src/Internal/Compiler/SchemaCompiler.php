@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Packman\Schema\Internal;
+namespace Packman\Schema\Internal\Compiler;
 
-use Packman\Schema\Contracts\RetiresSteps;
-use Packman\Schema\Contracts\SchemaComponent;
-use Packman\Schema\Contracts\SchemaStep;
-use Packman\Schema\Data\SchemaSpace;
+use Packman\Schema\Contracts\Compiler\RetiresSteps;
+use Packman\Schema\Contracts\Compiler\SchemaComponent;
+use Packman\Schema\Contracts\Compiler\SchemaStep;
+use Packman\Schema\Data\Compiler\SchemaSpace;
 use Packman\Schema\Exceptions\InvalidSchemaException;
 use Packman\Schema\Internal\Data\CompiledSchema;
 use Packman\Schema\Internal\Services\ConnectionIdentity;

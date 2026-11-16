@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Packman\Schema\Internal\Commands;
 
 use Illuminate\Console\Command;
-use Packman\Schema\Contracts\SchemaMigrator;
+use Packman\Schema\Contracts\Migration\SchemaMigrator;
 use Packman\Schema\Enums\SchemaScope;
 
 /** @internal */

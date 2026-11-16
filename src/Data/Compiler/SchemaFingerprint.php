@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packman\Schema\Data;
+namespace Packman\Schema\Data\Compiler;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionInterface;

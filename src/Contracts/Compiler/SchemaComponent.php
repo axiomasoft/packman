@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Schema\Contracts;
+namespace Packman\Schema\Contracts\Compiler;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Schema\Data\SchemaSpace;
+use Packman\Schema\Data\Compiler\SchemaSpace;
 
 /**
  * The schema a package contributes to every space it applies to: an append-only, ordered list of immutable steps.

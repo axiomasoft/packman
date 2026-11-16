@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Packman\Schema\Tests\Fixtures;
 
 use Illuminate\Database\Schema\Blueprint;
-use Packman\Schema\Contracts\SchemaStep;
+use Packman\Schema\Contracts\Compiler\SchemaStep;
 use Packman\Schema\SpaceSchema;
 
 final class FixtureStep implements SchemaStep

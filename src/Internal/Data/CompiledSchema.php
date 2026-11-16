@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Internal\Data;
 
-use Packman\Schema\Contracts\SchemaStep;
-use Packman\Schema\Data\SchemaSpace;
+use Packman\Schema\Contracts\Compiler\SchemaStep;
+use Packman\Schema\Data\Compiler\SchemaSpace;
 use Packman\Schema\Internal\Services\SchemaNames;
 
 /**

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Schema\Internal;
+namespace Packman\Schema\Internal\Compiler;
 
 use Illuminate\Support\Str;
 use Packman\Config\Exceptions\InvalidConfiguration;
-use Packman\Schema\Contracts\SchemaOwnership;
+use Packman\Schema\Contracts\Compiler\SchemaOwnership;
 
 final class SchemaOwnershipRegistry implements SchemaOwnership
 {

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Tests\Fixtures;
 
-use Packman\Schema\Contracts\SchemaComponent;
-use Packman\Schema\Contracts\SchemaStep;
-use Packman\Schema\Data\SchemaSpace;
+use Packman\Schema\Contracts\Compiler\SchemaComponent;
+use Packman\Schema\Contracts\Compiler\SchemaStep;
+use Packman\Schema\Data\Compiler\SchemaSpace;
 
 final class FixtureComponent implements SchemaComponent
 {

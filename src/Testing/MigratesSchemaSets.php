@@ -7,7 +7,7 @@ namespace Packman\Schema\Testing;
 use LogicException;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Schema\Contracts\SchemaMigrator;
+use Packman\Schema\Contracts\Migration\SchemaMigrator;
 use Packman\Schema\Enums\SchemaScope;
 
 /**

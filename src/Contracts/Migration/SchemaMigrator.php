@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Packman\Schema\Contracts;
+namespace Packman\Schema\Contracts\Migration;
 
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
-use Packman\Schema\Data\SchemaMigrationStatus;
+use Packman\Schema\Data\Migration\SchemaMigrationStatus;
 use Packman\Schema\Enums\SchemaScope;
 
 #[Spi(kind: SpiKind::Call, since: '1.0')]

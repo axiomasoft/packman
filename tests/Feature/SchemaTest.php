@@ -5,10 +5,10 @@ declare(strict_types=1);
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Packman\Config\Exceptions\InvalidConfiguration;
-use Packman\Schema\Contracts\SchemaOwnership;
-use Packman\Schema\Data\ConstraintNames;
-use Packman\Schema\Data\SchemaFingerprint;
-use Packman\Schema\Data\TableNames;
+use Packman\Schema\Contracts\Compiler\SchemaOwnership;
+use Packman\Schema\Data\Compiler\ConstraintNames;
+use Packman\Schema\Data\Compiler\SchemaFingerprint;
+use Packman\Schema\Data\Compiler\TableNames;
 use Packman\Schema\Laravel\PackmanMigration;
 
 uses()->group('pg');

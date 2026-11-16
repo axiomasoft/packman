@@ -6,7 +6,7 @@ namespace Packman\Schema\Internal\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
-use Packman\Schema\Contracts\SchemaMigrator;
+use Packman\Schema\Contracts\Migration\SchemaMigrator;
 use Packman\Schema\Enums\SchemaScope;
 
 /** @internal */

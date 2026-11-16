@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Packman\Schema\Data;
+namespace Packman\Schema\Data\Compiler;
 
 use Illuminate\Database\ConnectionResolverInterface;
 use InvalidArgumentException;
@@ -10,7 +10,7 @@ use LogicException;
 use Packman\Attributes\Api;
 use Packman\Config\Data\TablePrefix;
 use Packman\Config\Exceptions\InvalidConfiguration;
-use Packman\Schema\Contracts\SchemaOwnership;
+use Packman\Schema\Contracts\Compiler\SchemaOwnership;
 
 /**
  * Resolves logical table names to physical prefixed table names and verifies the database install fingerprint on first lookup.

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Packman\Schema\Internal\Services;
 
 use Closure;
-use Packman\Schema\Data\SchemaSpace;
+use Packman\Schema\Data\Compiler\SchemaSpace;
 use Packman\Schema\Internal\Contracts\SchemaWriter;
 use Packman\Schema\SpaceSchema;
 
