@@ -103,9 +103,70 @@ final class ModulesBootRegistrar implements PackageRegistrar
 
     private function isCompilingModules(Application $app): bool
     {
+        if (! $app->runningInConsole()) {
+            return false;
+        }
+
+        $command = self::consoleCommandName();
+
+        if ($command === null) {
+            return false;
+        }
+
         $compileCommand = $app->make(ModulesOptions::class)->compileCommand;
 
-        return $app->runningInConsole()
-            && (is_array($_SERVER['argv'] ?? null) ? ($_SERVER['argv'][1] ?? null) : null) === $compileCommand;
+        return in_array($command, [
+            $compileCommand,
+            'optimize',
+            'package:discover',
+            'config:cache',
+            'route:cache',
+            'view:cache',
+            'event:cache',
+        ], true);
+    }
+
+    private static function consoleCommandName(): ?string
+    {
+        $rawArgv = $_SERVER['argv'] ?? null;
+
+        if (! is_array($rawArgv)) {
+            return null;
+        }
+
+        $argv = array_values($rawArgv);
+        $count = count($argv);
+
+        for ($index = 1; $index < $count; $index++) {
+            $token = $argv[$index];
+
+            if (! is_string($token) || $token === '') {
+                continue;
+            }
+
+            if ($token === '--') {
+                $next = $argv[$index + 1] ?? null;
+
+                return is_string($next) && $next !== '' ? $next : null;
+            }
+
+            if ($token === '--env') {
+                $next = $argv[$index + 1] ?? null;
+
+                if (is_string($next) && ! str_starts_with($next, '-')) {
+                    $index++;
+                }
+
+                continue;
+            }
+
+            if (str_starts_with($token, '-')) {
+                continue;
+            }
+
+            return $token;
+        }
+
+        return null;
     }
 }

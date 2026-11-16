@@ -6,79 +6,144 @@
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "CompilationException",
-            "code": "modules.compilation_failed"
+            "code": "modules.compilation_failed",
+            "type": "urn:packman:problem:modules.compilation_failed",
+            "status": 500,
+            "title": "Module registry compilation failed.",
+            "retryable": false,
+            "category": "internal"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "ModuleEnableFailedException",
-            "code": "modules.enable_failed"
+            "code": "modules.enable_failed",
+            "type": "urn:packman:problem:modules.enable_failed",
+            "status": 500,
+            "title": "Enabling module failed.",
+            "retryable": false,
+            "category": "internal"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "EntityNotFound",
-            "code": "modules.entity_not_found"
+            "code": "modules.entity_not_found",
+            "type": "urn:packman:problem:modules.entity_not_found",
+            "status": 404,
+            "title": "Module entity not found.",
+            "retryable": false,
+            "category": "not_found"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "HasEnabledDependentsException",
-            "code": "modules.has_enabled_dependents"
+            "code": "modules.has_enabled_dependents",
+            "type": "urn:packman:problem:modules.has_enabled_dependents",
+            "status": 409,
+            "title": "Module has enabled dependents.",
+            "retryable": false,
+            "category": "conflict"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "InvalidManifestException",
-            "code": "modules.invalid_manifest"
+            "code": "modules.invalid_manifest",
+            "type": "urn:packman:problem:modules.invalid_manifest",
+            "status": 422,
+            "title": "Invalid module manifest.",
+            "retryable": false,
+            "category": "validation"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "InvalidRegistryPoint",
-            "code": "modules.invalid_registry_point"
+            "code": "modules.invalid_registry_point",
+            "type": "urn:packman:problem:modules.invalid_registry_point",
+            "status": 422,
+            "title": "Invalid module registry point.",
+            "retryable": false,
+            "category": "validation"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "InvalidStateTransitionException",
-            "code": "modules.invalid_state_transition"
+            "code": "modules.invalid_state_transition",
+            "type": "urn:packman:problem:modules.invalid_state_transition",
+            "status": 409,
+            "title": "Invalid module lifecycle transition.",
+            "retryable": false,
+            "category": "conflict"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "MissingDependencyException",
-            "code": "modules.missing_dependency"
+            "code": "modules.missing_dependency",
+            "type": "urn:packman:problem:modules.missing_dependency",
+            "status": 409,
+            "title": "Missing required module dependency.",
+            "retryable": false,
+            "category": "conflict"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "ModuleNotFound",
-            "code": "modules.module_not_found"
+            "code": "modules.module_not_found",
+            "type": "urn:packman:problem:modules.module_not_found",
+            "status": 404,
+            "title": "Module not found.",
+            "retryable": false,
+            "category": "not_found"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "RegistryFrozen",
-            "code": "modules.registry_frozen"
+            "code": "modules.registry_frozen",
+            "type": "urn:packman:problem:modules.registry_frozen",
+            "status": 500,
+            "title": "Entity registry is frozen.",
+            "retryable": false,
+            "category": "internal"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "RegistryInputUnavailable",
-            "code": "modules.registry_input_unavailable"
+            "code": "modules.registry_input_unavailable",
+            "type": "urn:packman:problem:modules.registry_input_unavailable",
+            "status": 503,
+            "title": "Compiled module registry is unavailable.",
+            "retryable": false,
+            "category": "unavailable"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "StaleRegistryRevision",
-            "code": "modules.stale_registry_revision"
+            "code": "modules.stale_registry_revision",
+            "type": "urn:packman:problem:modules.stale_registry_revision",
+            "status": 409,
+            "title": "Stale module registry revision.",
+            "retryable": false,
+            "category": "conflict"
         },
         {
             "package": "axiomasoft/packman-modules",
             "enum": "Packman\\Modules\\Enums\\ModuleErrorCode",
             "case": "ModuleUpgradeFailedException",
-            "code": "modules.upgrade_failed"
+            "code": "modules.upgrade_failed",
+            "type": "urn:packman:problem:modules.upgrade_failed",
+            "status": 500,
+            "title": "Upgrading module failed.",
+            "retryable": false,
+            "category": "internal"
         }
     ]
 }
