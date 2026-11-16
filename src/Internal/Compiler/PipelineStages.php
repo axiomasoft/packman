@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Compiler;
 
-use Packman\Modules\Data\Api;
-use Packman\Modules\Data\Entity;
-use Packman\Modules\Data\EntityField;
-use Packman\Modules\Data\Permissions;
+use Packman\Modules\Data\Entities\Entity;
+use Packman\Modules\Data\Entities\EntityField;
+use Packman\Modules\Data\Extenders\Api;
+use Packman\Modules\Data\Extenders\Permissions;
 use Packman\Modules\Internal\Extend\Filament;
 use Packman\Modules\Internal\Extend\Menu;
 use Packman\Modules\Internal\Extend\Routes;

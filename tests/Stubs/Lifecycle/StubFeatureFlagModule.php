@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Packman\Modules\Tests\Stubs\Lifecycle;
 
 use Packman\Features\Data\FeatureFlagDefinition;
-use Packman\Modules\Contracts\ModuleDefinition;
-use Packman\Modules\Data\ModuleManifest;
+use Packman\Modules\Contracts\Definition\ModuleDefinition;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
 
 /**
  * No migrations/hooks — exists solely to exercise `ModuleManifest::$featureFlags`

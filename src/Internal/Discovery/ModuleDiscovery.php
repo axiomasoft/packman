@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Discovery;
 
 use Packman\Extensions\ExtensionInspector;
-use Packman\Modules\Contracts\ModuleDefinition;
-use Packman\Modules\Data\ModuleManifest;
-use Packman\Modules\Exceptions\InvalidManifestException;
+use Packman\Modules\Contracts\Definition\ModuleDefinition;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Exceptions\Compiler\InvalidManifestException;
 use Packman\Modules\Internal\Settings\DefaultSettingDefinition;
 use Packman\Modules\Internal\Support\ModulesOptions;
 
@@ -19,7 +19,7 @@ use Packman\Modules\Internal\Support\ModulesOptions;
  *
  * @internal spec: B-10 §3.2/§5.2
  */
-final readonly class ModuleDiscovery implements \Packman\Modules\Contracts\ModuleDiscovery
+final readonly class ModuleDiscovery implements \Packman\Modules\Contracts\Definition\ModuleDiscovery
 {
     /**
      * @param  list<class-string<ModuleDefinition>>  $fallbackModules  injectable seam for tests/testbench.
@@ -61,6 +61,10 @@ final readonly class ModuleDiscovery implements \Packman\Modules\Contracts\Modul
             $manifest->tablePrefix($facets->tablePrefix);
         }
 
+        if ($manifest->settingsNamespace === null && $facets->settingsNamespace !== null && trim($facets->settingsNamespace) !== '') {
+            $manifest->settingsNamespace($facets->settingsNamespace);
+        }
+
         if ($manifest->settings === [] && $facets->hasDatabaseSettings && $facets->defaultSettings !== []) {
             $definitions = [];
 
@@ -91,6 +95,10 @@ final readonly class ModuleDiscovery implements \Packman\Modules\Contracts\Modul
 
         if ($manifest->onPurgeHook === null && $facets->onPurgeHook !== null && class_exists($facets->onPurgeHook)) {
             $manifest->onPurge($facets->onPurgeHook);
+        }
+
+        if ($manifest->panelProviders === [] && $facets->panelProviders !== []) {
+            $manifest->panelProviders($facets->panelProviders);
         }
 
         return $manifest;

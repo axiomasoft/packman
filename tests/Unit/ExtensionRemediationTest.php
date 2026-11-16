@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Model;
 use Packman\Context\Contracts\ContextResolverInterface;
-use Packman\Modules\Contracts\ModuleRegistry;
-use Packman\Modules\Data\CompiledRegistry;
-use Packman\Modules\Data\EntityDefinition;
-use Packman\Modules\Data\ModuleManifest;
-use Packman\Modules\Exceptions\CompilationException;
+use Packman\Modules\Contracts\Registry\ModuleRegistry;
+use Packman\Modules\Data\Compiler\CompiledRegistry;
+use Packman\Modules\Data\Entities\EntityDefinition;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Exceptions\Compiler\CompilationException;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
 use Packman\Modules\Internal\Definition\ModuleDependency;
 use Packman\Modules\Internal\Discovery\ModuleDiscovery;

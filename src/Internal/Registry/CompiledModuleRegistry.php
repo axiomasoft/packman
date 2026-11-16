@@ -6,12 +6,12 @@ namespace Packman\Modules\Internal\Registry;
 
 use Closure;
 use Packman\Context\Contracts\ContextScopeInterface;
-use Packman\Modules\Contracts\ModuleRegistry;
-use Packman\Modules\Contracts\ModuleRegistryCache;
-use Packman\Modules\Contracts\ModuleStateReader;
-use Packman\Modules\Data\CompiledModule;
-use Packman\Modules\Data\CompiledRegistry;
-use Packman\Modules\Exceptions\ModuleNotFound;
+use Packman\Modules\Contracts\Registry\ModuleRegistry;
+use Packman\Modules\Contracts\Registry\ModuleRegistryCache;
+use Packman\Modules\Contracts\Registry\ModuleStateReader;
+use Packman\Modules\Data\Compiler\CompiledModule;
+use Packman\Modules\Data\Compiler\CompiledRegistry;
+use Packman\Modules\Exceptions\Registry\ModuleNotFound;
 use Packman\Modules\ModulesServiceProvider;
 use RuntimeException;
 

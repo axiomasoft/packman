@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Settings;
 
 use Override;
-use Packman\Modules\Contracts\ModuleRegistry;
+use Packman\Modules\Contracts\Registry\ModuleRegistry;
 use Packman\Modules\Internal\Compiler\CompiledSettingDefault;
 use Packman\Settings\Contracts\SettingDefaultsProviderInterface;
 

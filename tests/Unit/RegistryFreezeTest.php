@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Packman\Modules\Data\EntityDefinition;
-use Packman\Modules\Enums\Capability;
-use Packman\Modules\Exceptions\RegistryFrozen;
+use Packman\Modules\Data\Entities\EntityDefinition;
+use Packman\Modules\Enums\Entities\Capability;
+use Packman\Modules\Exceptions\Entities\RegistryFrozen;
 use Packman\Modules\Testing\ArrayEntityRegistry;
 
 function freezeDefinition(string $handle): EntityDefinition

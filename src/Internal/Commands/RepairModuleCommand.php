@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Commands;
 
 use Illuminate\Console\Command;
-use Packman\Modules\Contracts\ModuleLifecycle;
+use Packman\Modules\Contracts\Lifecycle\ModuleLifecycle;
 
 /**
  * Reconciles a module's ownership registry with the real schema and provides the single legal

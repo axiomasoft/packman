@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Gate;
 
-use Packman\Modules\Contracts\ModuleActivationGate;
+use Packman\Modules\Contracts\Lifecycle\ModuleActivationGate;
 
 /**
  * Result of {@see ModuleActivationGate::check()}: allow, or deny with a

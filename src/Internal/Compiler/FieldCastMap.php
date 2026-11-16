@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Compiler;
 
-use Packman\Modules\Contracts\FieldCastRegistry;
+use Packman\Modules\Contracts\Compiler\FieldCastRegistry;
 
 /** @internal Mutable composition registry. */
 final class FieldCastMap implements FieldCastRegistry

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Lifecycle;
 
 use Illuminate\Database\ConnectionResolverInterface;
-use Packman\Modules\Contracts\RecordsRegistrar;
+use Packman\Modules\Contracts\Lifecycle\RecordsRegistrar;
 use Psr\Clock\ClockInterface;
 
 /**

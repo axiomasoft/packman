@@ -10,8 +10,8 @@ use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Foundation\ApplicationLocator;
 use Packman\Foundation\Contracts\PackageRegistrar;
-use Packman\Modules\Contracts\ModuleRegistrar;
-use Packman\Modules\Internal\ServiceProviderModuleRegistrar;
+use Packman\Modules\Contracts\Definition\ModuleRegistrar;
+use Packman\Modules\Internal\Registration\ServiceProviderModuleRegistrar;
 
 /** Composition of the kernel module; the public provider delegates here. */
 #[Spi(kind: SpiKind::Call, since: '1.0')]

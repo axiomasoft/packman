@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Packman\Modules\Data\ExtensionStamp;
+use Packman\Modules\Data\Compiler\ExtensionStamp;
 use Packman\Modules\Testing\ExtensionContract;
 
 require_once __DIR__.'/../Fixtures/extension-contract/fixture-adapter.php';

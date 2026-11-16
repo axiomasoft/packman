@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Tests\PHPStan;
 
-use Packman\Modules\PHPStan\Rules\NoDirectSystemTableWriteRule;
-use Packman\Modules\PHPStan\Rules\NoForeignPrefixSqlRule;
-use Packman\Modules\PHPStan\Rules\NoFsOutsideModuleRule;
+use Packman\Modules\PHPStan\Rules\Boundaries\NoDirectSystemTableWriteRule;
+use Packman\Modules\PHPStan\Rules\Boundaries\NoForeignPrefixSqlRule;
+use Packman\Modules\PHPStan\Rules\Boundaries\NoFsOutsideModuleRule;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 

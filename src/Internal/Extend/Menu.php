@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Extend;
 
-use Packman\Modules\Contracts\Extender;
+use Packman\Modules\Contracts\Compiler\Extender;
 
 /**
  * 5. Panel navigation entry or group. Order between siblings is

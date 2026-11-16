@@ -10,7 +10,7 @@ use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\Migrations\Migration;
 use LogicException;
 use Packman\Modules\Internal\Support\ModulesOptions;
-use Packman\Schema\Contracts\ModuleMigrationBoundary;
+use Packman\Schema\Contracts\Migration\ModuleMigrationBoundary;
 use Psr\Clock\ClockInterface;
 use ReflectionClass;
 

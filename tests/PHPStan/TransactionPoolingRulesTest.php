@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Tests\PHPStan;
 
-use Packman\Modules\PHPStan\Rules\NoEvalRule;
-use Packman\Modules\PHPStan\Rules\NoListenNotifyRule;
-use Packman\Modules\PHPStan\Rules\NoSessionAdvisoryLockRule;
-use Packman\Modules\PHPStan\Rules\NoSetWithoutLocalRule;
-use Packman\Modules\PHPStan\Rules\NoSqlPrepareRule;
-use Packman\Modules\PHPStan\Rules\NoTempTableRule;
+use Packman\Modules\PHPStan\Rules\Pooling\NoEvalRule;
+use Packman\Modules\PHPStan\Rules\Pooling\NoListenNotifyRule;
+use Packman\Modules\PHPStan\Rules\Pooling\NoSessionAdvisoryLockRule;
+use Packman\Modules\PHPStan\Rules\Pooling\NoSetWithoutLocalRule;
+use Packman\Modules\PHPStan\Rules\Pooling\NoSqlPrepareRule;
+use Packman\Modules\PHPStan\Rules\Pooling\NoTempTableRule;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 

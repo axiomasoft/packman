@@ -7,7 +7,7 @@ namespace Packman\Modules\Internal\Commands;
 use Illuminate\Console\Command;
 use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Context\Data\ScopeRef;
-use Packman\Modules\Contracts\RegistryIntrospection;
+use Packman\Modules\Contracts\Registry\RegistryIntrospection;
 
 /**
  * Read-only local operator diagnostic for module activation status.

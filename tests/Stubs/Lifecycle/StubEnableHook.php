@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Tests\Stubs\Lifecycle;
 
-use Packman\Modules\Contracts\EnableHook;
-use Packman\Modules\Data\ModuleRuntimeContext;
+use Packman\Modules\Contracts\Lifecycle\EnableHook;
+use Packman\Modules\Data\Lifecycle\ModuleRuntimeContext;
 
 /** Idempotent (AC-7): claiming the same setting reference twice is a no-op update. */
 final class StubEnableHook implements EnableHook

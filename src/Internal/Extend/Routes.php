@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Extend;
 
-use Packman\Modules\Contracts\Extender;
+use Packman\Modules\Contracts\Compiler\Extender;
 
 /**
  * 7. Route files (plain Laravel routing), grouped per-module by the

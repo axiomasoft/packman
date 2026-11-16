@@ -8,22 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Packman\Data\Laravel\JsonDocuments;
 use Packman\Features\Data\FeatureFlagDefinition;
-use Packman\Modules\Contracts\FieldCastRegistry;
-use Packman\Modules\Contracts\ManifestSectionCompiler;
-use Packman\Modules\Contracts\ModuleCompilation;
-use Packman\Modules\Data\Api;
-use Packman\Modules\Data\CompiledEntityField;
-use Packman\Modules\Data\CompiledRegistry;
-use Packman\Modules\Data\Entity;
-use Packman\Modules\Data\EntityDefinition;
-use Packman\Modules\Data\EntityField;
-use Packman\Modules\Data\FieldDefinition;
-use Packman\Modules\Data\InstalledPackageVersion;
-use Packman\Modules\Data\ModuleManifest;
-use Packman\Modules\Data\NormalizedExtension;
-use Packman\Modules\Data\Permissions;
-use Packman\Modules\Enums\Capability;
-use Packman\Modules\Exceptions\CompilationException;
+use Packman\Modules\Contracts\Compiler\FieldCastRegistry;
+use Packman\Modules\Contracts\Compiler\ManifestSectionCompiler;
+use Packman\Modules\Contracts\Compiler\ModuleCompilation;
+use Packman\Modules\Data\Compiler\CompiledEntityField;
+use Packman\Modules\Data\Compiler\CompiledRegistry;
+use Packman\Modules\Data\Compiler\InstalledPackageVersion;
+use Packman\Modules\Data\Compiler\NormalizedExtension;
+use Packman\Modules\Data\Entities\Entity;
+use Packman\Modules\Data\Entities\EntityDefinition;
+use Packman\Modules\Data\Entities\EntityField;
+use Packman\Modules\Data\Entities\FieldDefinition;
+use Packman\Modules\Data\Extenders\Api;
+use Packman\Modules\Data\Extenders\Permissions;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Enums\Entities\Capability;
+use Packman\Modules\Exceptions\Compiler\CompilationException;
 use Packman\Modules\Internal\Extend\Filament;
 use Packman\Modules\Internal\Extend\Menu;
 use Packman\Modules\Internal\Extend\Routes;
@@ -171,11 +171,7 @@ final readonly class RegistryCompiler implements ModuleCompilation
         $settings = [];
 
         foreach ($manifests as $manifest) {
-            // Guarded by CompilationValidator::validateRequiredFields()
-            // (tablePrefix is mandatory) before this method ever runs — see
-            // compileEntity()'s identical guard. A DISTINCT throw: reaching
-            // it means validation was bypassed, not that the manifest is bad.
-            $namespace = $manifest->tablePrefix ?? throw CompilationException::tablePrefixInvariantBypassed($manifest->composerName);
+            $namespace = $this->settingsNamespaceFor($manifest);
 
             foreach ($manifest->settings as $default) {
                 $settings[] = new CompiledSettingDefault(namespace: $namespace, definition: $default);
@@ -183,6 +179,19 @@ final readonly class RegistryCompiler implements ModuleCompilation
         }
 
         return $settings;
+    }
+
+    private function settingsNamespaceFor(ModuleManifest $manifest): string
+    {
+        // Guarded by CompilationValidator::validateRequiredFields()
+        // (tablePrefix is mandatory) before this method ever runs — see
+        // compileEntity()'s identical guard. A DISTINCT throw: reaching
+        // it means validation was bypassed, not that the manifest is bad.
+        $tablePrefix = $manifest->tablePrefix ?? throw CompilationException::tablePrefixInvariantBypassed($manifest->composerName);
+
+        return $manifest->settingsNamespace !== null && $manifest->settingsNamespace !== ''
+            ? $manifest->settingsNamespace
+            : $tablePrefix;
     }
 
     /**
@@ -373,7 +382,7 @@ final readonly class RegistryCompiler implements ModuleCompilation
     }
 
     /**
-     * @template T of \Packman\Modules\Contracts\Extender
+     * @template T of \Packman\Modules\Contracts\Compiler\Extender
      *
      * @param  list<ModuleManifest>  $manifests
      * @param  class-string<T>  $extenderClass
@@ -508,7 +517,7 @@ final readonly class RegistryCompiler implements ModuleCompilation
                 array_push($records, ...$this->normalizeExtender(manifest: $manifest, extender: $extender, ownerVersion: $ownerVersion));
             }
 
-            $namespace = $manifest->tablePrefix ?? throw CompilationException::tablePrefixInvariantBypassed($manifest->composerName);
+            $namespace = $this->settingsNamespaceFor($manifest);
 
             foreach ($manifest->settings as $setting) {
                 $records[] = new NormalizedExtension(
@@ -1070,7 +1079,7 @@ final readonly class RegistryCompiler implements ModuleCompilation
     }
 
     /**
-     * @template T of \Packman\Modules\Contracts\Extender
+     * @template T of \Packman\Modules\Contracts\Compiler\Extender
      *
      * @param  class-string<T>  $class
      * @param  list<T>  $items
@@ -1085,7 +1094,7 @@ final readonly class RegistryCompiler implements ModuleCompilation
     }
 
     /**
-     * @template T of \Packman\Modules\Contracts\Extender
+     * @template T of \Packman\Modules\Contracts\Compiler\Extender
      *
      * @param  list<ModuleManifest>  $manifests
      * @param  class-string<T>  $class

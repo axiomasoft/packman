@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Compiler;
 
 use LogicException;
-use Packman\Modules\Contracts\Extender;
-use Packman\Modules\Data\ModuleManifest;
-use Packman\Modules\Data\NormalizedExtension;
-use Packman\Modules\Exceptions\CompilationException;
+use Packman\Modules\Contracts\Compiler\Extender;
+use Packman\Modules\Data\Compiler\NormalizedExtension;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Exceptions\Compiler\CompilationException;
 use Packman\Modules\Internal\Definition\ModuleDependency;
 
 /**

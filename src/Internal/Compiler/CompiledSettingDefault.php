@@ -13,7 +13,7 @@ use ReflectionClass;
  * reached the compiled registry before this. The namespace is the module's
  * `tablePrefix`: `sys_settings.namespace` is documented as "id модуля
  * ('crm')", which is exactly the short 2–3 letter code
- * {@see Packman\Modules\Data\ModuleManifest::$tablePrefix} already carries, not the full
+ * {@see Packman\Modules\Data\Lifecycle\ModuleManifest::$tablePrefix} already carries, not the full
  * composer name.
  *
  * @internal spec: P1.25, A68, B-10 §3.1

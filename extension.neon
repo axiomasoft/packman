@@ -18,43 +18,43 @@ parametersSchema:
 
 services:
     -
-        class: Packman\Modules\PHPStan\Rules\NoSetWithoutLocalRule
+        class: Packman\Modules\PHPStan\Rules\Pooling\NoSetWithoutLocalRule
         tags:
             - phpstan.rules.rule
     -
-        class: Packman\Modules\PHPStan\Rules\NoSessionAdvisoryLockRule
+        class: Packman\Modules\PHPStan\Rules\Pooling\NoSessionAdvisoryLockRule
         tags:
             - phpstan.rules.rule
     -
-        class: Packman\Modules\PHPStan\Rules\NoListenNotifyRule
+        class: Packman\Modules\PHPStan\Rules\Pooling\NoListenNotifyRule
         tags:
             - phpstan.rules.rule
     -
-        class: Packman\Modules\PHPStan\Rules\NoTempTableRule
+        class: Packman\Modules\PHPStan\Rules\Pooling\NoTempTableRule
         tags:
             - phpstan.rules.rule
     -
-        class: Packman\Modules\PHPStan\Rules\NoSqlPrepareRule
+        class: Packman\Modules\PHPStan\Rules\Pooling\NoSqlPrepareRule
         tags:
             - phpstan.rules.rule
     -
-        class: Packman\Modules\PHPStan\Rules\NoEvalRule
+        class: Packman\Modules\PHPStan\Rules\Pooling\NoEvalRule
         tags:
             - phpstan.rules.rule
     -
-        class: Packman\Modules\PHPStan\Rules\NoForeignPrefixSqlRule
+        class: Packman\Modules\PHPStan\Rules\Boundaries\NoForeignPrefixSqlRule
         arguments:
             modulePrefixes: %packmanModules.modulePrefixes%
         tags:
             - phpstan.rules.rule
     -
-        class: Packman\Modules\PHPStan\Rules\NoFsOutsideModuleRule
+        class: Packman\Modules\PHPStan\Rules\Boundaries\NoFsOutsideModuleRule
         arguments:
             moduleNamespaces: %packmanModules.moduleNamespaces%
         tags:
             - phpstan.rules.rule
     -
-        class: Packman\Modules\PHPStan\Rules\NoDirectSystemTableWriteRule
+        class: Packman\Modules\PHPStan\Rules\Boundaries\NoDirectSystemTableWriteRule
         arguments:
             systemTableNamespaces: %packmanModules.systemTableNamespaces%
         tags:
