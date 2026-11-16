@@ -22,7 +22,9 @@ use Packman\Panels\Builder\Panel;
 use Packman\Panels\Builder\PanelBuilder;
 use Packman\Panels\Builder\PanelProvider;
 use Packman\Panels\Contracts\Admission\PanelAdmissionGate;
+use Packman\Panels\Contracts\Admission\PanelAdmitter;
 use Packman\Panels\Contracts\Registry\PanelRegistry;
+use Packman\Panels\Data\Admission\AdmissionResult;
 use Packman\Panels\Enums\Admission\TenantMode;
 use Packman\Panels\Internal\Catalogue\PanelRegistryImpl;
 
@@ -228,6 +230,121 @@ it('passes active ContextResolverInterface scope to PanelAdmitter for TenantMode
         expect(FilamentTestOrderResource::canViewAny())->toBeFalse();
     } finally {
         app()->instance(PanelRegistry::class, $originalRegistry);
+        app()->forgetInstance(FilamentSurfaceGate::class);
+    }
+});
+
+class NonRequiredGuardPanelProvider extends PanelProvider
+{
+    public static function getId(): string
+    {
+        return 'non-required-guard';
+    }
+
+    public function panel(PanelBuilder $panel): PanelBuilder
+    {
+        return $panel
+            ->label('Non-Required Panel')
+            ->tenantMode(TenantMode::None);
+    }
+}
+
+class SubjectOnlyGuardPanelProvider extends PanelProvider
+{
+    public static function getId(): string
+    {
+        return 'subject-only-guard';
+    }
+
+    public function panel(PanelBuilder $panel): PanelBuilder
+    {
+        return $panel
+            ->for(FilamentTestUser::class)
+            ->tenantMode(TenantMode::None);
+    }
+}
+
+it('fails closed when guardPanel enforces admission without PanelAdmissionGate or PanelAdmitter, resolves direct PanelAdmitter, and permits explicit non-required panels', function (): void {
+    $originalRegistry = app()->make(PanelRegistry::class);
+    $registry = new PanelRegistryImpl(app());
+    $registry->register(TenantRequiredGuardPanelProvider::class);
+    $registry->register(SubjectOnlyGuardPanelProvider::class);
+    $registry->register(NonRequiredGuardPanelProvider::class);
+    $registry->freeze();
+
+    app()->instance(PanelRegistry::class, $registry);
+    app()->forgetInstance(PanelAdmissionGate::class);
+    app()->forgetInstance(FilamentSurfaceGate::class);
+
+    $user = FilamentTestUser::query()->create(['id' => 1, 'name' => 'Guarded User']);
+    $this->actingAs($user);
+    Gate::define('orders.view_any', static fn (): bool => true);
+
+    try {
+        // Missing PanelAdmissionGate -> PanelAdmitter resolves to null -> fails closed for TenantMode::Required.
+        $tenantPanel = FilamentPanel::make()
+            ->id('missing-gate-tenant')
+            ->default()
+            ->path('missing-gate-tenant')
+            ->resources([FilamentTestOrderResource::class])
+            ->plugin(PackmanFilamentPlugin::make()->guardPanel('tenant-guard')->enforce());
+        $this->activatePanel($tenantPanel);
+        expect(FilamentTestOrderResource::canViewAny())->toBeFalse();
+
+        // Missing PanelAdmissionGate -> also fails closed when panel declares subject models (TenantMode::None).
+        $subjectPanel = FilamentPanel::make()
+            ->id('missing-gate-subject')
+            ->path('missing-gate-subject')
+            ->resources([FilamentTestOrderResource::class])
+            ->plugin(PackmanFilamentPlugin::make()->guardPanel('subject-only-guard')->enforce());
+        $this->activatePanel($subjectPanel);
+        expect(FilamentTestOrderResource::canViewAny())->toBeFalse();
+
+        // Explicit non-required panel (no subject models, TenantMode::None) still passes when Gate permits.
+        $openPanel = FilamentPanel::make()
+            ->id('non-required')
+            ->path('non-required')
+            ->resources([FilamentTestOrderResource::class])
+            ->plugin(PackmanFilamentPlugin::make()->guardPanel('non-required-guard')->enforce());
+        $this->activatePanel($openPanel);
+        expect(FilamentTestOrderResource::canViewAny())->toBeTrue();
+
+        // Directly bound PanelAdmitter (even without PanelAdmissionGate) is resolved by FilamentBindingsRegistrar.
+        $admitter = new class implements PanelAdmitter
+        {
+            public bool $allow = true;
+
+            public function admit(Panel $panel, object $subject, ContextScopeInterface $tenant, ?string $scopeType = null, ?string $scopeId = null): ?AdmissionResult
+            {
+                return $this->allow ? new AdmissionResult($tenant, $scopeType, $scopeId, false) : null;
+            }
+        };
+        app()->instance(PanelAdmitter::class, $admitter);
+        app()->forgetInstance(FilamentSurfaceGate::class);
+
+        $resolver = new class(new ScopeRef('tenant-99')) implements ContextResolverInterface
+        {
+            public function __construct(public ?ContextScopeInterface $scope) {}
+
+            public function current(): ?ContextScopeInterface
+            {
+                return $this->scope;
+            }
+        };
+        app()->instance(ContextResolverInterface::class, $resolver);
+
+        $this->activatePanel($tenantPanel);
+        expect(FilamentTestOrderResource::canViewAny())->toBeTrue();
+
+        // Even with a permissive custom PanelAdmitter, TenantMode::Required fails closed on global/absent scope.
+        $resolver->scope = new ScopeRef('global');
+        expect(FilamentTestOrderResource::canViewAny())->toBeFalse();
+
+        $resolver->scope = null;
+        expect(FilamentTestOrderResource::canViewAny())->toBeFalse();
+    } finally {
+        app()->instance(PanelRegistry::class, $originalRegistry);
+        app()->forgetInstance(PanelAdmitter::class);
         app()->forgetInstance(FilamentSurfaceGate::class);
     }
 });

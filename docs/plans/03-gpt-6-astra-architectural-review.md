@@ -4,19 +4,19 @@
 - **Session ID:** `01a1e454-c26b-7e71-881f-e9d7cd076fe7`
 - **Review Date:** 2026-11-16
 - **Owner Final Directives (2026-11-16):**
-  1. **Zero `corex` mentions & zero bridges inside `packman`:** `packman` is the universal ecosystem foundation monorepo consumed by `corex` and all other packages. Adapt Opus's `Modules` from `corex` into universal `Packman\Modules`.
+  1. **Zero downstream product mentions & zero bridges inside `packman`:** `packman` is the universal ecosystem foundation monorepo consumed by the reference modular platform and all other sibling ecosystem packages. Adapt the 111-file `Modules` subsystem from the reference modular platform into universal `Packman\Modules`.
   2. **Whole Unified Kernel (`packages/core` -> `axiomasoft/packman`, PSR-4 root `Packman\`):** Do not over-fragment core primitives (`Attributes`, `Foundation`, `Context`, `Data`, `Config`, `Errors`, `Doctor`) into micro-packages or separate `quality-gates` from `devtools`. Keep one cohesive kernel (`packages/core`) and focused add-ons (`modules`, `plugins`, `schema`, `panels`, `filament`, `testkit`, `devtools`).
 
 ---
 
 ## 1. Findings from `gpt-6-astra` & Exact Resolutions Applied
 
-### Finding 1 [Blocker]: `CoreX\Modules` Had Direct Imports Into `CoreX\*` Kernel Subsystems
-- **What `gpt-6-astra` Found:** `corex/packages/core/src/Modules` (111 files) directly imported `CoreX\Context\Data\TenantContext`, `CoreX\Features\Data\FeatureFlagDefinition`, `CoreX\Data\Laravel\JsonDocuments`, `CoreX\Errors\*`, `CoreX\Config\*`, `CoreX\Database\*`, `CoreX\Messaging\Events\DomainEvent`, `CoreX\Audit\*`, and `CoreX\Settings\Contracts\SettingDefaultsProvider`.
+### Finding 1 [Blocker]: Legacy Platform `Modules` Had Direct Imports Into Host Kernel Subsystems
+- **What `gpt-6-astra` Found:** Reference modular platform `packages/core/src/Modules` (111 files) directly imported host-specific `Context\Data\TenantContext`, `Features\Data\FeatureFlagDefinition`, `Data\Laravel\JsonDocuments`, `Errors\*`, `Config\*`, `Database\*`, `Messaging\Events\DomainEvent`, `Audit\*`, and `Settings\Contracts\SettingDefaultsProvider`.
 - **Final Resolution:**
-  - Zero bridges and zero mentions of `corex` inside `packman`.
-  - Adapt all 111 files into `packages/modules` (`axiomasoft/packman-modules`, `Packman\Modules\*`) by replacing all **29 non-`Modules` `CoreX\*` imports** with universal `Packman\*` kernel contracts (`Packman\Context\Contracts\{ContextScopeInterface,ContextResolverInterface,ActorResolverInterface}`, `Packman\Features\*`, `Packman\Settings\*`, `Packman\Events\DomainEvent`, `Packman\Data\Laravel\JsonDocuments`, `Packman\Config\*`, `Packman\Errors\*`) and `Packman\Schema\*`, while making all **13 hardcoded strings** configurable via `ModulesOptions`.
-  - Opus's compilation pipeline, 8 extenders, transactional lifecycle, and 11 PHPStan rules remain 100% preserved algorithmically; `corex` cleanly consumes `axiomasoft/packman-modules`.
+  - Zero bridges and zero host-product mentions inside `packman`.
+  - Adapt all 111 files into `packages/modules` (`axiomasoft/packman-modules`, `Packman\Modules\*`) by replacing all **29 non-`Modules` host imports** with universal `Packman\*` kernel contracts (`Packman\Context\Contracts\{ContextScopeInterface,ContextResolverInterface,ActorResolverInterface}`, `Packman\Features\*`, `Packman\Settings\*`, `Packman\Events\DomainEvent`, `Packman\Data\Laravel\JsonDocuments`, `Packman\Config\*`, `Packman\Errors\*`) and `Packman\Schema\*`, while making all **13 hardcoded strings** configurable via `ModulesOptions`.
+  - The compilation pipeline, 8 extenders, transactional lifecycle, and 11 PHPStan rules remain 100% preserved algorithmically; the reference platform cleanly consumes `axiomasoft/packman-modules`.
 
 ### Finding 2 [Major]: Separate Intra-Package Plugins from Runtime Composer-Discovered Modules
 - **What `gpt-6-astra` Found:** Commerz plugins, Chatom plugins, Vaulter slot/capability modules, and AzGuard panel plugins represent lightweight compile-time intra-package extension systems (zero `mod_modules`/`mod_records` lifecycle tables).
@@ -36,7 +36,7 @@
   - All testing harnesses live in `packages/testkit` (`axiomasoft/packman-testkit`, `require-dev`), and all 16 architecture gates + scanners + Rector rules + scaffolder + `ai:sync` + `split` live together in `packages/devtools` (`axiomasoft/packman-devtools`, `require-dev`).
 
 ### Finding 5 [Major]: Parameterize Gates & Synchronize AI Tooling via Versioned Plugin
-- **What `gpt-6-astra` Found:** Legacy scripts hardcoded CoreX assumptions, `dev-doctrine.md` requires plugin-connected skills instead of raw vendoring, and `corex/.codex/agents/*.toml` failed deserialization in Codex v0.169.0.
+- **What `gpt-6-astra` Found:** Legacy scripts hardcoded platform-specific assumptions, `dev-doctrine.md` requires plugin-connected skills instead of raw vendoring, and legacy `.codex/agents/*.toml` files failed deserialization in Codex v0.169.0.
 - **Final Resolution:**
   - `packages/devtools` executes reusable gate engines driven by `schemas/packman.schema.json` + `schemas/profiles/*.profile.json`, tested with positive/negative fixtures.
   - `packman/ai/` ships as a versioned skill-plugin & agent-pack (`ai/agent-pack.json`, `ai/plugin.json`) synced idempotently via `packman ai:sync --dry-run` while preserving `*-reviewer-overrides.md` and fixing `.codex/agents/*.toml`.

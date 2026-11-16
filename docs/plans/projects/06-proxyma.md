@@ -2,7 +2,7 @@
 
 **Repository Path:** `/home/vostrikov/projects/packages/proxyma`  
 **Target Profile:** `laravel-package` (2 subpackages: `core`, `filament`)  
-**Zero `corex` Coupling:** Pure standalone outbound transport & policy panel engine consuming `axiomasoft/packman` + `packman-{plugins,panels,schema,filament,testkit,devtools}`.
+**Zero Host-Product Coupling:** Pure standalone outbound transport & policy panel engine consuming `axiomasoft/packman` + `packman-{plugins,panels,schema,filament,testkit,devtools}`.
 
 ---
 

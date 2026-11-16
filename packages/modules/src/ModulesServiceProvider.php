@@ -9,8 +9,10 @@ use Override;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Config\Contracts\ConfigReportSectionInterface;
+use Packman\Errors\Laravel\ProblemDefinitions;
 use Packman\Foundation\Concerns\RegistersPackageRegistrars;
 use Packman\Foundation\Contracts\PackageRegistrar;
+use Packman\Modules\Internal\Errors\ModulesProblemDefinitions;
 use Packman\Modules\Internal\Support\ModulesConfigSection;
 use Packman\Modules\Internal\Support\ModulesOptions;
 use Packman\Modules\Laravel\LifecycleRegistrar;
@@ -38,6 +40,12 @@ final class ModulesServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/modules.php', 'modules');
         $this->app->tag([ModulesConfigSection::class], ConfigReportSectionInterface::class);
+
+        ProblemDefinitions::register(
+            app: $this->app,
+            composerManifest: __DIR__.'/../composer.json',
+            provider: ModulesProblemDefinitions::class,
+        );
 
         $this->registerPackageRegistrars();
     }

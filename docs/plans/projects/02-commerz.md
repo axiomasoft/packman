@@ -2,7 +2,7 @@
 
 **Repository Path:** `/home/vostrikov/projects/packages/commerz`  
 **Target Profile:** `laravel-package` (9 subpackages: `core`, `catalog`, `inventory`, `pricing`, `promotions`, `sales`, `shipping`, `full`, `testkit`)  
-**Zero `corex` Coupling:** Pure standalone modular e-commerce monorepo consuming `axiomasoft/packman` + `packman-{plugins,schema,panels,testkit,devtools}`.
+**Zero Host-Product Coupling:** Pure standalone modular e-commerce monorepo consuming `axiomasoft/packman` + `packman-{plugins,schema,panels,testkit,devtools}`.
 
 ---
 

@@ -5,6 +5,7 @@
 /packages/*/.phpunit.cache/
 /fixtures/*/vendor/
 /fixtures/*/.phpunit.cache/
+/fixtures/*/bootstrap/cache/*.php
 /composer.lock
 /fixtures/*/composer.lock
 .DS_Store

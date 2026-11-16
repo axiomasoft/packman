@@ -15,13 +15,25 @@ use Packman\Attributes\Api;
 #[Api(since: '1.0')]
 final class EcosystemAiSynchronizer
 {
+    /** @var list<string> */
+    private const array MANAGED_OUTPUT_GLOBS = [
+        '.claude/rules/*.md',
+        '.claude/agents/*.md',
+        '.codex/agents/*.toml',
+        '.gemini/rules/*.md',
+    ];
+
     /**
      * @return array{
      *   ok: bool,
      *   status: 'skipped_missing_source'|'dry_run'|'synced',
      *   planned: list<string>,
      *   written: list<string>,
+     *   pruned: list<string>,
      *   preserved: list<string>,
+     *   missing: list<string>,
+     *   drifted: list<string>,
+     *   orphans: list<string>,
      *   notes: list<string>
      * }
      */
@@ -36,14 +48,20 @@ final class EcosystemAiSynchronizer
                 'status' => 'skipped_missing_source',
                 'planned' => [],
                 'written' => [],
+                'pruned' => [],
                 'preserved' => [],
+                'missing' => [],
+                'drifted' => [],
+                'orphans' => [],
                 'notes' => ['No canonical ai/ directory found; skipping sync cleanly.'],
             ];
         }
 
         $planned = [];
         $written = [];
-        $preserved = [];
+        $pruned = [];
+        $missing = [];
+        $drifted = [];
         $notes = [];
         $artifacts = [];
 
@@ -67,12 +85,7 @@ final class EcosystemAiSynchronizer
             $artifacts[".gemini/rules/{$slug}.md"] = $content;
         }
 
-        $rawPreserved = glob($root.'/.claude/agents/*-reviewer-overrides.md');
-        $preservedPaths = is_array($rawPreserved) ? $rawPreserved : [];
-        sort($preservedPaths, SORT_STRING);
-        foreach ($preservedPaths as $overridePath) {
-            $preserved[] = '.claude/agents/'.basename($overridePath);
-        }
+        $preserved = $this->collectPreservedOverrides($root, $manifest);
 
         foreach ($agents as $slug => $content) {
             if (str_ends_with($slug, '-reviewer-overrides') && is_file("{$root}/.claude/agents/{$slug}.md")) {
@@ -103,14 +116,32 @@ final class EcosystemAiSynchronizer
 
         ksort($artifacts, SORT_STRING);
 
+        $allowed = array_flip(array_merge(array_keys($artifacts), $preserved));
+        $orphans = $this->findOrphanArtifacts($root, $allowed);
+        $writeOk = true;
+
         foreach ($artifacts as $relative => $body) {
             $planned[] = $relative;
+            $target = $root.'/'.$relative;
 
             if ($dryRun) {
+                if (! is_file($target)) {
+                    $missing[] = $relative;
+                    $notes[] = "Missing generated AI artifact: {$relative}";
+
+                    continue;
+                }
+
+                $existing = file_get_contents($target);
+
+                if ($existing !== $body) {
+                    $drifted[] = $relative;
+                    $notes[] = "Drifted generated AI artifact: {$relative}";
+                }
+
                 continue;
             }
 
-            $target = $root.'/'.$relative;
             $dir = dirname($target);
 
             if (! is_dir($dir)) {
@@ -121,23 +152,153 @@ final class EcosystemAiSynchronizer
             $written[] = $relative;
         }
 
-        $notes[] = sprintf(
-            '%s %d AI sync artifacts (%d rules, %d agents, %d preserved overrides).',
-            $dryRun ? 'Planned' : 'Synchronized',
-            count($planned),
-            count($rules),
-            count($agents),
-            count($preserved),
-        );
+        if ($dryRun) {
+            foreach ($orphans as $orphan) {
+                $notes[] = "Orphan (stale) AI artifact: {$orphan}";
+            }
+        } else {
+            foreach ($orphans as $orphan) {
+                $target = $root.'/'.$orphan;
+
+                if (! is_file($target)) {
+                    continue;
+                }
+
+                if (unlink($target)) {
+                    $pruned[] = $orphan;
+                    $notes[] = "Pruned obsolete AI artifact: {$orphan}";
+                } else {
+                    $writeOk = false;
+                    $notes[] = "Failed to prune obsolete AI artifact: {$orphan}";
+                }
+            }
+        }
+
+        $ok = $dryRun ? ($missing === [] && $drifted === [] && $orphans === []) : $writeOk;
+
+        if ($dryRun) {
+            $notes[] = $ok
+                ? sprintf(
+                    'Verified %d AI sync artifacts (%d rules, %d agents, %d preserved overrides) with zero drift.',
+                    count($planned),
+                    count($rules),
+                    count($agents),
+                    count($preserved),
+                )
+                : sprintf(
+                    'AI sync drift detected (%d missing, %d drifted, %d orphan out of %d planned artifacts). Run `bin/packman ai:sync`.',
+                    count($missing),
+                    count($drifted),
+                    count($orphans),
+                    count($planned),
+                );
+        } else {
+            $notes[] = $pruned === []
+                ? sprintf(
+                    'Synchronized %d AI sync artifacts (%d rules, %d agents, %d preserved overrides).',
+                    count($planned),
+                    count($rules),
+                    count($agents),
+                    count($preserved),
+                )
+                : sprintf(
+                    'Synchronized %d AI sync artifacts (%d rules, %d agents, %d preserved overrides, %d pruned).',
+                    count($planned),
+                    count($rules),
+                    count($agents),
+                    count($preserved),
+                    count($pruned),
+                );
+        }
 
         return [
-            'ok' => true,
+            'ok' => $ok,
             'status' => $dryRun ? 'dry_run' : 'synced',
             'planned' => $planned,
             'written' => $written,
+            'pruned' => $pruned,
             'preserved' => $preserved,
+            'missing' => $missing,
+            'drifted' => $drifted,
+            'orphans' => $dryRun ? $orphans : [],
             'notes' => $notes,
         ];
+    }
+
+    /**
+     * @param  array<mixed>  $manifest
+     * @return list<string>
+     */
+    private function collectPreservedOverrides(string $root, array $manifest): array
+    {
+        $preserved = [];
+        $rawPreserved = glob($root.'/.claude/agents/*-reviewer-overrides.md');
+        $preservedPaths = is_array($rawPreserved) ? $rawPreserved : [];
+
+        foreach ($preservedPaths as $overridePath) {
+            if (is_file($overridePath)) {
+                $preserved[] = '.claude/agents/'.basename($overridePath);
+            }
+        }
+
+        foreach (['preserve', 'preserved'] as $key) {
+            $configured = $manifest[$key] ?? null;
+
+            if (! is_array($configured)) {
+                continue;
+            }
+
+            foreach ($configured as $entry) {
+                if (! is_string($entry)) {
+                    continue;
+                }
+
+                $relative = ltrim(trim($entry), '/');
+
+                if ($relative !== '' && is_file($root.'/'.$relative)) {
+                    $preserved[] = $relative;
+                }
+            }
+        }
+
+        $preserved = array_values(array_unique($preserved));
+        sort($preserved, SORT_STRING);
+
+        return $preserved;
+    }
+
+    /**
+     * @param  array<string, int>  $allowed
+     * @return list<string>
+     */
+    private function findOrphanArtifacts(string $root, array $allowed): array
+    {
+        $orphans = [];
+
+        foreach (self::MANAGED_OUTPUT_GLOBS as $pattern) {
+            $matches = glob($root.'/'.$pattern);
+
+            if (! is_array($matches)) {
+                continue;
+            }
+
+            foreach ($matches as $path) {
+                if (! is_file($path)) {
+                    continue;
+                }
+
+                $relative = ltrim(substr($path, strlen($root)), '/');
+
+                if (! isset($allowed[$relative])) {
+                    $orphans[] = $relative;
+                }
+            }
+        }
+
+        $orphans = array_values(array_unique($orphans));
+        sort($orphans, SORT_STRING);
+
+        return $orphans;
     }
 
     /** @return array<string, string> */
@@ -173,7 +334,7 @@ final class EcosystemAiSynchronizer
         $effort = $this->escapeTomlString($meta['model_reasoning_effort'] ?? 'medium');
         $sandbox = $this->escapeTomlString($meta['sandbox_mode'] ?? 'workspace-write');
 
-        $instructions = str_replace('"""', '\\"""', trim($body));
+        $instructions = str_replace(['\\', '"""'], ['\\\\', '\\"""'], trim($body));
         $toml = <<<TOML
 name = "{$name}"
 description = "{$description}"

@@ -7,7 +7,7 @@ namespace Packman\Testkit\Concerns\Database;
 use Illuminate\Support\Facades\DB;
 use Packman\Attributes\Api;
 use Packman\Testkit\Data\Database\TestDatabaseIdentity;
-use Packman\Testkit\Support\Database\SuiteDatabaseConnection;
+use Packman\Testkit\Internal\ResolvedDatabaseConnection;
 use Packman\Testkit\Support\Database\TestDatabaseGuard;
 
 /** Refreshes PostgreSQL or SQLite test schemas cleanly before schema-variant tests. */
@@ -16,11 +16,10 @@ trait RefreshesDatabaseForSchemaVariant
 {
     protected function resetPgsqlPublicSchema(string $connection = 'pgsql'): void
     {
-        $identity = SuiteDatabaseConnection::pgsqlIdentity();
-        TestDatabaseGuard::assertSafe($identity);
+        $resolved = ResolvedDatabaseConnection::assertDestructiveSafe($connection, requiredDriver: 'pgsql');
 
-        DB::connection($connection)->statement('DROP SCHEMA IF EXISTS public CASCADE');
-        DB::connection($connection)->statement('CREATE SCHEMA public');
+        $resolved->statement('DROP SCHEMA IF EXISTS public CASCADE');
+        $resolved->statement('CREATE SCHEMA public');
         DB::purge($connection);
     }
 

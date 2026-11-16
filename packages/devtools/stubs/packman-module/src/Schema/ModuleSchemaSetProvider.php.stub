@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }}\Schema;
+
+use Packman\Attributes\Internal;
+use Packman\Schema\Contracts\Migration\SchemaSetProvider;
+use Packman\Schema\Data\Migration\SchemaSet;
+use Packman\Schema\Enums\SchemaLifecycle;
+use Packman\Schema\Enums\SchemaScope;
+
+#[Internal]
+final readonly class ModuleSchemaSetProvider implements SchemaSetProvider
+{
+    /** @return list<SchemaSet> */
+    public function sets(): array
+    {
+        return [
+            new SchemaSet(
+                package: '{{ composer_name }}',
+                name: 'tenant',
+                scope: SchemaScope::Tenant,
+                path: __DIR__.'/../../database/migrations/tenant',
+                version: 1,
+                drivers: ['pgsql', 'sqlite'],
+                lifecycle: SchemaLifecycle::Module,
+            ),
+        ];
+    }
+}

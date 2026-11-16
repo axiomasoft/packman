@@ -46,10 +46,11 @@ test-arch:
 	$(COMPOSER) test:arch
 
 fixtures:
+	set -e; \
 	for dir in fixtures/*; do \
 		if [ -f "$$dir/composer.json" ]; then \
-			$(PHP84) composer --working-dir="$$dir" install --no-interaction && \
-			$(PHP84) composer --working-dir="$$dir" test; \
+			$(PHP84) composer --working-dir="$$dir" install --no-interaction || exit $$?; \
+			$(PHP84) composer --working-dir="$$dir" test || exit $$?; \
 		fi; \
 	done
 

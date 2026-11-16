@@ -18,9 +18,19 @@ final class SuiteDatabaseConnection
     {
         $host = EnvLookup::string('PGSQL_HOST', 'DB_HOST') ?? '127.0.0.1';
         $port = (int) (EnvLookup::string('PGSQL_PORT', 'DB_PORT') ?? '5432');
-        $database = DatabaseLaneEnvironment::isolatedDatabaseName(
-            EnvLookup::string('PGSQL_DATABASE', 'DB_DATABASE') ?? 'packman_test',
-        );
+        $databaseName = EnvLookup::string('PGSQL_DATABASE');
+
+        if ($databaseName === null) {
+            $dbConnection = EnvLookup::string('DB_CONNECTION');
+            $fallbackDatabase = ($dbConnection === null || strtolower($dbConnection) === 'pgsql')
+                ? EnvLookup::string('DB_DATABASE')
+                : null;
+            $databaseName = ($fallbackDatabase !== null && $fallbackDatabase !== ':memory:')
+                ? $fallbackDatabase
+                : 'packman_test';
+        }
+
+        $database = DatabaseLaneEnvironment::isolatedDatabaseName($databaseName);
         $username = EnvLookup::string('PGSQL_USERNAME', 'DB_USERNAME') ?? 'postgres';
         $schema = EnvLookup::string('PGSQL_SCHEMA') ?? 'public';
 

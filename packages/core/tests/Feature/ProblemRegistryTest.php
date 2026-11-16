@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Config\Repository as ConfigRepository;
+use Illuminate\Container\Container;
+use Illuminate\Events\EventServiceProvider;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Facade;
 use Packman\Errors\Contracts\ProblemDefinitionProvider;
 use Packman\Errors\Contracts\ProblemRegistry;
 use Packman\Errors\Data\ErrorDescriptor;
@@ -13,13 +18,33 @@ use Packman\Errors\Internal\CompiledProblemRegistry;
 use Packman\Errors\Internal\PackageProblemDefinitions;
 use Packman\Errors\Internal\ProblemContribution;
 use Packman\Errors\Laravel\ProblemDefinitions;
+use Packman\PackmanServiceProvider;
 
 test('ProblemRegistry boots with the isolated kernel and freezes its catalogue', function (): void {
-    $registry = resolve(ProblemRegistry::class);
+    $previousContainer = Container::getInstance();
+    $previousFacadeApp = Facade::getFacadeApplication();
 
+    $isolatedApp = new Application(basePath: $this->app->basePath());
+    $isolatedApp->instance('env', 'testing');
+    $isolatedApp->instance('config', new ConfigRepository([]));
+    $isolatedApp->register(EventServiceProvider::class);
+    $isolatedApp->register(PackmanServiceProvider::class);
+
+    try {
+        $isolatedApp->boot();
+        $isolatedRegistry = $isolatedApp->make(ProblemRegistry::class);
+
+        expect($isolatedRegistry->get(CoreErrorCode::InternalError)->type)->toBe('urn:packman:problem:packman.internal_error')
+            ->and($isolatedRegistry)->toBe($isolatedApp->make(ProblemRegistry::class))
+            ->and(array_filter($isolatedRegistry->all(), static fn (ProblemDefinition $row): bool => ! str_starts_with($row->code->value(), 'packman.')))->toBe([]);
+    } finally {
+        Container::setInstance($previousContainer);
+        Facade::setFacadeApplication($previousFacadeApp);
+    }
+
+    $registry = resolve(ProblemRegistry::class);
     expect($registry->get(CoreErrorCode::InternalError)->type)->toBe('urn:packman:problem:packman.internal_error')
-        ->and($registry)->toBe(resolve(ProblemRegistry::class))
-        ->and(array_filter($registry->all(), static fn (ProblemDefinition $row): bool => ! str_starts_with($row->code->value(), 'packman.')))->toBe([]);
+        ->and($registry)->toBe(resolve(ProblemRegistry::class));
 
     ProblemDefinitions::register($this->app, dirname(__DIR__, 2).'/composer.json', PackageProblemDefinitions::class);
 
@@ -72,13 +97,25 @@ test('ProblemRegistry rejects enum outside declared source roots and honors conf
     expect(fn () => new CompiledProblemRegistry([new ProblemContribution('packman', $provider, 'axiomasoft/packman', ['/non-existent-root'])]))
         ->toThrow(ProblemRegistryException::class, 'ERROR-FOREIGN-TYPE');
 
-    config()->set('packman.errors.urn_prefix', 'urn:example:problem:');
-    $this->app->forgetInstance(ProblemContribution::class.':'.PackageProblemDefinitions::class);
-    $this->app->forgetInstance(PackageProblemDefinitions::class);
-    $this->app->forgetInstance(ProblemRegistry::class);
+    $previousContainer = Container::getInstance();
+    $previousFacadeApp = Facade::getFacadeApplication();
 
-    $registry = resolve(ProblemRegistry::class);
-    expect($registry->get(CoreErrorCode::InternalError)->type)->toBe('urn:example:problem:packman.internal_error');
+    $customUrnApp = new Application(basePath: $this->app->basePath());
+    $customUrnApp->instance('env', 'testing');
+    $customUrnApp->instance('config', new ConfigRepository([
+        'packman' => ['errors' => ['urn_prefix' => 'urn:example:problem:']],
+    ]));
+    $customUrnApp->register(EventServiceProvider::class);
+    $customUrnApp->register(PackmanServiceProvider::class);
+
+    try {
+        $customUrnApp->boot();
+        $registry = $customUrnApp->make(ProblemRegistry::class);
+        expect($registry->get(CoreErrorCode::InternalError)->type)->toBe('urn:example:problem:packman.internal_error');
+    } finally {
+        Container::setInstance($previousContainer);
+        Facade::setFacadeApplication($previousFacadeApp);
+    }
 });
 
 test('ProblemRegistry rejects unknown persisted identities and descriptor category drift', function (): void {

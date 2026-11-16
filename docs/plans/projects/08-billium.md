@@ -5,7 +5,7 @@
 - `packages/contracts` (`axiomasoft/billium-contracts`): **`php-library`** (pure PHP + `ext-mbstring` + `brick/math` + `brick/money`)
 - `packages/core` (`axiomasoft/billium-core`): **`laravel-package`**
 - `packages/contracts-dart`: Cross-language Dart client SDK (preserved + tested via `conformance/`)  
-**Zero `corex` Coupling:** Preserves financial double-entry invariants and transactional module gating atop `axiomasoft/packman` + `packman-{plugins,schema,testkit,devtools}`.
+**Zero Host-Product Coupling:** Preserves financial double-entry invariants and transactional module gating atop `axiomasoft/packman` + `packman-{plugins,schema,testkit,devtools}`.
 
 ---
 

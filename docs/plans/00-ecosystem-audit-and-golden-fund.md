@@ -1,8 +1,8 @@
 # 00. Ecosystem Audit & "Golden Fund" Synthesis
 
-**Audited Repositories:** `corex`, `chatom`, `vaulter`, `azguard`, `proxyma`, `commerz`, `tenant`, `billium`, `sockit`  
+**Audited Repositories:** `modular-platform` (reference platform), `chatom`, `vaulter`, `azguard`, `proxyma`, `commerz`, `tenant`, `billium`, `sockit`  
 **Audit Method:** Direct code & AST inspection across all 9 repositories by 7 dedicated fresh-context repository auditors.  
-**Core Architectural Mandate:** `packman` uses a single whole kernel (`packages/core` -> `axiomasoft/packman`, root namespace `Packman\`) paired with clean add-on packages (`modules`, `plugins`, `schema`, `panels`, `filament`, `testkit`, `devtools`) and contains **zero mentions of `corex`**. All 9 repositories (including `corex`) become downstream consumers of `packman`.
+**Core Architectural Mandate:** `packman` uses a single whole kernel (`packages/core` -> `axiomasoft/packman`, root namespace `Packman\`) paired with clean add-on packages (`modules`, `plugins`, `schema`, `panels`, `filament`, `testkit`, `devtools`) and contains **zero host-specific product coupling**. All 9 sibling ecosystem packages (including the reference modular platform) become downstream consumers of `packman`.
 
 ---
 
@@ -14,7 +14,7 @@ Every repository solved the same foundational problems independently, polishing 
 
 | Repository | Mechanism & Location | Best Innovation ("Golden Fund") | Limitation / Divergence Today |
 |:--|:--|:--|:--|
-| **`corex`** | `packages/core/src/Modules/*` (111 files by Opus) | Composer `installed.json` discovery + test fallback; deterministic 8-stage `RegistryCompiler` (`Entity → EntityField → Permissions → Api → Filament → Menu → Routes → Workflow`); SHA-fingerprinted cached PHP registry (`0` FS scans / `0` SQL on warm requests); transactional DB lifecycle (`mod_modules`, `mod_records` claims, `mod_lifecycle_log`); 11 AST PHPStan rules. | Hardcoded `CoreX\*` imports (29 symbols) and hardcoded strings (`corex-module`, `extra.corex.module`, `corex:modules:*`, `bootstrap/cache/corex_modules.php`, `corexModules.*`). |
+| **Reference Platform** | `packages/core/src/Modules/*` (111 files) | Composer `installed.json` discovery + test fallback; deterministic 8-stage `RegistryCompiler` (`Entity → EntityField → Permissions → Api → Filament → Menu → Routes → Workflow`); SHA-fingerprinted cached PHP registry (`0` FS scans / `0` SQL on warm requests); transactional DB lifecycle (`mod_modules`, `mod_records` claims, `mod_lifecycle_log`); 11 AST PHPStan rules. | Hardcoded legacy platform imports (29 symbols) and hardcoded strings (`*-module`, `extra.<platform>.module`, `<platform>:modules:*`, `bootstrap/cache/<platform>_modules.php`, `<platform>Modules.*`). |
 | **`commerz`** | `packages/core/src/Plugins/*` + `PluginGraph.php` | Pure compile-time `CommerzPlugin` (`new $class()`, zero I/O); `PluginManifest` (`vendor.name` + strict SemVer + `requires`/`optional`); Kahn's topological sort with deterministic tie-breaking; transitive ancestor ownership enforcement for `ContributionKind`; immutable `FrozenContributions` (Octane-safe). | Only handles compile-time plugin graph; duplicated attributes (`Commerz\Attributes\*`) and error classes (`InvalidConfiguration`). |
 | **`chatom`** | `packages/core/src/Plugins/*` + `PollPlugin`, `WebhooksPlugin`, etc. | Capability-based decoupling (`PluginManifest` never names other plugins directly; requests capabilities/extension points); 9 partitioned sub-compilers (`Identity`, `ConfigSchema`, `OperationsStages`, `Channels`, `CapabilitiesDrivers`, `Http`, `Diagnostics`, `Delivery`, `Content`); all-at-once `ContributionChecks` accumulation; database engine compatibility checks (`assertDatabases`). | Duplicated plugin engine alongside `commerz` and `vaulter`; own `Chatom\Attributes\*`. |
 | **`vaulter`** | `packages/core/src/Modules/*` | `ModuleBuilder` with explicit `Cardinality` (`RequiredSingle`, `OptionalSingle`, `Many`) and typed `SlotKind` semantics (`Guard`, `Restriction`, `Contributor`, `Handler`, `EventSink`, `OutboxConsumer`, `OperationMiddleware`); `CapabilityProvider::providesFromConfig()`; `ExtensionRegistry::handler($slot, $key)` and `handlerClass()`. | Named `VaulterModule` even though it is an in-memory intra-package extension/slot system; uses `Vaulter\Attributes\*`. |
@@ -25,7 +25,7 @@ Every repository solved the same foundational problems independently, polishing 
 **Synthesis Decision in `packman`:**
 `packman` cleanly separates the two legitimate extension models into dedicated add-on packages atop `packages/core` (`axiomasoft/packman`):
 1. **`axiomasoft/packman-plugins` (`Packman\Plugins\*` — Strict Code Extensions, Zero DB Required):** The universal intra-package extension, plugin, capability, and slot engine combining `commerz` (`PluginManifest`, Kahn's topological sort + ancestor ownership), `chatom` (disabled list, all-at-once `ContributionChecks`, database matrix check), `vaulter` (`Cardinality`, `SlotKind`, `CapabilityProvider::providesFromConfig()`, `ExtensionRegistry`), and `azguard` (scoped `PluginContext`). Plugins here are pure code extensions activated via configuration/code with **no database tables or records required**; hosts that persist plugin activation in DB can optionally bind `PluginActivationGate`.
-2. **`axiomasoft/packman-modules` (`Packman\Modules\*` — Bitrix/WordPress-Style Stateful Platform Modules & Plugins):** The Composer-discovered, deploy-time compiled, tenant-lifecycle-aware modular platform engine adapted directly from `corex/packages/core/src/Modules` (all 111 Opus files), with all 29 external imports replaced by `Packman\*` kernel contracts/DTOs (`axiomasoft/packman`) and `Packman\Schema\*` (`axiomasoft/packman-schema`), and all 13 hardcoded strings configurable via `ModulesOptions` (discovering both module and plugin package types `['packman-module', 'packman-plugin', 'module', 'plugin']` with DB state in `mod_modules`, `mod_records`, `mod_lifecycle_log`).
+2. **`axiomasoft/packman-modules` (`Packman\Modules\*` — Bitrix/WordPress-Style Stateful Platform Modules & Plugins):** The Composer-discovered, deploy-time compiled, tenant-lifecycle-aware modular platform engine adapted directly from the reference modular platform's `packages/core/src/Modules` (all 111 files), with all 29 external imports replaced by `Packman\*` kernel contracts/DTOs (`axiomasoft/packman`) and `Packman\Schema\*` (`axiomasoft/packman-schema`), and all 13 hardcoded strings configurable via `ModulesOptions` (discovering both module and plugin package types `['packman-module', 'packman-plugin', 'module', 'plugin']` with DB state in `mod_modules`, `mod_records`, `mod_lifecycle_log`).
 
 ---
 
@@ -33,7 +33,7 @@ Every repository solved the same foundational problems independently, polishing 
 
 | Repository | Implementation | Best Innovation ("Golden Fund") |
 |:--|:--|:--|
-| **`corex`** | `packages/panels/src/*` (34 files) | UI-agnostic `PanelDescriptor`, `PanelProvider`, `PanelAccess`, `PanelContext`, `EntityViewSchemaProvider`, and the complete persistence-ready `SavedViews` subsystem (`SavedViewRepository`, `ViewSchemaProvider`, `ViewAccessPolicy`, `SqlSavedViewRepository`). |
+| **Reference Platform** | `packages/panels/src/*` (34 files) | UI-agnostic `PanelDescriptor`, `PanelProvider`, `PanelAccess`, `PanelContext`, `EntityViewSchemaProvider`, and the complete persistence-ready `SavedViews` subsystem (`SavedViewRepository`, `ViewSchemaProvider`, `ViewAccessPolicy`, `SqlSavedViewRepository`). |
 | **`azguard`** | `packages/core/src/Panels/*` & `packages/filament/*` | Two-phase `PanelRegistry` (`register`/`replace`/`configure` -> `freeze()`), append-only `PanelRecipe` with origin precedence (`provider` < `plugin` < `configureAll` < `configure($id)`), hash-indexed `PanelCatalog`, graceful `PanelAdmission` (scoped navigation discovery), and **Livewire security hardening** (`RefusesSurfaceBoot`, `RefusesSurfaceCalls`, `RefusesEditableColumns`, write-PDO `AuthorizesActions`, `RefusesUnverifiableDownload`). |
 | **`proxyma`** | `packages/core/src/Domain/{Policy/PanelDefinition,Panels/*}` & `packages/filament/src/BindingEditor.php` | `PanelSlot`, `PanelFormData` (field-level inheritance, `clamped`, `minimum`, `maximum`, `clamped_by`, `editable`, `reason`, `editVersion` optimistic hash), `PanelSubjects` (anti-spoofing ancestor re-resolution), and `BindingEditor` (`Crypt::encryptString` stateless tamper-proof Livewire form context). |
 | **`vaulter`** | `packages/filament/*` | Subsystem-gated Filament resources (`VaulterPlugin::enabledResources()` checks both Filament toggle and core feature flags) + typed `VaulterPlugin::current($panel)`. |
@@ -47,7 +47,7 @@ Every repository solved the same foundational problems independently, polishing 
 |:--|:--|:--|
 | **`chatom`** | `packages/core/src/Configuration/*` | `ConfigSection` + `JournalingConfigReader` (single-pass fault tolerance collecting all errors under dotted paths + automatic secret redaction + `unsafeBool` production guard) + `SectionCompiler` (closed-schema unknown-key rejection with **Levenshtein "did you mean?" suggestions**) + `DefinitionsCache` (SHA-256 fingerprint + round-trip codec verification + atomic file write + `opcache_invalidate`). |
 | **`commerz`** | `packages/core/src/Configuration/CommerzConfig.php` | Ultra-clean fail-closed `final readonly *Options::fromArray($config, $path)` with zero silent defaults and explicit dotted error paths (`commerz-pricing.tax.calculator`). |
-| **`corex`** | `packages/core/src/Config/*` | `ConfigurationValidator` (`add($path, $message)` + `failIfAny()`), `SecretRef`, `RuntimeConfigGate`, `ConfigReportSection`, `ValidateConfigCommand`. |
+| **Reference Platform** | `packages/core/src/Config/*` | `ConfigurationValidator` (`add($path, $message)` + `failIfAny()`), `SecretRef`, `RuntimeConfigGate`, `ConfigReportSection`, `ValidateConfigCommand`. |
 | **`azguard`** | `packages/core/src/Configuration/ConfigSections.php` | Modular config root ownership (`ConfigSections::own($root, $validate)`) sealing on first read and rejecting unknown root keys. |
 | **`vaulter`** | `packages/core/src/Configuration/*` | `ConfigNormalizer::REPLACEMENT_MAPS` (host-defined strategy maps replace package defaults instead of dot-merging) + closure-free validation (config-cache safe) + schedule frequency parsing. |
 
@@ -58,9 +58,9 @@ Every repository solved the same foundational problems independently, polishing 
 | Domain | Target Package in `packman` | Source Repositories & Best Practices Selected |
 |:--|:--|:--|
 | **Errors, Attributes, Foundation, Context, Data, Config, Doctor** | **`packages/core`** (`axiomasoft/packman`, `Packman\`) | Unified whole kernel: `Attributes`, `Foundation` (`PackageRegistrar`, `ApplicationLocator`), `Context` (`ContextScopeInterface`, `ContextResolverInterface`, `ActorResolverInterface`), `Data` (`JsonDocument`/`JsonDocuments`), `Config` (`*Options`, `JournalingConfigReader`, `SectionCompiler`, `ConfigSections`, `DefinitionsCache`), `Errors` (`DescribesError`, `ErrorDescriptor`, `CodedException`, `CompiledProblemRegistry`), `Doctor` (`DoctorRegistry`, `HealthCheck`, `DoctorFinding` + cascade skip + dotted prefix filter). |
-| **Schema** | **`packages/schema`** (`axiomasoft/packman-schema`) | `corex` `SchemaSet`/`SchemaMigrator` + `commerz` `SchemaOwnershipRegistry` (longest-noun match), `ConstraintNames::shorten()` (63-byte PG limit), `PackmanMigration`, `SchemaFingerprint` + `chatom` `SchemaComponent`/`SchemaStep` + `vaulter` topological `ModuleSchemas`. |
-| **Testkit** | **`packages/testkit`** (`axiomasoft/packman-testkit`, `require-dev`) | `chatom` `PackageTestCase` (`migrateOncePerProcess`), `TestDatabaseGuard` + `commerz` `Concurrency::run()` (`pcntl_fork` + barrier files), `PluginContractTests` + `corex` `IsolatesDatabasePath`, `MigratesSchemaSets`, `ArrayEntityRegistry`, `ExtensionContract`. |
-| **DevTools & Quality Gates** | **`packages/devtools`** (`axiomasoft/packman-devtools`, `require-dev`) | `azguard` `StubStore` (strict placeholder checks + Pint-sorted imports), `Place`/`Layout`, AST `ProviderRegistration`, 4-phase transactional `MakeCommand` + `corex` 16 static/architecture/API/schema/ownership gates + `SurfaceScanner` + `ErrorSourceScanner` + custom Laravel Rector rules + `chatom` `OwnersCatalogue`, `split.json`, generators + `azguard` `compatibility.json`. |
+| **Schema** | **`packages/schema`** (`axiomasoft/packman-schema`) | Reference platform `SchemaSet`/`SchemaMigrator` + `commerz` `SchemaOwnershipRegistry` (longest-noun match), `ConstraintNames::shorten()` (63-byte PG limit), `PackmanMigration`, `SchemaFingerprint` + `chatom` `SchemaComponent`/`SchemaStep` + `vaulter` topological `ModuleSchemas`. |
+| **Testkit** | **`packages/testkit`** (`axiomasoft/packman-testkit`, `require-dev`) | `chatom` `PackageTestCase` (`migrateOncePerProcess`), `TestDatabaseGuard` + `commerz` `Concurrency::run()` (`pcntl_fork` + barrier files), `PluginContractTests` + reference platform `IsolatesDatabasePath`, `MigratesSchemaSets`, `ArrayEntityRegistry`, `ExtensionContract`. |
+| **DevTools & Quality Gates** | **`packages/devtools`** (`axiomasoft/packman-devtools`, `require-dev`) | `azguard` `StubStore` (strict placeholder checks + Pint-sorted imports), `Place`/`Layout`, AST `ProviderRegistration`, 4-phase transactional `MakeCommand` + reference platform 16 static/architecture/API/schema/ownership gates + `SurfaceScanner` + `ErrorSourceScanner` + custom Laravel Rector rules + `chatom` `OwnersCatalogue`, `split.json`, generators + `azguard` `compatibility.json`. |
 
 ---
 
@@ -68,16 +68,16 @@ Every repository solved the same foundational problems independently, polishing 
 
 1. **Vendor & Root Naming Fragmentation:**
    - `vaulter` uses `axioma-studio/vaulter-*` across all 11 subpackages while the other 8 repositories use `axiomasoft/*`.
-   - `corex/packages/access-azguard/composer.json:9` declares `"axioma-studio/azguard-core": "^0.3"`, while `azguard/packages/core/composer.json` is `"axiomasoft/azguard"`.
-   - Root `composer.json` names vary across `corex/monorepo`, `axiomasoft/*-monorepo`, `axioma-studio/vaulter-monorepo`, and `axiomasoft/*-workspace`.
+   - `<platform>/packages/access-azguard/composer.json:9` declares `"axioma-studio/azguard-core": "^0.3"`, while `azguard/packages/core/composer.json` is `"axiomasoft/azguard"`.
+   - Root `composer.json` names vary across `<platform>/monorepo`, `axiomasoft/*-monorepo`, `axioma-studio/vaulter-monorepo`, and `axiomasoft/*-workspace`.
 2. **Duplicated Kernel Boilerplate:**
-   - Identical `Attributes/{Api,Spi,SpiKind,Internal}` classes exist independently in `corex`, `vaulter`, `azguard`, `commerz`, `chatom`, `tenant`, `billium`.
+   - Identical `Attributes/{Api,Spi,SpiKind,Internal}` classes exist independently in the reference platform, `vaulter`, `azguard`, `commerz`, `chatom`, `tenant`, `billium`.
    - Separate configuration validators, exception base classes, doctor frameworks, and API manifest scanners exist in almost every repository.
 3. **Hardcoded Branding in Infrastructure Code:**
-   - `tenant/packages/tenant-postgres/src/Internal/Database/TemplateManifest.php:63` hardcodes `"corex-template-manifest/v1\0"`.
-   - `tenant/packages/tenant-postgres/src/Internal/Database/TemplateIntegrityLock.php:16` hardcodes `'corex-template-integrity:'`.
-   - `tenant/packages/tenant-laravel/src/Internal/FrameworkConfig.php:10` references `CoreX` in its docblock.
-   - `corex/packages/core/src/Modules/*` hardcodes `corex-module`, `extra.corex.module`, `corex:modules:*`, `corex.modules`, `bootstrap/cache/corex_modules.php`, and `corexModules.*`.
+   - `tenant/packages/tenant-postgres/src/Internal/Database/TemplateManifest.php:63` hardcodes a legacy platform-template manifest prefix.
+   - `tenant/packages/tenant-postgres/src/Internal/Database/TemplateIntegrityLock.php:16` hardcodes a legacy platform-template integrity lock prefix.
+   - `tenant/packages/tenant-laravel/src/Internal/FrameworkConfig.php:10` references legacy platform branding in its docblock.
+   - Reference platform `packages/core/src/Modules/*` hardcodes host-specific package types, extra keys, command prefixes, cache paths, and PHPStan rule namespaces.
 4. **Heavy/Inconsistent Framework Coupling:**
    - `proxyma/packages/core/src/Laravel/ProxymaServiceProvider.php` is 314 lines long with 30+ raw `$app['config']->get(...)` lookups.
    - `vaulter` pulls `spatie/laravel-package-tools` into 7 subpackages merely for `$package->name(...)`, and `VaulterConfig` retains a live `Illuminate\Contracts\Config\Repository` instance instead of compiling immutable `*Options`.
@@ -90,4 +90,4 @@ Every repository solved the same foundational problems independently, polishing 
    - `vaulter` has 85 committed run-log files (`.claude/runs/`: 31, `.grok/runs/`: 54; 93 total in `.claude` + `.grok`).
    - `proxyma` vendors 606 files under `.agents/skills/` (contradicting plugin-based skill connection).
    - `billium` has 336 AI/orchestration files including `.swissknifeman/orch-artifacts/*`.
-   - `corex/.codex/agents/{corex-spec-writer,corex-test-writer,corex-test-verifier,corex-api-surface}.toml` fail deserialization in Codex v0.169.0 (`skills = [...]` expects `BundledSkillsConfig` struct; `command_requirements` is an unknown field).
+   - Legacy `.codex/agents/*-{spec-writer,test-writer,test-verifier,api-surface}.toml` in the reference platform fail deserialization in Codex v0.169.0 (`skills = [...]` expects `BundledSkillsConfig` struct; `command_requirements` is an unknown field).

@@ -29,11 +29,64 @@ it('rejects reserved, empty, production-like, and un-opted remote databases', fu
     'remote host without opt-in' => [new TestDatabaseIdentity('pgsql', 'db.internal.example', 5432, 'packman_test', 'app')],
 ]);
 
-it('permits non-suffixed or remote databases when explicit destructive opt-in override is passed', function (): void {
-    TestDatabaseGuard::assertSafe(
-        new TestDatabaseIdentity('pgsql', 'ci-postgres.internal', 5432, 'custom_lane', 'ci'),
-        optInOverride: true,
-    );
+it('rejects non-suffixed databases even when PACKMAN_TEST_DESTRUCTIVE_OPT_IN=1 or optInOverride is true, while permitting remote *_test databases with opt-in', function (): void {
+    $previous = getenv('PACKMAN_TEST_DESTRUCTIVE_OPT_IN');
+    $previousEnv = $_ENV['PACKMAN_TEST_DESTRUCTIVE_OPT_IN'] ?? null;
+    $previousServer = $_SERVER['PACKMAN_TEST_DESTRUCTIVE_OPT_IN'] ?? null;
+
+    putenv('PACKMAN_TEST_DESTRUCTIVE_OPT_IN=1');
+    $_ENV['PACKMAN_TEST_DESTRUCTIVE_OPT_IN'] = '1';
+    $_SERVER['PACKMAN_TEST_DESTRUCTIVE_OPT_IN'] = '1';
+
+    try {
+        expect(static fn () => TestDatabaseGuard::assertSafe(
+            new TestDatabaseIdentity('pgsql', '127.0.0.1', 5432, 'customer_data', 'app'),
+        ))->toThrow(UnsafeTestDatabaseException::class, '_test');
+
+        expect(static fn () => TestDatabaseGuard::assertSafe(
+            new TestDatabaseIdentity('pgsql', 'ci-postgres.internal', 5432, 'custom_lane', 'ci'),
+            optInOverride: true,
+        ))->toThrow(UnsafeTestDatabaseException::class, '_test');
+
+        expect(static fn () => TestDatabaseGuard::assertSafe(
+            new TestDatabaseIdentity('sqlite', '', 0, '/var/data/customer_data.sqlite', ''),
+            optInOverride: true,
+        ))->toThrow(UnsafeTestDatabaseException::class, '_test');
+
+        TestDatabaseGuard::assertSafe(
+            new TestDatabaseIdentity('pgsql', 'ci-postgres.internal', 5432, 'ci_packman_test', 'ci'),
+            optInOverride: true,
+        );
+
+        TestDatabaseGuard::assertDestructiveSafe(
+            new TestDatabaseIdentity('pgsql', '127.0.0.1', 5432, 'packman_test', 'postgres'),
+            optInOverride: true,
+        );
+
+        expect(static fn () => TestDatabaseGuard::assertDestructiveSafe(
+            new TestDatabaseIdentity('pgsql', '127.0.0.1', 5432, 'packman_test', 'postgres'),
+            optInOverride: false,
+        ))->toThrow(UnsafeTestDatabaseException::class, 'PACKMAN_TEST_DESTRUCTIVE_OPT_IN=1');
+
+        TestDatabaseGuard::assertDestructiveSafe(
+            new TestDatabaseIdentity('sqlite', '', 0, ':memory:', ''),
+            optInOverride: false,
+        );
+    } finally {
+        putenv($previous === false ? 'PACKMAN_TEST_DESTRUCTIVE_OPT_IN' : "PACKMAN_TEST_DESTRUCTIVE_OPT_IN={$previous}");
+
+        if ($previousEnv === null) {
+            unset($_ENV['PACKMAN_TEST_DESTRUCTIVE_OPT_IN']);
+        } else {
+            $_ENV['PACKMAN_TEST_DESTRUCTIVE_OPT_IN'] = $previousEnv;
+        }
+
+        if ($previousServer === null) {
+            unset($_SERVER['PACKMAN_TEST_DESTRUCTIVE_OPT_IN']);
+        } else {
+            $_SERVER['PACKMAN_TEST_DESTRUCTIVE_OPT_IN'] = $previousServer;
+        }
+    }
 
     expect(SuiteDatabaseConnection::pgsqlDsn(new TestDatabaseIdentity('pgsql', '127.0.0.1', 54329, 'packman_test', 'skm')))
         ->toBe('pgsql:host=127.0.0.1;port=54329;dbname=packman_test');
@@ -55,5 +108,50 @@ it('computes worker lane database names when per-process isolation is active', f
         putenv($previous === false ? 'PACKMAN_TEST_DB_PER_PROCESS' : "PACKMAN_TEST_DB_PER_PROCESS={$previous}");
         putenv($previousToken === false ? 'TEST_TOKEN' : "TEST_TOKEN={$previousToken}");
         unset($_ENV['PACKMAN_TEST_DB_PER_PROCESS'], $_ENV['TEST_TOKEN']);
+    }
+});
+
+it('does not treat sqlite :memory: DB_DATABASE as PGSQL_DATABASE in SuiteDatabaseConnection', function (): void {
+    $keys = ['PGSQL_DATABASE', 'DB_CONNECTION', 'DB_DATABASE'];
+    $saved = [];
+
+    foreach ($keys as $key) {
+        $saved[$key] = [
+            'getenv' => getenv($key),
+            'env' => $_ENV[$key] ?? null,
+            'server' => $_SERVER[$key] ?? null,
+        ];
+    }
+
+    putenv('PGSQL_DATABASE');
+    unset($_ENV['PGSQL_DATABASE'], $_SERVER['PGSQL_DATABASE']);
+    putenv('DB_CONNECTION=sqlite');
+    $_ENV['DB_CONNECTION'] = 'sqlite';
+    $_SERVER['DB_CONNECTION'] = 'sqlite';
+    putenv('DB_DATABASE=:memory:');
+    $_ENV['DB_DATABASE'] = ':memory:';
+    $_SERVER['DB_DATABASE'] = ':memory:';
+
+    try {
+        $identity = SuiteDatabaseConnection::pgsqlIdentity();
+        TestDatabaseGuard::assertSafe($identity);
+        expect($identity->driver)->toBe('pgsql')
+            ->and($identity->database)->toBe('packman_test');
+    } finally {
+        foreach ($saved as $key => $prev) {
+            putenv($prev['getenv'] === false ? $key : "{$key}={$prev['getenv']}");
+
+            if ($prev['env'] === null) {
+                unset($_ENV[$key]);
+            } else {
+                $_ENV[$key] = $prev['env'];
+            }
+
+            if ($prev['server'] === null) {
+                unset($_SERVER[$key]);
+            } else {
+                $_SERVER[$key] = $prev['server'];
+            }
+        }
     }
 });

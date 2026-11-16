@@ -1,0 +1,23 @@
+{
+    "name": "fixture/crm-module",
+    "description": "Composer-discovered Packman module fixture composing With* facets.",
+    "type": "packman-module",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "axiomasoft/packman": "^1.0@dev",
+        "axiomasoft/packman-modules": "^1.0@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fixture\\CrmModule\\": "src/"
+        }
+    },
+    "extra": {
+        "packman": {
+            "module": "Fixture\\CrmModule\\CrmModule"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

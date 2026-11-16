@@ -14,6 +14,7 @@ use Packman\Extensions\Contracts\Persistence\WithSchema;
 use Packman\Extensions\Contracts\Runtime\WithDiagnostics;
 use Packman\Modules\Contracts\Definition\ModuleDefinition;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use {{ namespace }}\Schema\ModuleSchemaSetProvider;
 
 #[Spi(kind: SpiKind::Implement, since: '1.0')]
 final class {{ class_prefix }}Module extends ModuleDefinition implements WithConfiguration, WithDiagnostics, WithSchema
@@ -46,6 +47,12 @@ final class {{ class_prefix }}Module extends ModuleDefinition implements WithCon
 
     public function migrationPath(): string
     {
-        return __DIR__.'/../database/migrations';
+        return __DIR__.'/../database/migrations/tenant';
+    }
+
+    /** @return list<class-string> */
+    public function schemaSetProviders(): array
+    {
+        return [ModuleSchemaSetProvider::class];
     }
 }

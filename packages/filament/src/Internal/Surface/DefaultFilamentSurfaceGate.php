@@ -31,6 +31,7 @@ use Packman\Filament\Enums\FilamentErrorCode;
 use Packman\Filament\Internal\Reflection\ClassTraits;
 use Packman\Panels\Contracts\Admission\PanelAdmitter;
 use Packman\Panels\Contracts\Registry\PanelRegistry;
+use Packman\Panels\Enums\Admission\TenantMode;
 use Packman\Panels\Enums\Panel\Reads;
 use Throwable;
 use UnitEnum;
@@ -271,8 +272,12 @@ final readonly class DefaultFilamentSurfaceGate implements FilamentSurfaceGate
     {
         $guardPanelId = $plugin->getGuardPanel();
 
-        if ($guardPanelId === null || $this->panels === null) {
+        if ($guardPanelId === null) {
             return true;
+        }
+
+        if ($this->panels === null) {
+            return false;
         }
 
         try {
@@ -303,15 +308,23 @@ final readonly class DefaultFilamentSurfaceGate implements FilamentSurfaceGate
             }
         }
 
-        if ($this->admission !== null && $panel->subjectModels() !== []) {
-            $result = $this->admission->admit($panel, $user, $this->resolveScope());
+        $requiresAdmission = $panel->subjectModels() !== [] || $panel->tenantMode() === TenantMode::Required;
 
-            if ($result === null) {
-                return false;
-            }
+        if (! $requiresAdmission) {
+            return true;
         }
 
-        return true;
+        if ($this->admission === null) {
+            return false;
+        }
+
+        $scope = $this->resolveScope();
+
+        if ($panel->tenantMode() === TenantMode::Required && in_array($scope->id(), ['global', 'system', ''], true)) {
+            return false;
+        }
+
+        return $this->admission->admit($panel, $user, $scope) !== null;
     }
 
     private function resolveScope(): ContextScopeInterface

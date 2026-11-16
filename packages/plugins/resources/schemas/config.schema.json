@@ -4,7 +4,10 @@
     "type": "object",
     "properties": {
         "packman-plugins": {
-            "type": "array"
+            "type": [
+                "array",
+                "object"
+            ]
         }
     },
     "additionalProperties": false

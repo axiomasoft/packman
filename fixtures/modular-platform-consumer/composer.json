@@ -1,0 +1,109 @@
+{
+    "name": "fixture/modular-platform-consumer",
+    "description": "Modular platform consumer verifying Composer-discovered ModuleDefinition, With* traits via ExtensionInspector, RegistryCompiler, Schema, Panels, and PackmanFilamentPlugin.",
+    "license": "MIT",
+    "type": "project",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../packages/core",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/packman": "1.0.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/schema",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/packman-schema": "1.0.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/modules",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/packman-modules": "1.0.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/panels",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/packman-panels": "1.0.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/filament",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/packman-filament": "1.0.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/testkit",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "axiomasoft/packman-testkit": "1.0.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "modules/crm",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "fixture/crm-module": "1.0.x-dev"
+                }
+            }
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "axiomasoft/packman": "^1.0@dev",
+        "axiomasoft/packman-filament": "^1.0@dev",
+        "axiomasoft/packman-modules": "^1.0@dev",
+        "axiomasoft/packman-panels": "^1.0@dev",
+        "axiomasoft/packman-schema": "^1.0@dev",
+        "fixture/crm-module": "^1.0@dev"
+    },
+    "require-dev": {
+        "axiomasoft/packman-testkit": "^1.0@dev",
+        "phpunit/phpunit": "^13.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fixture\\ModularPlatform\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Fixture\\ModularPlatform\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}

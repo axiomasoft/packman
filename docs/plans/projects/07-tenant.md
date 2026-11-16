@@ -5,7 +5,7 @@
 - `packages/tenant` (`axiomasoft/tenant`): **`php-library`** (100% pure PHP `>=8.4 <8.6` + `ext-intl`, **zero Laravel dependency**)
 - `packages/tenant-laravel` (`axiomasoft/tenant-laravel`): **`laravel-package`**
 - `packages/tenant-postgres` (`axiomasoft/tenant-postgres`): **`laravel-package`**
-**Zero `corex` Coupling:** Purges 2 hardcoded legacy `corex-*` cryptographic/lock strings and 1 docblock reference found in audit.
+**Zero Host-Product Coupling:** Purges 2 hardcoded legacy host-template cryptographic/lock strings and 1 docblock reference found in audit.
 
 ---
 
@@ -46,13 +46,13 @@
 - **Create 3 Registrars (`src/Registrars/{TenantRuntimeRegistrar,TenantFacilitiesRegistrar,TenantQueueRegistrar}.php`)**:
   - Implement `Packman\Foundation\Contracts\PackageRegistrar`.
 - **`src/TenantServiceProvider.php`**: Refactor 151-line provider to use `RegistersPackageRegistrars` + `TenantOptions`.
-- **`src/Internal/FrameworkConfig.php` (Line 10)**: Remove legacy `CoreX dynamic configuration seam` docblock mention (replace with `Packman dynamic configuration seam` or remove `FrameworkConfig` once fully migrated to `TenantOptions`).
+- **`src/Internal/FrameworkConfig.php` (Line 10)**: Remove legacy host dynamic configuration seam docblock mention (replace with `Packman dynamic configuration seam` or remove `FrameworkConfig` once fully migrated to `TenantOptions`).
 
 ### 2.4. `packages/tenant-postgres` (`laravel-package`)
 - **`composer.json`**: Require `axiomasoft/packman`, `axiomasoft/packman-schema`; register `Tenant\Postgres\TenantPostgresServiceProvider`.
 - **Create `src/Infrastructure/Database/TenantPostgresSchemaSets.php` & `src/TenantPostgresServiceProvider.php`**:
   - Implement `Packman\Schema\Contracts\SchemaSetProvider` declaring `SchemaSet('tenant-postgres', SchemaScope::Central, SchemaLifecycle::Platform)`.
-- **Purge Hardcoded `corex-*` Strings:**
-  - **`src/Internal/Database/TemplateManifest.php:63`**: Replace `"corex-template-manifest/v1\0".$payload` -> `"tenant-template-manifest/v1\0".$payload`.
-  - **`src/Internal/Database/TemplateIntegrityLock.php:16`**: Replace `'corex-template-integrity:'.$templateId` -> `'tenant-template-integrity:'.$templateId`.
+- **Purge Hardcoded Legacy Template Strings:**
+  - **`src/Internal/Database/TemplateManifest.php:63`**: Replace legacy host-template manifest prefix -> `"tenant-template-manifest/v1\0".$payload`.
+  - **`src/Internal/Database/TemplateIntegrityLock.php:16`**: Replace legacy host-template integrity lock prefix -> `'tenant-template-integrity:'.$templateId`.
   - **`tests/postgres/*`**: Update corresponding manifest & advisory-lock test expectations.

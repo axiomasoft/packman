@@ -3,7 +3,7 @@
 **Package:** `axiomasoft/packman-monorepo`  
 **Stack:** PHP 8.4–8.5 · Laravel 13 · Pest 5 / PHPUnit 13 · PHPStan / Larastan 3 · Pint · Rector  
 **Architecture Principle:** One whole unified kernel (`packages/core` -> `axiomasoft/packman`, PSR-4 root `Packman\`) plus focused modular add-ons (`modules`, `plugins`, `schema`, `panels`, `filament`, `testkit`, `devtools`).  
-**Zero-Mention Rule:** Inside `packman` PHP/JSON/config code and public identifiers, there are **zero references to `corex`**. `packman` is the universal ecosystem kernel; `corex` and all sibling packages consume `packman`.
+**Zero-Mention Rule:** Inside `packman` PHP/JSON/config code and public identifiers, there are **zero references to downstream host products**. `packman` is the universal ecosystem kernel; the reference modular platform and all sibling packages consume `packman`.
 
 ---
 
@@ -17,7 +17,7 @@ Every repository and subpackage explicitly declares one of four profiles in `pac
 |:--|:--|:--|:--|:--|
 | **`php-library`** | `library` | Pure PHP 8.4+ contracts, DTOs, exceptions; zero Laravel runtime required. | PHP 8.4+, `axiomasoft/packman` (core pure-PHP surface) | `tenant/packages/tenant`, `billium/packages/contracts` |
 | **`laravel-package`** | `library` | Thin `ServiceProvider` + `PackageRegistrar`s; intra-package plugins/slots via `packman-plugins`; headless panels via `packman-panels`. | `axiomasoft/packman`, `packman-{plugins,schema,panels}` | `commerz`, `chatom`, `vaulter`, `azguard`, `proxyma`, `billium-core`, `sockit` |
-| **`modular-platform`** | `library` + `module` consumers | Full Composer-discovered runtime module platform (`packman-modules`) using `ModuleDefinition`, 8-stage `RegistryCompiler`, `CompiledRegistry`, and lifecycle state (`mod_modules`, `mod_records`), while downstream packages declare Composer `type: "module"` (or configured type like `"corex-module"`). | `axiomasoft/packman`, `packman-{modules,schema,panels}` | `corex` (and any future modular CMS/CRM/ERP platform) |
+| **`modular-platform`** | `library` + `module` consumers | Full Composer-discovered runtime module platform (`packman-modules`) using `ModuleDefinition`, 8-stage `RegistryCompiler`, `CompiledRegistry`, and lifecycle state (`mod_modules`, `mod_records`), while downstream packages declare Composer `type: "packman-module"` (or configured type like `"host-module"`). | `axiomasoft/packman`, `packman-{modules,schema,panels}` | Reference modular platform (and any future modular CMS/CRM/ERP platform) |
 | **`product`** | `project` / `library` | Application / product composition root (`FlexCMS`, `FlexCRM`, SaaS apps). | Platform + domain packages | `flex/cms`, `flex/crm` |
 
 ---
@@ -88,9 +88,9 @@ The unified ecosystem kernel containing 11 cohesive modules directly under `pack
    - `Contracts\ActorResolverInterface`: `public function current(): ActorRef;`
    - `Data\ScopeRef` (`string $id, array $attributes = []`), `Data\ActorRef` (`string $type, ?string $id`).
    - `Exceptions\ScopeUnavailableException`.
-4. **`Packman\Data` (`src/Data/`):** *(Extracted from `corex/packages/core/src/Data`)*
+4. **`Packman\Data` (`src/Data/`):** *(Extracted from the reference platform `packages/core/src/Data`)*
    - `Data\JsonDocument` (`canonicalJson` immutable wrapper), `Laravel\JsonDocuments` (`nullable`, `optionalArray`, `optionalMap`, `decode`), `Laravel\JsonDocumentCast`.
-5. **`Packman\Config` (`src/Config/`):** *(Synthesizing `chatom`, `commerz`, `corex`, `azguard`, `vaulter`)*
+5. **`Packman\Config` (`src/Config/`):** *(Synthesizing `chatom`, `commerz`, reference platform, `azguard`, `vaulter`)*
    - **`Contracts\OptionsFactory`:** Every configurable package compiles a `final readonly class <Pkg>Options::fromArray(array $config, string $path): self` once at boot; domain services inject `<Pkg>Options`, never `config()`/`env()` or live `Repository`.
    - **`Laravel\ConfigurationValidator`:** Accumulates dotted-path violations (`add($path, $message)`) and throws `InvalidConfiguration` (`failIfAny()`).
    - **`Internal\JournalingConfigReader` & `CompileJournal` (`chatom`):** Typed extractors (`string`, `nullableString`, `int($min,$max)`, `float`, `bool`, `unsafeBool`, `enum`, `stringList`, `intList`, `stringMap`, `className`) collecting all errors in a single pass, redacting `/(secret|password|token|key)$/i`, and blocking `unsafeBool` in production without explicit opt-in.
@@ -116,7 +116,7 @@ The unified ecosystem kernel containing 11 cohesive modules directly under `pack
 
 ### 2.2. `packages/modules` — `axiomasoft/packman-modules` (PSR-4: `Packman\Modules\`)
 
-**The 111-file Opus Runtime Module Loader, Adapted with Zero `corex` References:**
+**The 111-file Reference Runtime Module Loader, Adapted with Zero Downstream Product References:**
 - Preserves **100% of Opus's internal algorithms**:
   - `ModuleDefinition` & fluent `ModuleManifest`
   - `ModuleDiscovery` (Composer `installed.json` scan + `$fallbackModules` test seam)
@@ -126,8 +126,8 @@ The unified ecosystem kernel containing 11 cohesive modules directly under `pack
   - All 11 AST PHPStan rules (`NoDirectSystemTableWriteRule`, `NoEvalRule`, `NoForeignPrefixSqlRule`, `NoFsOutsideModuleRule`, `NoListenNotifyRule`, `NoSessionAdvisoryLockRule`, `NoSetWithoutLocalRule`, `NoSqlPrepareRule`, `NoTempTableRule`, `AbstractDatabaseCallRule`)
 - **All 29 external imports** rebound to `Packman\{Attributes,Context,Data,Config,Errors,Events,Features,Settings,Foundation}\*` and `Packman\Schema\*`. Audit trait wiring (`AuditCapabilityWiring`) is decoupled via post-entity-registry hook so host apps wire observers cleanly.
 - **All 13 hardcoded strings** moved into `ModulesOptions`:
-  - `$packageTypes = ['packman-module', 'packman-plugin', 'module', 'plugin']` (downstream Bitrix/WordPress-style modular platforms add e.g. `'corex-module'`, `'corex-plugin'`)
-  - `$extraKeys = [['packman', 'module'], ['packman', 'plugin'], ['module'], ['plugin']]` (downstream platforms add e.g. `['corex', 'module']`, `['corex', 'plugin']`)
+  - `$packageTypes = ['packman-module', 'packman-plugin', 'module', 'plugin']` (downstream Bitrix/WordPress-style modular platforms add e.g. `'host-module'`, `'host-plugin'`)
+  - `$extraKeys = [['packman', 'module'], ['packman', 'plugin'], ['module'], ['plugin']]` (downstream platforms add e.g. `['host', 'module']`, `['host', 'plugin']`)
   - `$configRoot = 'modules'`, `$cachePath = 'bootstrap/cache/modules.php'`, `$cachePrefix = 'modules'`, `$lockKey = 'modules:lifecycle-graph'`
   - `$modulesTable = 'mod_modules'`, `$recordsTable = 'mod_records'`, `$lifecycleLogTable = 'mod_lifecycle_log'`
   - `$compilerPackage = 'axiomasoft/packman-modules'`
@@ -150,7 +150,7 @@ Unified intra-package stateless code plugin, capability & slot engine combining 
 
 ### 2.4. `packages/schema` — `axiomasoft/packman-schema` (PSR-4: `Packman\Schema\`)
 
-- **`SchemaSet` & `SchemaMigrator` (`corex`):** `SchemaSet(id, package, scope: Central|Tenant|Dedicated, lifecycle: Platform|Module, path, version, drivers, requires, connection)` tagged via `SchemaSetProvider`; zero `loadMigrationsFrom`.
+- **`SchemaSet` & `SchemaMigrator` (reference platform):** `SchemaSet(id, package, scope: Central|Tenant|Dedicated, lifecycle: Platform|Module, path, version, drivers, requires, connection)` tagged via `SchemaSetProvider`; zero `loadMigrationsFrom`.
 - **`SchemaOwnershipRegistry` (`commerz`):** Longest-matching noun ownership + duplicate collision guard.
 - **`ConstraintNames::shorten()` (`commerz`):** Deterministic 63-byte PostgreSQL identifier truncation (`substr($name, 0, 54) . '_' . substr(sha1($name), 0, 8)`).
 - **`PackmanMigration` (`commerz`):** Enforces `_pk` naming, `uuidPrimary()`, `timestampsTz()` (`timestamptz(6)`), `money()`, `ref()` (`varchar(191)`).
@@ -164,7 +164,7 @@ Unified intra-package stateless code plugin, capability & slot engine combining 
   - Two-phase `PanelRegistry` (`register`/`replace`/`configure`/`configureAll` -> atomic `freeze()` at `$app->booted(...)`), append-only `PanelRecipe` with origin precedence (`provider` < `plugin` < `configureAll` < `configure($id)`), `Panel::options(class-string<T>): ?T` (`azguard`).
   - `PanelDescriptor`, `PanelProvider`, `PanelContext`, `PanelAccess`, `PanelSlot`, `PanelFormData` (field inheritance, `clamped`, `minimum`, `maximum`, `clamped_by`, `editable`, `reason`, `editVersion` optimistic concurrency hash — `proxyma`).
   - `PanelAdmission` with graceful scoped navigation (`azguard`).
-  - `SavedViews` contracts + SQL repository (`corex/panels`) + optional `ModulePanelCatalogue` activated when `Packman\Modules` is bound.
+  - `SavedViews` contracts + SQL repository (reference platform `panels`) + optional `ModulePanelCatalogue` activated when `Packman\Modules` is bound.
 - **`Packman\Filament` (`packages/filament`):**
   - `FilamentPanelPlugin` contract
   - `BindingEditor`: stateless `Crypt::encryptString` context signing across Livewire roundtrips + server-side dehydration edit enforcement (`proxyma`).
@@ -260,7 +260,7 @@ Unified intra-package stateless code plugin, capability & slot engine combining 
 │   │   ├── 01-packman-monorepo-architecture-and-tree.md
 │   │   ├── 02-ecosystem-rollout-and-alignment-plan.md
 │   │   ├── 03-gpt-6-astra-architectural-review.md
-│   │   └── projects/{01-corex.md .. 09-sockit.md}
+│   │   └── projects/{01-modular-platform.md .. 09-sockit.md}
 │   ├── architecture/{constitution.md,dependency-dag.md,extension-profiles.md,namespace-and-bc-strategy.md,taxonomy.md,structure-profiles.md,api-policy.md,semver-policy.md,config-policy.md,panels-policy.md,schema-policy.md,data-ownership-policy.md,naming.md}
 │   └── reference/{cli-commands.md,packman-json-schema.md,php-api-schema.md}
 ├── schemas/

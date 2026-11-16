@@ -102,3 +102,49 @@ it('can compile a missing production registry while ordinary console boot still 
         $this->app->detectEnvironment(static fn (): string => 'testing');
     }
 });
+
+it('exempts cold production modules:compile with leading CLI flags and optimize lifecycle commands while rejecting normal commands', function (): void {
+    $previousArgv = $_SERVER['argv'] ?? null;
+    $this->app->detectEnvironment(static fn (): string => 'production');
+    $this->app->useBootstrapPath(database_path('bootstrap'));
+    $path = base_path(CompiledModuleRegistry::CACHE_PATH);
+
+    try {
+        if (is_file($path)) {
+            unlink($path);
+        }
+
+        $_SERVER['argv'] = ['artisan', '--env=production', '-q', '--no-interaction', 'modules:compile'];
+        $this->app->register(ModulesServiceProvider::class, true);
+        $this->app->instance(ModuleDiscovery::class, new ModuleDiscovery(installedJsonPath: '/nonexistent-test-installed.json'));
+
+        $this->artisan('modules:compile')->assertSuccessful();
+        expect(is_file($path))->toBeTrue();
+
+        unlink($path);
+        resolve(ModuleRegistry::class)->flush();
+
+        foreach ([
+            ['artisan', '--env', 'production', 'modules:compile'],
+            ['artisan', 'optimize'],
+            ['artisan', '-q', '--env=production', 'optimize'],
+            ['artisan', 'package:discover'],
+            ['artisan', 'config:cache'],
+            ['artisan', 'route:cache'],
+            ['artisan', 'view:cache'],
+            ['artisan', 'event:cache'],
+        ] as $argv) {
+            $_SERVER['argv'] = $argv;
+            new ModulesServiceProvider($this->app)->boot();
+        }
+
+        $_SERVER['argv'] = ['artisan', '--env=production', 'list'];
+        expect(fn () => new ModulesServiceProvider($this->app)->boot())->toThrow(RuntimeException::class);
+    } finally {
+        if (is_file($path)) {
+            @unlink($path);
+        }
+        $_SERVER['argv'] = $previousArgv;
+        $this->app->detectEnvironment(static fn (): string => 'testing');
+    }
+});

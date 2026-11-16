@@ -2,7 +2,7 @@
 
 **Repository Path:** `/home/vostrikov/projects/packages/chatom`  
 **Target Profile:** `laravel-package` (7 subpackages: `core`, `attachments`, `forum`, `poll`, `voice-message`, `webhooks`, `testkit`)  
-**Zero `corex` Coupling:** Standalone modular communication/chat platform consuming `axiomasoft/packman` + `packman-{plugins,schema,testkit,devtools}`.
+**Zero Host-Product Coupling:** Standalone modular communication/chat platform consuming `axiomasoft/packman` + `packman-{plugins,schema,testkit,devtools}`.
 
 ---
 

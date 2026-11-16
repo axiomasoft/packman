@@ -2,7 +2,7 @@
 
 **Repository Path:** `/home/vostrikov/projects/packages/sockit`  
 **Target Profile:** `laravel-package` (Fresh Scaffold from Existing Specifications via `bin/packman`)  
-**Zero `corex` Coupling:** Built from commit 1 on `axiomasoft/packman` + `packman-{plugins,panels,schema,testkit,devtools}` following `audits/sockit-reports-restored/*` and `plans/2026.10.17-№1-SOCKIT-FOUNDATION/*`.
+**Zero Host-Product Coupling:** Built from commit 1 on `axiomasoft/packman` + `packman-{plugins,panels,schema,testkit,devtools}` following `audits/sockit-reports-restored/*` and `plans/2026.10.17-№1-SOCKIT-FOUNDATION/*`.
 
 ---
 

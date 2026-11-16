@@ -6,6 +6,7 @@ namespace Packman\Filament\Laravel;
 
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Foundation\Application;
 use Override;
 use Packman\Attributes\Spi;
@@ -16,7 +17,6 @@ use Packman\Filament\Internal\Configuration\FilamentOptions;
 use Packman\Filament\Internal\Surface\DefaultFilamentSurfaceGate;
 use Packman\Filament\PackmanFilamentPlugin;
 use Packman\Foundation\Contracts\PackageRegistrar;
-use Packman\Panels\Contracts\Admission\PanelAdmissionGate;
 use Packman\Panels\Contracts\Admission\PanelAdmitter;
 use Packman\Panels\Contracts\Registry\PanelRegistry;
 use Packman\Panels\Contracts\Subjects\PanelFormProjector;
@@ -44,9 +44,7 @@ final class FilamentBindingsRegistrar implements PackageRegistrar
         $app->singleton(FilamentSurfaceGate::class, static fn (Application $app): FilamentSurfaceGate => new DefaultFilamentSurfaceGate(
             gate: $app->make(Gate::class),
             panels: $app->bound(PanelRegistry::class) ? $app->make(PanelRegistry::class) : null,
-            admission: $app->bound(PanelAdmissionGate::class) && $app->bound(PanelAdmitter::class)
-                ? $app->make(PanelAdmitter::class)
-                : null,
+            admission: self::resolvePanelAdmitter($app),
             container: $app,
         ));
 
@@ -65,5 +63,18 @@ final class FilamentBindingsRegistrar implements PackageRegistrar
     public function boot(Application $app): void
     {
         $app->make(FilamentOptions::class);
+    }
+
+    private static function resolvePanelAdmitter(Application $app): ?PanelAdmitter
+    {
+        if (! $app->bound(PanelAdmitter::class)) {
+            return null;
+        }
+
+        try {
+            return $app->make(PanelAdmitter::class);
+        } catch (BindingResolutionException) {
+            return null;
+        }
     }
 }

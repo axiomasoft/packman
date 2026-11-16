@@ -3,7 +3,7 @@
 **Repository Path:** `/home/vostrikov/projects/packages/azguard`  
 **Target Profile:** `laravel-package`  
 **Subpackage Restructuring:** Extract `packages/core/modules/{scopes,audit,devtools}` into top-level `packages/{scopes,audit,devtools}` alongside `packages/core` and `packages/filament`.  
-**Zero `corex` Coupling:** Standalone authorization engine consuming `axiomasoft/packman` + `packman-{plugins,panels,filament,testkit,devtools}`.
+**Zero Host-Product Coupling:** Standalone authorization engine consuming `axiomasoft/packman` + `packman-{plugins,panels,filament,testkit,devtools}`.
 
 ---
 

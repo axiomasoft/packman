@@ -34,7 +34,7 @@ final readonly class Layout
             'php-library' => new ProfileDescriptor('php-library', 'Framework-agnostic PHP library with Contracts/Data/Internal separation.', ['Contracts', 'Data', 'Enums', 'Exceptions', 'Internal']),
             'laravel-package' => new ProfileDescriptor('laravel-package', 'Laravel package with slim ServiceProvider and PackageRegistrar.', ['Contracts', 'Data', 'Enums', 'Exceptions', 'Internal', 'Laravel']),
             'packman-plugin' => new ProfileDescriptor('packman-plugin', 'Stateless Packman code plugin implementing ExtensionPlugin + WithConfiguration.', ['Contracts', 'Data', 'Internal', 'Laravel']),
-            'packman-module' => new ProfileDescriptor('packman-module', 'DB-backed Packman module extending ModuleDefinition and composing With* facets.', ['Contracts', 'Data', 'Internal', 'Laravel']),
+            'packman-module' => new ProfileDescriptor('packman-module', 'DB-backed Packman module extending ModuleDefinition and composing With* facets.', ['Contracts', 'Data', 'Internal', 'Laravel', 'Schema']),
             default => throw new InvalidArgumentException("Unknown scaffold profile [{$profile}]. Supported: ".implode(', ', self::PROFILES)),
         };
     }
@@ -79,7 +79,8 @@ final readonly class Layout
                 new GeneratedFile("{$base}/config/{$place->slug}.php", $this->stubs->render('packman-module/config/config.php.stub', $vars), $overwrite),
                 new GeneratedFile("{$base}/src/{$place->classPrefix}Module.php", $this->stubs->render('packman-module/src/Module.php.stub', $vars), $overwrite),
                 new GeneratedFile("{$base}/src/Laravel/{$place->classPrefix}ServiceProvider.php", $this->stubs->render('packman-module/src/ServiceProvider.php.stub', $vars), $overwrite),
-                new GeneratedFile("{$base}/database/migrations/2026_11_01_000001_create_{$place->tablePrefix}_records_table.php", $this->stubs->render('packman-module/database/migrations/create_table.php.stub', $vars), $overwrite),
+                new GeneratedFile("{$base}/src/Schema/ModuleSchemaSetProvider.php", $this->stubs->render('packman-module/src/Schema/ModuleSchemaSetProvider.php.stub', $vars), $overwrite),
+                new GeneratedFile("{$base}/database/migrations/tenant/2026_11_01_000001_create_{$place->tablePrefix}_records_table.php", $this->stubs->render('packman-module/database/migrations/tenant/create_table.php.stub', $vars), $overwrite),
                 new GeneratedFile("{$base}/tests/Feature/{$place->classPrefix}ModuleTest.php", $this->stubs->render('packman-module/tests/Feature/ModuleContractTest.php.stub', $vars), $overwrite),
             ],
             default => throw new InvalidArgumentException("Unknown scaffold profile [{$profile}]. Supported: ".implode(', ', self::PROFILES)),

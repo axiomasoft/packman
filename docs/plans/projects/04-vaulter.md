@@ -2,7 +2,7 @@
 
 **Repository Path:** `/home/vostrikov/projects/packages/vaulter`  
 **Target Profile:** `laravel-package` (9 PHP subpackages: `core`, `drive`, `documents`, `media`, `collaboration`, `azguard`, `filament`, `webhooks`, `vaulter` + JS packages `vue`, `vue-collaboration`)  
-**Zero `corex` Coupling:** Standalone document/drive platform aligned with `axiomasoft/*` naming and consuming `axiomasoft/packman` + `packman-{plugins,schema,filament,testkit,devtools}`.
+**Zero Host-Product Coupling:** Standalone document/drive platform aligned with `axiomasoft/*` naming and consuming `axiomasoft/packman` + `packman-{plugins,schema,filament,testkit,devtools}`.
 
 ---
 

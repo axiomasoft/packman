@@ -5,10 +5,14 @@ declare(strict_types=1);
 
 use Packman\DevTools\Console\ApplicationFactory;
 
-$candidates = [
-    dirname(__DIR__, 3).'/vendor/autoload.php',
+$composerAutoload = $GLOBALS['_composer_autoload_path'] ?? ($_composer_autoload_path ?? null);
+
+$candidates = array_values(array_filter([
+    is_string($composerAutoload) && $composerAutoload !== '' ? $composerAutoload : null,
+    dirname(__DIR__, 3).'/autoload.php',
     dirname(__DIR__).'/vendor/autoload.php',
-];
+    dirname(__DIR__, 3).'/vendor/autoload.php',
+], is_string(...)));
 
 $autoload = null;
 foreach ($candidates as $candidate) {

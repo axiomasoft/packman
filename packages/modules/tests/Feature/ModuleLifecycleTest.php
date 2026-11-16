@@ -459,6 +459,14 @@ it('writes the lifecycle-log actor from CurrentActor, not a hardcoded value (A54
     $userRow = lifecyclePg()->table('mod_lifecycle_log')->where('module_name', 'packman/stub-base')->where('operation', 'disable')->first();
     expect($userRow->actor_type)->toBe('user')
         ->and($userRow->actor_id)->toBe($userId);
+
+    // Generic non-UUID actor id and custom actor type persist without UUID/enum rejection.
+    app()->instance(ActorResolverInterface::class, new StubActorResolver(new ActorRef('webhook', '1')));
+    lifecycleFor(migrationPaths: ['packman/stub-base' => lifecycleStubsPath('base')])->enable('packman/stub-base');
+
+    $genericRow = lifecyclePg()->table('mod_lifecycle_log')->where('module_name', 'packman/stub-base')->where('operation', 'enable')->orderByDesc('id')->first();
+    expect($genericRow->actor_type)->toBe('webhook')
+        ->and($genericRow->actor_id)->toBe('1');
 });
 
 it('rejects enabling a purged module — purged is terminal (A11/A12, FSM gate)', function (): void {

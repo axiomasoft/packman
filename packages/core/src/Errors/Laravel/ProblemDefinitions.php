@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Errors\Laravel;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
@@ -60,7 +61,19 @@ final class ProblemDefinitions
         }
 
         $app->singleton($binding, static function (Application $app) use ($owner, $provider, $package, $sourceRoots): ProblemContribution {
-            $instance = $app->make($provider);
+            $urnPrefix = 'urn:packman:problem:';
+
+            if ($app->bound(Repository::class)) {
+                $configured = $app->make(Repository::class)->get('packman.errors.urn_prefix');
+
+                if (is_string($configured) && $configured !== '') {
+                    $urnPrefix = $configured;
+                }
+            }
+
+            $instance = $app->bound($provider)
+                ? $app->make($provider)
+                : $app->make($provider, ['urnPrefix' => $urnPrefix]);
 
             if (! $instance instanceof ProblemDefinitionProvider) {
                 throw new ProblemRegistryException(errorCode: CoreErrorCode::InvalidDefinition, diagnostic: 'ERROR-INVALID-PROVIDER');

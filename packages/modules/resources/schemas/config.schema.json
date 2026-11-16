@@ -13,8 +13,20 @@
                             "type": "string",
                             "default": "modules"
                         },
-                        "store": [],
-                        "ttl": []
+                        "store": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "null"
+                            ],
+                            "default": null
+                        },
+                        "ttl": {
+                            "type": "integer",
+                            "default": 3600
+                        }
                     },
                     "additionalProperties": false
                 },
@@ -30,7 +42,16 @@
                     "type": "string",
                     "default": "axiomasoft/packman-modules"
                 },
-                "connection": [],
+                "connection": {
+                    "type": [
+                        "string",
+                        "integer",
+                        "number",
+                        "boolean",
+                        "null"
+                    ],
+                    "default": null
+                },
                 "extra_keys": {
                     "type": "array"
                 },
