@@ -1,0 +1,40 @@
+{
+    "name": "{{ composer_name }}",
+    "description": "DB-backed Packman module {{ composer_name }}.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "axiomasoft/packman": "^1.0@dev",
+        "axiomasoft/packman-modules": "^1.0@dev",
+        "axiomasoft/packman-schema": "^1.0@dev",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0"
+    },
+    "require-dev": {
+        "axiomasoft/packman-testkit": "^1.0@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "{{ namespace_escaped }}": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "{{ namespace_escaped }}Tests\\\\": "tests/"
+        }
+    },
+    "extra": {
+        "packman": {
+            "profile": "packman-module",
+            "module": "{{ namespace_escaped }}{{ class_prefix }}Module"
+        },
+        "laravel": {
+            "providers": [
+                "{{ namespace_escaped }}Laravel\\\\{{ class_prefix }}ServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

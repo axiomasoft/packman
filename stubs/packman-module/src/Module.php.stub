@@ -1,0 +1,51 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
+use Packman\Extensions\Concerns\Configuration\Configurable;
+use Packman\Extensions\Concerns\Persistence\OwnsSchema;
+use Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Extensions\Contracts\Persistence\WithSchema;
+use Packman\Extensions\Contracts\Runtime\WithDiagnostics;
+use Packman\Modules\Contracts\Definition\ModuleDefinition;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+
+#[Spi(kind: SpiKind::Implement, since: '1.0')]
+final class {{ class_prefix }}Module extends ModuleDefinition implements WithConfiguration, WithDiagnostics, WithSchema
+{
+    use Configurable;
+    use OwnsSchema;
+    use ProvidesDiagnostics;
+
+    public function manifest(): ModuleManifest
+    {
+        return ModuleManifest::make('{{ composer_name }}')
+            ->title('{{ class_prefix }} Module')
+            ->tablePrefix('{{ table_prefix }}');
+    }
+
+    public function configRoot(): string
+    {
+        return '{{ config_key }}';
+    }
+
+    public function defaultConfigPath(): string
+    {
+        return __DIR__.'/../config/{{ slug }}.php';
+    }
+
+    public function tablePrefix(): string
+    {
+        return '{{ table_prefix }}';
+    }
+
+    public function migrationPath(): string
+    {
+        return __DIR__.'/../database/migrations';
+    }
+}

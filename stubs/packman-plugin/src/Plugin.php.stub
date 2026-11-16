@@ -1,0 +1,42 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
+use Packman\Extensions\Concerns\Configuration\Configurable;
+use Packman\Extensions\Contracts\Configuration\WithConfiguration;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Laravel\PluginRegistrar;
+
+#[Spi(kind: SpiKind::Implement, since: '1.0')]
+final class {{ class_prefix }}Plugin implements ExtensionPlugin, WithConfiguration
+{
+    use Configurable;
+
+    public function manifest(): PluginManifest
+    {
+        return new PluginManifest(
+            id: '{{ plugin_id }}',
+            version: '1.0.0',
+        );
+    }
+
+    public function configRoot(): string
+    {
+        return '{{ config_key }}';
+    }
+
+    public function defaultConfigPath(): string
+    {
+        return __DIR__.'/../config/{{ slug }}.php';
+    }
+
+    public function register(PluginRegistrar $registrar): void
+    {
+        // Declare plugin kinds, contributions, capabilities, or slots.
+    }
+}

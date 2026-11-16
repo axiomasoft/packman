@@ -1,0 +1,3 @@
+# {{ composer_name }}
+
+Laravel integration package (`laravel-package` profile).

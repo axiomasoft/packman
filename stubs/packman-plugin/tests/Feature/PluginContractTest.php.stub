@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }}\Tests\Feature;
+
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Testkit\Concerns\Conformance\PluginContractTests;
+use Packman\Testkit\PackageTestCase;
+use {{ namespace }}\{{ class_prefix }}Plugin;
+
+final class {{ class_prefix }}PluginTest extends PackageTestCase
+{
+    use PluginContractTests;
+
+    protected function pluginUnderTest(): ExtensionPlugin
+    {
+        return new {{ class_prefix }}Plugin;
+    }
+}
