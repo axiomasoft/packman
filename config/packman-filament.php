@@ -9,6 +9,7 @@ return [
 
     'enforce' => false,
 
+    /** @var array<string, bool> */
     'resources' => [],
 
     'abilities' => [
