@@ -62,7 +62,16 @@
                 "views": {
                     "type": "object",
                     "properties": {
-                        "connection": [],
+                        "connection": {
+                            "type": [
+                                "string",
+                                "integer",
+                                "number",
+                                "boolean",
+                                "null"
+                            ],
+                            "default": null
+                        },
                         "scopes_table": {
                             "type": "string",
                             "default": "sys_saved_view_scopes"
