@@ -81,6 +81,10 @@ final class ServerVariableToRequestFacadeRector extends AbstractRector
             return null;
         }
 
+        if ($node->getAttribute(ArrayDimFetchContextNodeVisitor::IS_IN_INTERPOLATED_STRING) === true) {
+            return null;
+        }
+
         return $this->nodeFactory->createStaticCall(Request::class, 'server', [
             new Arg($node->dim),
         ]);
