@@ -74,7 +74,7 @@ final class SurfaceScanner
         foreach ($types as $type) {
             $hasApi = $this->findAttribute($type, Api::class);
             $hasSpi = $this->findAttribute($type, Spi::class);
-            $hasInternal = $this->hasAttribute($type, Internal::class) || $type->docInternal;
+            $hasInternal = $this->hasAttribute($type, Internal::class);
             $inInternalNs = $this->isInternalNamespace($type->name);
 
             if ($hasInternal && ($hasApi !== null || $hasSpi !== null)) {

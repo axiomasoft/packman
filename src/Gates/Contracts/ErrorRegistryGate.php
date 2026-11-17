@@ -46,7 +46,7 @@ final readonly class ErrorRegistryGate implements QualityGate
         $report = $this->scanner->scanPackages($context->rootPath, $targets, $context->config->errorUrnPrefix());
 
         return $report->ok()
-            ? GateResult::pass($this->id(), $this->category(), [sprintf('Verified %d registered ErrorCode cases across packages.', count($report->entries))])
+            ? GateResult::pass($this->id(), $this->category(), [sprintf('Declared %d valid ErrorCode definitions across packages.', count($report->entries))])
             : GateResult::fail($this->id(), $this->category(), $report->diagnostics);
     }
 }

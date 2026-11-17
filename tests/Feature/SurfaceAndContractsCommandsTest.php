@@ -86,11 +86,24 @@ final class LeakyApi
 
 PHP);
 
+        $ws->write('packages/sample/src/Data/DocInternalWithoutAttr.php', <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Sample\Data;
+
+/** @internal */
+final class DocInternalWithoutAttr {}
+
+PHP);
+
         $bad = $scanner->scanPackage('acme/sample', $ws->path('packages/sample/src'));
         expect($bad->ok())->toBeFalse()
             ->and(implode("\n", array_map(static fn ($d): string => $d->code, $bad->diagnostics)))
             ->toContain('surface.internal_conflict')
-            ->toContain('surface.internal_leak');
+            ->toContain('surface.internal_leak')
+            ->toContain('surface.missing_attribute');
     } finally {
         $ws->cleanup();
     }
