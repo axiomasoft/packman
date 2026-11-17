@@ -19,6 +19,31 @@ final class ConfigurationValidator
         $this->items[] = $path.': '.$message;
     }
 
+    /**
+     * Rejects unknown keys in a config map with Levenshtein typo suggestions.
+     *
+     * @param  array<array-key, mixed>  $config
+     * @param  list<string>  $allowedKeys
+     */
+    public function rejectUnknownKeys(array $config, array $allowedKeys, string $path): void
+    {
+        $allowed = array_flip($allowedKeys);
+
+        foreach (array_keys($config) as $key) {
+            if (! is_string($key)) {
+                $this->add($path, 'configuration keys must be strings');
+
+                continue;
+            }
+
+            if (isset($allowed[$key])) {
+                continue;
+            }
+
+            $this->add("{$path}.{$key}", 'unknown key'.self::typoSuggestion($key, $allowedKeys));
+        }
+    }
+
     public function failIfAny(): void
     {
         if ($this->items === []) {
@@ -26,5 +51,22 @@ final class ConfigurationValidator
         }
 
         throw new InvalidConfiguration($this->items);
+    }
+
+    /** @param list<string> $candidates */
+    private static function typoSuggestion(string $unknown, array $candidates): string
+    {
+        $best = null;
+        $bestDistance = 4;
+
+        foreach ($candidates as $candidate) {
+            $distance = levenshtein($unknown, $candidate);
+
+            if ($distance < $bestDistance) {
+                [$best, $bestDistance] = [$candidate, $distance];
+            }
+        }
+
+        return $best === null ? '' : " (did you mean \"{$best}\"?)";
     }
 }

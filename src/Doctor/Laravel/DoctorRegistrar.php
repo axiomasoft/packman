@@ -30,6 +30,6 @@ final class DoctorRegistrar implements PackageRegistrar
 
         $app->singleton(ConfigValidCheck::class);
         $app->singleton(SchemaStatusCheck::class);
-        $app->tag([ConfigValidCheck::class, SchemaStatusCheck::class], DoctorRegistry::TAG);
+        $app->tag([ConfigValidCheck::class, SchemaStatusCheck::class], DoctorChecks::TAG);
     }
 }
