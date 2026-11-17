@@ -43,6 +43,9 @@ final class PackmanManifestReader
                     continue;
                 }
 
+                $rawOwns = is_array($entry['owns'] ?? null) ? $entry['owns'] : [];
+                $owns = array_values(array_filter($rawOwns, is_string(...)));
+
                 $packages[] = new PackageManifest(
                     name: is_string($entry['name'] ?? null) ? $entry['name'] : '',
                     path: is_string($entry['path'] ?? null) ? $entry['path'] : '',
@@ -51,33 +54,41 @@ final class PackmanManifestReader
                     layer: is_string($entry['layer'] ?? null) ? $entry['layer'] : 'L2',
                     type: is_string($entry['type'] ?? null) ? $entry['type'] : 'addon',
                     devOnly: (bool) ($entry['dev_only'] ?? false),
+                    owns: $owns,
                 );
             }
         }
 
         $profiles = [];
-        $rawProfileFiles = glob($root.'/schemas/profiles/*.profile.json');
-        $profileFiles = is_array($rawProfileFiles) ? $rawProfileFiles : [];
-        sort($profileFiles, SORT_STRING);
-        foreach ($profileFiles as $profileFile) {
-            $profileRaw = file_get_contents($profileFile);
+        $bundledDir = dirname(__DIR__, 3).'/resources/schemas/profiles';
+        $profileGlobs = [
+            $bundledDir.'/*.profile.json',
+            $root.'/schemas/profiles/*.profile.json',
+        ];
+        foreach ($profileGlobs as $globPattern) {
+            $rawProfileFiles = glob($globPattern);
+            $profileFiles = is_array($rawProfileFiles) ? $rawProfileFiles : [];
+            sort($profileFiles, SORT_STRING);
+            foreach ($profileFiles as $profileFile) {
+                $profileRaw = file_get_contents($profileFile);
 
-            if (! is_string($profileRaw) || $profileRaw === '') {
-                continue;
+                if (! is_string($profileRaw) || $profileRaw === '') {
+                    continue;
+                }
+
+                $decodedProfile = json_decode($profileRaw, true, 512, JSON_THROW_ON_ERROR);
+
+                if (! is_array($decodedProfile)) {
+                    continue;
+                }
+
+                $profileName = is_string($decodedProfile['profile'] ?? null)
+                    ? $decodedProfile['profile']
+                    : basename($profileFile, '.profile.json');
+
+                /** @var array<string, mixed> $decodedProfile */
+                $profiles[$profileName] = $decodedProfile;
             }
-
-            $decodedProfile = json_decode($profileRaw, true, 512, JSON_THROW_ON_ERROR);
-
-            if (! is_array($decodedProfile)) {
-                continue;
-            }
-
-            $profileName = is_string($decodedProfile['profile'] ?? null)
-                ? $decodedProfile['profile']
-                : basename($profileFile, '.profile.json');
-
-            /** @var array<string, mixed> $decodedProfile */
-            $profiles[$profileName] = $decodedProfile;
         }
 
         $gates = is_array($data['gates'] ?? null) ? $data['gates'] : [];

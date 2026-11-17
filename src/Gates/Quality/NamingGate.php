@@ -59,6 +59,7 @@ final readonly class NamingGate implements QualityGate
 
             $srcDir = $context->packageDirectory($package).'/src';
             $baseNamespace = trim($package->namespace, '\\');
+            $psr4Roots = $this->resolveSrcPsr4Roots($context->readComposerJson($package), $baseNamespace);
 
             foreach ($this->walker->phpFiles($srcDir) as $file) {
                 $checkedFiles++;
@@ -77,10 +78,7 @@ final readonly class NamingGate implements QualityGate
 
                 $subPath = ltrim(substr($file, strlen($srcDir)), '/');
                 $expectedShortName = pathinfo($subPath, PATHINFO_FILENAME);
-                $relativeDir = dirname($subPath);
-                $expectedNamespace = $relativeDir === '.'
-                    ? $baseNamespace
-                    : $baseNamespace.'\\'.str_replace('/', '\\', $relativeDir);
+                $expectedNamespace = $this->expectedNamespaceForSubPath($subPath, $psr4Roots);
 
                 [$actualNs, $symbolNames] = $this->extractNamespaceAndTypes($ast);
 
@@ -113,6 +111,61 @@ final readonly class NamingGate implements QualityGate
         return $violations === []
             ? GateResult::pass($this->id(), $this->category(), [sprintf('Verified strict_types and PSR-4 naming across %d source files.', $checkedFiles)])
             : GateResult::fail($this->id(), $this->category(), $violations);
+    }
+
+    /**
+     * @param  array<mixed>  $composer
+     * @return list<array{prefix: string, namespace: string}>
+     */
+    private function resolveSrcPsr4Roots(array $composer, string $baseNamespace): array
+    {
+        $roots = [];
+        $autoload = is_array($composer['autoload'] ?? null) ? $composer['autoload'] : [];
+        $psr4 = is_array($autoload['psr-4'] ?? null) ? $autoload['psr-4'] : [];
+
+        foreach ($psr4 as $ns => $path) {
+            if (! is_string($ns) || ! is_string($path)) {
+                continue;
+            }
+
+            $normalizedPath = trim(str_replace('\\', '/', $path), '/');
+
+            if ($normalizedPath === 'src') {
+                $roots[] = ['prefix' => '', 'namespace' => trim($ns, '\\')];
+            } elseif (str_starts_with($normalizedPath, 'src/')) {
+                $roots[] = ['prefix' => substr($normalizedPath, 4).'/', 'namespace' => trim($ns, '\\')];
+            }
+        }
+
+        if ($roots === []) {
+            $roots[] = ['prefix' => '', 'namespace' => $baseNamespace];
+        }
+
+        usort($roots, static fn (array $a, array $b): int => strlen($b['prefix']) <=> strlen($a['prefix']));
+
+        return $roots;
+    }
+
+    /** @param list<array{prefix: string, namespace: string}> $roots */
+    private function expectedNamespaceForSubPath(string $subPath, array $roots): string
+    {
+        foreach ($roots as $root) {
+            if ($root['prefix'] === '' || str_starts_with($subPath, $root['prefix'])) {
+                $remainder = substr($subPath, strlen($root['prefix']));
+                $relativeDir = dirname($remainder);
+
+                return $relativeDir === '.'
+                    ? $root['namespace']
+                    : $root['namespace'].'\\'.str_replace('/', '\\', $relativeDir);
+            }
+        }
+
+        $relativeDir = dirname($subPath);
+        $fallback = $roots[0]['namespace'] ?? '';
+
+        return $relativeDir === '.'
+            ? $fallback
+            : $fallback.'\\'.str_replace('/', '\\', $relativeDir);
     }
 
     /** @param list<Node\Stmt> $ast */

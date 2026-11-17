@@ -1660,6 +1660,15 @@
                             "optional": true,
                             "default": "false",
                             "flags": 1
+                        },
+                        {
+                            "name": "owns",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
+                            "flags": 1
                         }
                     ],
                     "return": null,

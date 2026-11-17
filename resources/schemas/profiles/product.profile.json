@@ -1,0 +1,10 @@
+{
+    "profile": "product",
+    "composer_type": "project",
+    "allow_laravel_required": true,
+    "allowed_directories": ["Contracts", "Data", "Enums", "Events", "Exceptions", "Internal", "Laravel"],
+    "provider_max_lines": 120,
+    "require_php_api_manifest": false,
+    "require_readme": true,
+    "require_changelog": false
+}

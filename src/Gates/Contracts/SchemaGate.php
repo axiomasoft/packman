@@ -49,6 +49,10 @@ final class SchemaGate implements QualityGate
         $manifestPath = $root.'/packman.json';
         $manifestSchemaPath = $root.'/schemas/packman.schema.json';
 
+        if (! is_file($manifestSchemaPath)) {
+            $manifestSchemaPath = dirname(__DIR__, 3).'/resources/schemas/packman.schema.json';
+        }
+
         if (is_file($manifestPath) && is_file($manifestSchemaPath)) {
             $manifestRaw = file_get_contents($manifestPath);
 

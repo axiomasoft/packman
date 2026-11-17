@@ -25,6 +25,30 @@ it('handles missing ai/ source directory gracefully in dry-run and live sync', f
     }
 });
 
+it('falls back to bundled canonical ai pack when packman.json exists without a local ai directory', function (): void {
+    $ws = new TempWorkspace('packman-aisync-downstream-');
+
+    try {
+        $ws->writeJson('packman.json', [
+            'schema_version' => 1,
+            'name' => 'acme/downstream-monorepo',
+            'profile' => 'laravel-package',
+            'packages' => [],
+        ]);
+
+        $app = ApplicationFactory::create($ws->root);
+        $tester = new CommandTester($app->find('ai:sync'));
+
+        expect($tester->execute(['--root' => $ws->root, '--dry-run' => true]))->toBe(1)
+            ->and($tester->getDisplay())->toContain('MISSING AGENTS.md');
+        expect($tester->execute(['--root' => $ws->root]))->toBe(0);
+        expect($tester->execute(['--root' => $ws->root, '--dry-run' => true]))->toBe(0);
+        expect(is_file($ws->path('.codex/agents/packman-reviewer.toml')))->toBeTrue();
+    } finally {
+        $ws->cleanup();
+    }
+});
+
 it('synchronizes canonical ai/ pack into .claude, valid Codex v0.169+ TOML, .gemini, and AGENTS.md while preserving reviewer overrides', function (): void {
     $ws = new TempWorkspace('packman-aisync-fixture-');
 

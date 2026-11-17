@@ -304,3 +304,65 @@ PHP);
         $ws->cleanup();
     }
 });
+
+it('falls back to bundled schemas, honors package owns, and supports multi-root psr-4 in downstream repos', function (): void {
+    $ws = new TempWorkspace('packman-downstream-gates-');
+
+    try {
+        $pkg = $ws->seedCleanMonorepoPackage('acme/custom', 'packages/custom', 'Acme\\Custom\\', 'laravel-package', 'L2');
+        $pkg['owns'] = ['CustomDomain'];
+        $ws->writeJson('packages/custom/composer.json', [
+            'name' => 'acme/custom',
+            'description' => 'Custom package.',
+            'type' => 'library',
+            'require' => ['php' => '^8.4'],
+            'autoload' => [
+                'psr-4' => [
+                    'Acme\\Custom\\' => 'src/',
+                    'Acme\\PublicExceptions\\' => 'src/Exceptions/Public/',
+                ],
+            ],
+        ]);
+        $ws->write('packages/custom/src/CustomDomain/Service.php', <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Custom\CustomDomain;
+
+use Packman\Attributes\Api;
+
+#[Api(since: '1.0')]
+final class Service {}
+
+PHP);
+        $ws->write('packages/custom/src/Exceptions/Public/DomainFailure.php', <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\PublicExceptions;
+
+use Packman\Attributes\Api;
+use RuntimeException;
+
+#[Api(since: '1.0')]
+final class DomainFailure extends RuntimeException {}
+
+PHP);
+        $ws->writePackmanJson([$pkg]);
+
+        (new ApiManifestGenerator)->sync($ws->root, [
+            ['name' => $pkg['name'], 'path' => $pkg['path']],
+        ], write: true);
+
+        $results = GateRunner::default()->run($ws->root);
+        expect($results)->toHaveCount(16);
+
+        foreach ($results as $result) {
+            expect($result->passed)->toBeTrue("Gate [{$result->gateId}] failed: ".implode('; ', $result->violations));
+        }
+    } finally {
+        $ws->cleanup();
+    }
+});
