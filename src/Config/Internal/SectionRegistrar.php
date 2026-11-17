@@ -41,7 +41,11 @@ final class SectionRegistrar
 
             $settings = (new $class)->settingsClass();
             $app->tag([$class], self::TAG);
-            $app->bind($settings, static fn (Application $app): object => $app->make(SettingsLookup::class)->get($settings));
+
+            if (! $app->bound($settings)) {
+                $app->bind($settings, static fn (Application $app): object => $app->make(SettingsLookup::class)->get($settings));
+            }
+
             $registered[$class] = true;
         }
 
