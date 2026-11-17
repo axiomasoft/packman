@@ -213,9 +213,9 @@ final class ConfigSchemaGenerator
     /** @return array<string, mixed> */
     private function itemExprToSchema(ArrayItem $item): array
     {
-        if ($item->value instanceof Array_ && $item->value->items === []) {
-            $doc = $item->getDocComment()?->getText();
+        $doc = $item->getDocComment()?->getText();
 
+        if ($item->value instanceof Array_ && $item->value->items === []) {
             if (is_string($doc) && preg_match('/@var\s+array<string,\s*bool>/', $doc) === 1) {
                 return [
                     'anyOf' => [
@@ -231,6 +231,20 @@ final class ConfigSchemaGenerator
                         ],
                     ],
                 ];
+            }
+        }
+
+        if ($item->value instanceof ConstFetch && strtolower($item->value->name->toString()) === 'null' && is_string($doc)) {
+            if (preg_match('/@var\s+\?(?:list|array)\b|@var\s+(?:list|array)<[^>]*>\s*\|\s*null|@var\s+null\s*\|\s*(?:list|array)/', $doc) === 1) {
+                return ['type' => ['array', 'null'], 'default' => null];
+            }
+
+            if (preg_match('/@var\s+\?int\b|@var\s+int\s*\|\s*null|@var\s+null\s*\|\s*int\b/', $doc) === 1) {
+                return ['type' => ['integer', 'null'], 'default' => null];
+            }
+
+            if (preg_match('/@var\s+\?bool\b|@var\s+bool\s*\|\s*null|@var\s+null\s*\|\s*bool\b/', $doc) === 1) {
+                return ['type' => ['boolean', 'null'], 'default' => null];
             }
         }
 

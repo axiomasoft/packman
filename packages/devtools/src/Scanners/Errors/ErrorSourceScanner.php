@@ -38,7 +38,7 @@ use Throwable;
 #[Api(since: '1.0')]
 final class ErrorSourceScanner
 {
-    private const string WIRE_CODE_PATTERN = '/\A[a-z0-9]+(?:_[a-z0-9]+)*(?:\.[a-z0-9]+(?:_[a-z0-9]+)*)+\z/';
+    private const string WIRE_CODE_PATTERN = '/\A[a-z0-9]+(?:[-_][a-z0-9]+)*(?:\.[a-z0-9]+(?:[-_][a-z0-9]+)*)+\z/';
 
     private readonly Parser $parser;
 

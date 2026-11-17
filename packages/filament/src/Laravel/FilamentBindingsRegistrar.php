@@ -31,7 +31,7 @@ final class FilamentBindingsRegistrar implements PackageRegistrar
     #[Override]
     public function register(Application $app): void
     {
-        $app->singleton(FilamentOptions::class, static function (Application $app): FilamentOptions {
+        $app->singletonIf(FilamentOptions::class, static function (Application $app): FilamentOptions {
             $config = $app->make(Repository::class);
             $primary = (array) $config->get('packman-filament', []);
             $scoped = (array) $config->get('packman.filament', []);
@@ -41,7 +41,7 @@ final class FilamentBindingsRegistrar implements PackageRegistrar
             return FilamentOptions::fromArray($merged);
         });
 
-        $app->singleton(FilamentSurfaceGate::class, static fn (Application $app): FilamentSurfaceGate => new DefaultFilamentSurfaceGate(
+        $app->singletonIf(FilamentSurfaceGate::class, static fn (Application $app): FilamentSurfaceGate => new DefaultFilamentSurfaceGate(
             gate: $app->make(Gate::class),
             panels: $app->bound(PanelRegistry::class) ? $app->make(PanelRegistry::class) : null,
             admission: self::resolvePanelAdmitter($app),
