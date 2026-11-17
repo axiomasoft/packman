@@ -8,7 +8,7 @@
     ],
     "require": {
         "php": "^8.4",
-        "axiomasoft/packman": "^1.0@dev",
+        "axiomasoft/packman": "^0.1|^1.0@dev",
         "driftingly/rector-laravel": "^2.0",
         "illuminate/support": "^12.0|^13.0",
         "nette/neon": "^3.4",
@@ -35,6 +35,9 @@
         "packman": {
             "profile": "laravel-package",
             "dev_only": true
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
         }
     },
     "minimum-stability": "dev",
