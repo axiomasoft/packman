@@ -18,6 +18,7 @@ use Packman\Extensions\Laravel\ExtensionFacetRegistrar;
 use Packman\Foundation\Contracts\PackageRegistrar;
 use Packman\Plugins\Contracts\Contributions\Capabilities;
 use Packman\Plugins\Contracts\Contributions\Contributions;
+use Packman\Plugins\Contracts\Contributions\Extensions;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Contracts\Registry\PluginActivationGate;
 use Packman\Plugins\Contracts\Registry\PluginInspector;
@@ -28,7 +29,6 @@ use Packman\Plugins\Internal\Graph\PluginCatalog;
 use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
 use Packman\Plugins\Laravel\Console\ExtensionsCommand;
 use Packman\Schema\Contracts\Compiler\SchemaOwnership;
-use Packman\Schema\Contracts\Migration\SchemaSetProvider;
 use Packman\Schema\Laravel\SchemaExtensions;
 use ReflectionClass;
 use Throwable;
@@ -130,6 +130,7 @@ final class ExtensionRegistrar implements PackageRegistrar
             $app->make(FrozenContributions::class),
             $app,
         ));
+        $app->alias(ExtensionRegistry::class, Extensions::class);
     }
 
     public function boot(Application $app): void
@@ -228,6 +229,7 @@ final class ExtensionRegistrar implements PackageRegistrar
     private static function wirePluginFacets(Application $app, FrozenContributions $contributions): void
     {
         $schemaNouns = [];
+        $hasSchemaExtensions = false;
 
         foreach ($contributions->describe() as $plugin) {
             $facet = $plugin->facets;
@@ -247,17 +249,14 @@ final class ExtensionRegistrar implements PackageRegistrar
             }
 
             if ($facet->hasSchema) {
+                $hasSchemaExtensions = true;
+
                 if ($facet->tableNouns !== []) {
                     $schemaNouns[$plugin->id] = $facet->tableNouns;
                 }
 
-                if ($facet->schemaSetProviders !== [] && interface_exists(SchemaSetProvider::class)) {
-                    foreach ($facet->schemaSetProviders as $provider) {
-                        if (is_subclass_of($provider, SchemaSetProvider::class)) {
-                            $app->singletonIf($provider);
-                            $app->tag([$provider], SchemaSetProvider::class);
-                        }
-                    }
+                if ($facet->schemaSetProviders !== [] && class_exists(SchemaExtensions::class)) {
+                    SchemaExtensions::registerProviders($app, ...$facet->schemaSetProviders);
                 }
             }
 
@@ -267,6 +266,10 @@ final class ExtensionRegistrar implements PackageRegistrar
                 problemProviders: $facet->problemProviders,
                 composerManifest: ExtensionFacetRegistrar::discoverComposerManifest($plugin->class),
             );
+        }
+
+        if ($hasSchemaExtensions && class_exists(SchemaExtensions::class)) {
+            SchemaExtensions::registerExtensionModuleBoundary($app);
         }
 
         if ($schemaNouns !== [] && interface_exists(SchemaOwnership::class) && class_exists(SchemaExtensions::class)) {

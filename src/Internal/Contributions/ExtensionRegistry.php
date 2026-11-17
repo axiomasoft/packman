@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace Packman\Plugins\Internal\Contributions;
 
 use Illuminate\Contracts\Container\Container;
-use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+use Packman\Plugins\Contracts\Contributions\Extensions;
 use Packman\Plugins\Data\Contributions\SlotContribution;
 use Packman\Plugins\Exceptions\Graph\MissingExtensionException;
 
 /**
  * Active slot contributions from the sealed extension graph, ordered by priority ascending, then id.
  */
-#[Api(since: '1.0')]
-final readonly class ExtensionRegistry
+#[Internal]
+final readonly class ExtensionRegistry implements Extensions
 {
     public function __construct(
         private FrozenContributions $graph,

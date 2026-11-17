@@ -18,7 +18,7 @@ final readonly class PluginManifest
     private const string SEMVER_PATTERN = '/\A(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-((0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?\z/';
 
     /** @var list<string> */
-    public const array DATABASES = ['pgsql', 'mysql', 'sqlite'];
+    public const array DATABASES = ['pgsql', 'mysql', 'mariadb', 'sqlite'];
 
     /**
      * @param  string  $id  `vendor.name`, dot-separated lowercase kebab-case segments
