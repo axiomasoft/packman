@@ -6,6 +6,7 @@ namespace Packman\Testkit\Concerns\Database;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Packman\Attributes\Api;
+use Packman\Testkit\Internal\ResolvedDatabaseConnection;
 use Packman\Testkit\Support\Database\SuiteDatabaseConnection;
 use Packman\Testkit\Support\Database\TestDatabaseGuard;
 
@@ -18,5 +19,10 @@ trait UsesSuiteDatabase
         $identity = SuiteDatabaseConnection::pgsqlIdentity();
         TestDatabaseGuard::assertSafe($identity);
         $config->set("database.connections.{$connection}", SuiteDatabaseConnection::laravelPgsqlConfig($identity));
+    }
+
+    protected function assertDestructiveSuitePgsqlAllowed(string $connection = 'pgsql'): void
+    {
+        ResolvedDatabaseConnection::assertDestructiveSafe($connection, requiredDriver: 'pgsql');
     }
 }

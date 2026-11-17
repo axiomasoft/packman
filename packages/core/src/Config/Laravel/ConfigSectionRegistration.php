@@ -37,6 +37,12 @@ final class ConfigSectionRegistration
         $app->make(ConfigSections::class)->own($root, $validate);
     }
 
+    /** @return array<string, Closure(array<string, mixed>): void> */
+    public static function owned(Application $app): array
+    {
+        return $app->make(ConfigSections::class)->owned();
+    }
+
     /** @param array<string, mixed> $config */
     public static function assertKnownKeys(Application $app, array $config): void
     {

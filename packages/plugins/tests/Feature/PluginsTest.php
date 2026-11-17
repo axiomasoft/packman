@@ -29,6 +29,7 @@ use Packman\Features\Data\FeatureFlagDefinition;
 use Packman\Plugins\Concerns\RegistersNothing;
 use Packman\Plugins\Contracts\Contributions\Capabilities;
 use Packman\Plugins\Contracts\Contributions\Contributions;
+use Packman\Plugins\Contracts\Contributions\Extensions;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Contracts\Registry\PluginActivationGate;
 use Packman\Plugins\Contracts\Registry\PluginInspector;
@@ -39,7 +40,6 @@ use Packman\Plugins\Enums\PluginErrorCode;
 use Packman\Plugins\Exceptions\Graph\InvalidExtensionGraphException;
 use Packman\Plugins\Exceptions\Graph\MissingExtensionException;
 use Packman\Plugins\Exceptions\Registry\UnsupportedContribution;
-use Packman\Plugins\Internal\Contributions\ExtensionRegistry;
 use Packman\Plugins\Internal\Contributions\FrozenContributions;
 use Packman\Plugins\Internal\Graph\PluginEntry;
 use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
@@ -577,11 +577,14 @@ it('hydrates capabilities, slots, options, schema nouns, diagnostics, and DB fla
     $contributions = app(Contributions::class);
     $inspector = app(PluginInspector::class);
     $capabilities = app(Capabilities::class);
-    $extensions = app(ExtensionRegistry::class);
+    $extensions = app(Extensions::class);
 
     expect($contributions->databaseRegisteredPluginIds())->toBe(['acme.composed'])
-        ->and($contributions->facetsOf('acme.composed')?->featureFlags[0]->key)->toBe('composed.beta')
+        ->and($inspector->facetsOf('acme.composed')?->featureFlags[0]->key)->toBe('composed.beta')
         ->and($inspector->describe()[0]->facets?->persistsInDatabase)->toBeTrue()
+        ->and($inspector->disabledIds())->toBe([])
+        ->and(array_keys($inspector->slots()))->toBe([Greeter::class])
+        ->and(array_keys($inspector->slotContributions()))->toBe([Greeter::class])
         ->and($capabilities->require(Greeter::class))->toBeInstanceOf(HelloGreeter::class)
         ->and($extensions->handler(Greeter::class, 'hello'))->toBeInstanceOf(HelloGreeter::class)
         ->and(app(ComposedPluginOptions::class)->mode)->toBe('strict')

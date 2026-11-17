@@ -10,6 +10,7 @@ use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Doctor\Contracts\HealthCheck;
+use WeakMap;
 
 /**
  * Supported SPI entry point for tagging {@see DoctorCheck} and {@see HealthCheck} implementations.
@@ -29,6 +30,10 @@ final class DoctorChecks
                 throw new InvalidArgumentException("{$check} must implement ".DoctorCheck::class.'.');
             }
 
+            if (! self::markTagged($app, self::TAG, $check)) {
+                continue;
+            }
+
             $app->singletonIf($check);
             $app->tag([$check], self::TAG);
         }
@@ -42,8 +47,36 @@ final class DoctorChecks
                 throw new InvalidArgumentException("{$check} must implement ".HealthCheck::class.'.');
             }
 
+            if (! self::markTagged($app, self::HEALTH_CHECK_TAG, $check)) {
+                continue;
+            }
+
             $app->singletonIf($check);
             $app->tag([$check], self::HEALTH_CHECK_TAG);
         }
+    }
+
+    private static function markTagged(Application $app, string $tag, string $class): bool
+    {
+        /** @var WeakMap<Application, array<string, true>>|null $seen */
+        static $seen = null;
+
+        if (! $seen instanceof WeakMap) {
+            /** @var WeakMap<Application, array<string, true>> $map */
+            $map = new WeakMap;
+            $seen = $map;
+        }
+
+        $entries = $seen->offsetExists($app) ? $seen->offsetGet($app) : [];
+        $key = $tag.'|'.$class;
+
+        if (isset($entries[$key])) {
+            return false;
+        }
+
+        $entries[$key] = true;
+        $seen->offsetSet($app, $entries);
+
+        return true;
     }
 }

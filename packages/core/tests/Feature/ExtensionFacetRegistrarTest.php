@@ -92,8 +92,10 @@ it('registers WithConfiguration, WithDiagnostics, ConfigSectionRegistration, and
     ConfigSectionRegistration::own(app(), 'facet_probe', static function (array $config): void {
         FacetProbeOptions::fromArray($config, 'facet_probe');
     });
+    DoctorChecks::register(app(), FacetProbeCheck::class);
 
     expect(app(FacetProbeOptions::class)->mode)->toBe('fast')
+        ->and(array_keys(ConfigSectionRegistration::owned(app())))->toBe(['facet_probe'])
         ->and(array_map(static fn (DoctorCheck $c): string => $c->key(), app(DoctorRegistryContract::class)->matching(['facet'])))
         ->toBe(['facet.probe.check']);
 
@@ -106,4 +108,21 @@ it('registers WithConfiguration, WithDiagnostics, ConfigSectionRegistration, and
 
     expect(static fn () => DoctorChecks::register(app(), stdClass::class))
         ->toThrow(InvalidArgumentException::class);
+});
+
+it('merges associative defaults while letting explicit empty/short lists replace default lists wholesale', function (): void {
+    $tempFile = sys_get_temp_dir().'/packman_defaults_'.uniqid('', true).'.php';
+    file_put_contents($tempFile, "<?php return ['items' => ['a', 'b'], 'nested' => ['enabled' => true, 'mode' => 'safe']];");
+
+    try {
+        config()->set('merge_probe', ['items' => [], 'nested' => ['mode' => 'strict']]);
+        ExtensionFacetRegistrar::registerConfiguration(app(), 'merge_probe', $tempFile, null);
+
+        expect(config('merge_probe'))->toBe([
+            'items' => [],
+            'nested' => ['enabled' => true, 'mode' => 'strict'],
+        ]);
+    } finally {
+        @unlink($tempFile);
+    }
 });

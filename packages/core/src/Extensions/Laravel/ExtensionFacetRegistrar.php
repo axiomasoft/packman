@@ -65,51 +65,51 @@ final class ExtensionFacetRegistrar
         ?string $optionsClass,
         ?string $configSectionClass = null,
     ): void {
-        if ($configSectionClass !== null && is_subclass_of($configSectionClass, ConfigSection::class)) {
-            ConfigSectionRegistration::register($app, $configSectionClass);
-        }
+        if ($configRoot !== '') {
+            if (
+                $defaultConfigPath !== null
+                && is_file($defaultConfigPath)
+                && $app->bound(Repository::class)
+                && self::markConfigDefaultsMerged($app, $configRoot, $defaultConfigPath)
+            ) {
+                $configRepo = $app->make(Repository::class);
+                $defaults = require $defaultConfigPath;
 
-        if ($configRoot === '') {
-            return;
-        }
+                if (is_array($defaults)) {
+                    $existing = $configRepo->get($configRoot, []);
+                    /** @var array<array-key, mixed> $existingMap */
+                    $existingMap = is_array($existing) ? $existing : [];
+                    $configRepo->set($configRoot, self::mergeConfigDefaults($defaults, $existingMap));
+                }
+            }
 
-        if (
-            $defaultConfigPath !== null
-            && is_file($defaultConfigPath)
-            && $app->bound(Repository::class)
-            && self::markConfigDefaultsMerged($app, $configRoot, $defaultConfigPath)
-        ) {
-            $configRepo = $app->make(Repository::class);
-            $defaults = require $defaultConfigPath;
+            if ($optionsClass !== null && is_subclass_of($optionsClass, OptionsFactory::class)) {
+                $app->singletonIf($optionsClass, static function (Application $app) use ($optionsClass, $configRoot): OptionsFactory {
+                    $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get($configRoot, []) : [];
 
-            if (is_array($defaults)) {
-                $existing = $configRepo->get($configRoot, []);
-                $configRepo->set($configRoot, array_replace_recursive($defaults, is_array($existing) ? $existing : []));
+                    return $optionsClass::fromArray(is_array($raw) ? $raw : [], $configRoot);
+                });
+
+                ConfigSectionRegistration::registerValidator(
+                    $app,
+                    $optionsClass,
+                    static function () use ($app, $optionsClass, $configRoot): void {
+                        $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get($configRoot, []) : [];
+
+                        if (! is_array($raw)) {
+                            $optionsClass::fromArray(['__invalid_root' => $raw], $configRoot);
+
+                            return;
+                        }
+
+                        $optionsClass::fromArray($raw, $configRoot);
+                    },
+                );
             }
         }
 
-        if ($optionsClass !== null && is_subclass_of($optionsClass, OptionsFactory::class)) {
-            $app->singletonIf($optionsClass, static function (Application $app) use ($optionsClass, $configRoot): OptionsFactory {
-                $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get($configRoot, []) : [];
-
-                return $optionsClass::fromArray(is_array($raw) ? $raw : [], $configRoot);
-            });
-
-            ConfigSectionRegistration::registerValidator(
-                $app,
-                $optionsClass,
-                static function () use ($app, $optionsClass, $configRoot): void {
-                    $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get($configRoot, []) : [];
-
-                    if (! is_array($raw)) {
-                        $optionsClass::fromArray(['__invalid_root' => $raw], $configRoot);
-
-                        return;
-                    }
-
-                    $optionsClass::fromArray($raw, $configRoot);
-                },
-            );
+        if ($configSectionClass !== null && is_subclass_of($configSectionClass, ConfigSection::class)) {
+            ConfigSectionRegistration::register($app, $configSectionClass);
         }
     }
 
@@ -212,5 +212,33 @@ final class ExtensionFacetRegistrar
         $merged->offsetSet($app, $entries);
 
         return true;
+    }
+
+    /**
+     * Merges associative maps recursively while letting host lists and empty arrays replace defaults wholesale.
+     *
+     * @param  array<array-key, mixed>  $defaults
+     * @param  array<array-key, mixed>  $existing
+     * @return array<array-key, mixed>
+     */
+    private static function mergeConfigDefaults(array $defaults, array $existing): array
+    {
+        if (array_is_list($defaults) || array_is_list($existing)) {
+            return $existing !== [] ? $existing : $defaults;
+        }
+
+        $merged = $defaults;
+
+        foreach ($existing as $key => $value) {
+            $default = $merged[$key] ?? null;
+
+            if (is_array($default) && is_array($value) && $default !== [] && $value !== [] && ! array_is_list($default) && ! array_is_list($value)) {
+                $merged[$key] = self::mergeConfigDefaults($default, $value);
+            } else {
+                $merged[$key] = $value;
+            }
+        }
+
+        return $merged;
     }
 }

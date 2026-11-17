@@ -25,13 +25,15 @@ final class SampleController
 {
     public function handle(): array
     {
+        $_SERVER['PACKMAN_WRITE_TEST'] = 'ok';
         $host = $_SERVER['HTTP_HOST'];
+        $hasHost = isset($_SERVER['HTTP_HOST']);
         $argv = $_SERVER['argv'];
         $apiClass = 'Packman\Attributes\Api';
         $optionalExists = class_exists('Packman\Modules\Testing\ExtensionContract');
         $moduleRef = 'Packman\Modules\Data\Lifecycle\ModuleManifest';
 
-        return [$host, $argv, $apiClass, $optionalExists, $moduleRef];
+        return [$host, $hasHost, $argv, $apiClass, $optionalExists, $moduleRef];
     }
 }
 
@@ -108,22 +110,18 @@ declare(strict_types=1);
 
 use Packman\DevTools\Rector\PackmanRectorSet;
 use Packman\DevTools\Rector\Rules\Boundaries\BoundarySafeStringClassRector;
-use Packman\DevTools\Rector\Rules\Laravel\DispatchToHelperFunctionsRector;
-use Packman\DevTools\Rector\Rules\Laravel\ServerVariableToRequestFacadeRector;
 use Rector\Config\RectorConfig;
 
 require_once '{$autoload}';
 require_once '{$jobFixture}';
 
-return RectorConfig::configure()
-    ->withPaths(['{$ws->path('app')}', '{$ws->path('packages')}', '{$ws->path('tests')}'])
-    ->withRules([
-        ServerVariableToRequestFacadeRector::class,
-        DispatchToHelperFunctionsRector::class,
-    ])
-    ->withConfiguredRule(BoundarySafeStringClassRector::class, [
+return static function (RectorConfig \$rectorConfig): void {
+    \$rectorConfig->paths(['{$ws->path('app')}', '{$ws->path('packages')}', '{$ws->path('tests')}']);
+    PackmanRectorSet::configure(\$rectorConfig);
+    \$rectorConfig->ruleWithConfiguration(BoundarySafeStringClassRector::class, [
         BoundarySafeStringClassRector::PRESERVED_PREFIXES_KEY => ['Packman\\\\Modules\\\\'],
     ]);
+};
 
 PHP);
 
@@ -141,6 +139,8 @@ PHP);
 
         $updatedController = (string) file_get_contents($domainFile);
         expect($updatedController)
+            ->toContain("\$_SERVER['PACKMAN_WRITE_TEST'] = 'ok'")
+            ->toContain("isset(\$_SERVER['HTTP_HOST'])")
             ->toContain('Request::server(\'HTTP_HOST\')')
             ->toContain('$_SERVER[\'argv\']')
             ->toContain('Api::class')

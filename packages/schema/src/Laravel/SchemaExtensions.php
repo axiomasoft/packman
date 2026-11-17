@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Laravel;
 
+use Closure;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Connection;
 use InvalidArgumentException;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Extensions\ExtensionInspector;
 use Packman\Schema\Contracts\Compiler\SchemaOwnership;
+use Packman\Schema\Contracts\Migration\ModuleMigrationBoundary;
 use Packman\Schema\Contracts\Migration\SchemaSetProvider;
+use WeakMap;
 
 /**
  * Shared Laravel helper wiring {@see WithSchema} table nouns and {@see SchemaSetProvider} tags.
@@ -28,14 +32,8 @@ final class SchemaExtensions
             return;
         }
 
-        foreach ($profile->schemaSetProviders as $provider) {
-            if (! is_subclass_of($provider, SchemaSetProvider::class)) {
-                throw new InvalidArgumentException("{$provider} must implement ".SchemaSetProvider::class.'.');
-            }
-
-            $app->singletonIf($provider);
-            $app->tag([$provider], SchemaSetProvider::class);
-        }
+        self::registerProviders($app, ...$profile->schemaSetProviders);
+        self::registerExtensionModuleBoundary($app);
 
         $owner = $ownerId ?? ($profile->configRoot !== null && $profile->configRoot !== '' ? $profile->configRoot : $instance::class);
         $nouns = $profile->tableNouns;
@@ -59,6 +57,61 @@ final class SchemaExtensions
                 $declare($ownership);
             }
         });
+    }
+
+    /** @param class-string ...$providers */
+    public static function registerProviders(Application $app, string ...$providers): void
+    {
+        foreach ($providers as $provider) {
+            if (! is_subclass_of($provider, SchemaSetProvider::class)) {
+                throw new InvalidArgumentException("{$provider} must implement ".SchemaSetProvider::class.'.');
+            }
+
+            if (! self::markProviderTagged($app, $provider)) {
+                continue;
+            }
+
+            $app->singletonIf($provider);
+            $app->tag([$provider], SchemaSetProvider::class);
+        }
+    }
+
+    /**
+     * Binds a transactional {@see ModuleMigrationBoundary} fallback for standalone code-plugin packages
+     * declaring {@see SchemaLifecycle::Module} schema sets without `packman-modules`.
+     */
+    public static function registerExtensionModuleBoundary(Application $app): void
+    {
+        $app->singletonIf(ModuleMigrationBoundary::class, static fn (): ModuleMigrationBoundary => new class implements ModuleMigrationBoundary
+        {
+            public function run(Connection $connection, string $connectionName, array $owners, Closure $run): void
+            {
+                $connection->transaction($run);
+            }
+        });
+    }
+
+    private static function markProviderTagged(Application $app, string $provider): bool
+    {
+        /** @var WeakMap<Application, array<string, true>>|null $tagged */
+        static $tagged = null;
+
+        if (! $tagged instanceof WeakMap) {
+            /** @var WeakMap<Application, array<string, true>> $map */
+            $map = new WeakMap;
+            $tagged = $map;
+        }
+
+        $entries = $tagged->offsetExists($app) ? $tagged->offsetGet($app) : [];
+
+        if (isset($entries[$provider])) {
+            return false;
+        }
+
+        $entries[$provider] = true;
+        $tagged->offsetSet($app, $entries);
+
+        return true;
     }
 
     /** @param class-string $class */

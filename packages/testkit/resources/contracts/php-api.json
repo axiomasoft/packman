@@ -404,6 +404,26 @@
             "uses": [],
             "doc": [],
             "methods": {
+                "assertDestructiveSuitePgsqlAllowed": {
+                    "visibility": "protected",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "connection",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "'pgsql'",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "void",
+                    "doc": []
+                },
                 "configureSuitePgsqlConnection": {
                     "visibility": "protected",
                     "static": false,

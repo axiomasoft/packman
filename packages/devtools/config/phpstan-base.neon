@@ -1,7 +1,7 @@
 parameters:
     level: max
     phpVersion: 80400
-    tmpDir: build/phpstan
+    tmpDir: %currentWorkingDirectory%/build/phpstan
     checkMissingCallableSignature: true
     checkPhpDocMissingReturn: true
     reportUnmatchedIgnoredErrors: true

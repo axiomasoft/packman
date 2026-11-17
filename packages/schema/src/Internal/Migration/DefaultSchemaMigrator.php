@@ -126,6 +126,7 @@ final readonly class DefaultSchemaMigrator implements SchemaMigrator
                     && $this->prerequisiteSetId !== null
                     && $this->prerequisiteSetId !== ''
                     && ! $db->getSchemaBuilder()->hasTable('mod_records')
+                    && array_any($this->sets->all(), fn (SchemaSet $set): bool => $set->id() === $this->prerequisiteSetId)
                     ? $this->sets->get($this->prerequisiteSetId)
                     : null;
                 $repository = $this->migrator->getRepository();

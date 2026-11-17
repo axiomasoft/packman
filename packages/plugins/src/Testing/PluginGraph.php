@@ -11,7 +11,6 @@ use Packman\Plugins\Contracts\Contributions\Contributions;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Contracts\Registry\PluginActivationGate;
 use Packman\Plugins\Contracts\Registry\PluginInspector;
-use Packman\Plugins\Internal\Contributions\FrozenContributions;
 use Packman\Plugins\Internal\Graph\PluginEntry;
 use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
 
@@ -36,7 +35,7 @@ final class PluginGraph
         ?string $database = null,
         array $disabled = [],
         ?PluginActivationGate $activationGate = null,
-    ): Contributions&PluginInspector&FrozenContributions {
+    ): Contributions&PluginInspector {
         $entries = [];
 
         foreach ($builtIn as $class) {

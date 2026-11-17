@@ -9,8 +9,10 @@ use Packman\DevTools\Rector\Rules\Boundaries\BoundarySafeStringClassRector;
 use Packman\DevTools\Rector\Rules\Laravel\DispatchToHelperFunctionsRector;
 use Packman\DevTools\Rector\Rules\Laravel\ServerVariableToRequestFacadeRector;
 use Rector\Config\RectorConfig;
+use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
+use RectorLaravel\NodeVisitor\ArrayDimFetchContextNodeVisitor;
 
 /**
  * Reusable Packman Rector configuration bundling PHP 8.4 quality sets and boundary-safe custom rules.
@@ -29,14 +31,17 @@ final class PackmanRectorSet
             SetList::TYPE_DECLARATION,
         ]);
 
+        $rectorConfig->singleton(ArrayDimFetchContextNodeVisitor::class);
+
         $rectorConfig->rules([
             ServerVariableToRequestFacadeRector::class,
             DispatchToHelperFunctionsRector::class,
             BoundarySafeStringClassRector::class,
         ]);
 
-        if ($skipPaths !== []) {
-            $rectorConfig->skip($skipPaths);
-        }
+        $rectorConfig->skip([
+            StringClassNameToClassConstantRector::class,
+            ...$skipPaths,
+        ]);
     }
 }
