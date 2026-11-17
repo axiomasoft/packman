@@ -5,8 +5,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "axiomasoft/packman": "^1.0@dev",
-        "axiomasoft/packman-schema": "^1.0@dev",
+        "axiomasoft/packman": "^0.1|^1.0@dev",
+        "axiomasoft/packman-schema": "^0.1|^1.0@dev",
         "illuminate/contracts": "^12.0|^13.0",
         "illuminate/database": "^12.0|^13.0",
         "illuminate/http": "^12.0|^13.0",
@@ -37,6 +37,9 @@
         "packman": {
             "profile": "laravel-package",
             "dev_only": true
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
         }
     },
     "minimum-stability": "dev",
