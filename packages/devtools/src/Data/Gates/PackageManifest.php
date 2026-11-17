@@ -10,6 +10,7 @@ use Packman\Attributes\Api;
 #[Api(since: '1.0')]
 final readonly class PackageManifest
 {
+    /** @param list<string> $owns */
     public function __construct(
         public string $name,
         public string $path,
@@ -18,6 +19,7 @@ final readonly class PackageManifest
         public string $layer,
         public string $type,
         public bool $devOnly = false,
+        public array $owns = [],
     ) {}
 
     public function layerRank(): int

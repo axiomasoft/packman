@@ -51,9 +51,20 @@ final class ModuleLayoutGate implements QualityGate
                 continue;
             }
 
+            $composer = $context->readComposerJson($package);
+            $extraPackman = is_array($composer['extra'] ?? null) && is_array($composer['extra']['packman'] ?? null)
+                ? $composer['extra']['packman']
+                : [];
+            $composerOwns = is_array($extraPackman['owns'] ?? null)
+                ? array_values(array_filter($extraPackman['owns'], is_string(...)))
+                : [];
+
             $allowedDirs = is_array($profile['allowed_directories'] ?? null)
                 ? array_values(array_filter($profile['allowed_directories'], is_string(...)))
                 : [];
+            $permittedDirs = $allowedDirs === []
+                ? []
+                : array_values(array_unique([...$allowedDirs, ...$package->owns, ...$composerOwns]));
 
             $entries = scandir($srcDir);
 
@@ -65,7 +76,7 @@ final class ModuleLayoutGate implements QualityGate
 
                     $full = $srcDir.'/'.$entry;
 
-                    if (is_dir($full) && $allowedDirs !== [] && ! in_array($entry, $allowedDirs, true)) {
+                    if (is_dir($full) && $permittedDirs !== [] && ! in_array($entry, $permittedDirs, true)) {
                         $violations[] = sprintf(
                             '[%s] Directory %s/src/%s is not permitted under profile [%s].',
                             $package->name,
@@ -77,7 +88,6 @@ final class ModuleLayoutGate implements QualityGate
                 }
             }
 
-            $composer = $context->readComposerJson($package);
             $expectedType = is_string($profile['composer_type'] ?? null) ? $profile['composer_type'] : 'library';
             $actualType = is_string($composer['type'] ?? null) ? $composer['type'] : '';
 

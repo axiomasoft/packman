@@ -1,0 +1,12 @@
+{
+    "schema": "packman-ai-pack/1",
+    "name": "packman-canonical-ai",
+    "version": "1.0.0",
+    "description": "Canonical AI rules, skills, and multi-target agent definitions for axiomasoft/packman-monorepo.",
+    "targets": [
+        ".claude/",
+        ".codex/agents/",
+        ".gemini/",
+        "AGENTS.md"
+    ]
+}

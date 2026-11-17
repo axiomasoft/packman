@@ -1,0 +1,36 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://axiomasoft.dev/schemas/packman/php-api.schema.json",
+    "title": "Packman PHP API Manifest",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["schema", "package", "symbols"],
+    "properties": {
+        "schema": { "const": "php-api/1" },
+        "package": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+        "symbols": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "required": ["kind", "layer", "since"],
+                "properties": {
+                    "kind": { "enum": ["class", "interface", "trait", "enum"] },
+                    "layer": { "enum": ["api", "spi"] },
+                    "since": { "type": "string" },
+                    "final": { "type": "boolean" },
+                    "readonly": { "type": "boolean" },
+                    "abstract": { "type": "boolean" },
+                    "extends": { "type": "array", "items": { "type": "string" } },
+                    "implements": { "type": "array", "items": { "type": "string" } },
+                    "uses": { "type": "array", "items": { "type": "string" } },
+                    "doc": { "type": "array", "items": { "type": "string" } },
+                    "methods": { "type": "object" },
+                    "properties": { "type": "object" },
+                    "constants": { "type": ["object", "array"] },
+                    "enum_backing": { "type": ["string", "null"] },
+                    "enum_cases": { "type": "array" }
+                }
+            }
+        }
+    }
+}

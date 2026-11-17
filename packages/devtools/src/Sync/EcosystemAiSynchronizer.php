@@ -43,18 +43,24 @@ final class EcosystemAiSynchronizer
         $aiRoot = $root.'/ai';
 
         if (! is_dir($aiRoot)) {
-            return [
-                'ok' => true,
-                'status' => 'skipped_missing_source',
-                'planned' => [],
-                'written' => [],
-                'pruned' => [],
-                'preserved' => [],
-                'missing' => [],
-                'drifted' => [],
-                'orphans' => [],
-                'notes' => ['No canonical ai/ directory found; skipping sync cleanly.'],
-            ];
+            $bundledAi = dirname(__DIR__, 2).'/resources/ai';
+
+            if (is_file($root.'/packman.json') && is_dir($bundledAi)) {
+                $aiRoot = $bundledAi;
+            } else {
+                return [
+                    'ok' => true,
+                    'status' => 'skipped_missing_source',
+                    'planned' => [],
+                    'written' => [],
+                    'pruned' => [],
+                    'preserved' => [],
+                    'missing' => [],
+                    'drifted' => [],
+                    'orphans' => [],
+                    'notes' => ['No canonical ai/ directory found; skipping sync cleanly.'],
+                ];
+            }
         }
 
         $planned = [];

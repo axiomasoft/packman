@@ -26,6 +26,10 @@ final readonly class ApiManifestGenerator
         $changed = [];
         $schemaPath = rtrim($rootPath, '/').'/schemas/php-api.schema.json';
 
+        if (! is_file($schemaPath)) {
+            $schemaPath = dirname(__DIR__, 3).'/resources/schemas/php-api.schema.json';
+        }
+
         foreach ($packages as $pkg) {
             $packageDir = rtrim($rootPath, '/').'/'.trim($pkg['path'], '/');
             $srcDir = $packageDir.'/src';
