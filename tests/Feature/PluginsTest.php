@@ -52,6 +52,11 @@ use Packman\Plugins\Tests\Fixtures\HelloGreeter;
 use Packman\Plugins\Tests\Fixtures\HolaGreeter;
 use Packman\Plugins\Tests\Fixtures\NotAGreeter;
 use Packman\Schema\Contracts\Compiler\SchemaOwnership;
+use Packman\Schema\Contracts\Migration\SchemaSetProvider;
+use Packman\Schema\Contracts\Migration\SchemaSets;
+use Packman\Schema\Data\Migration\SchemaSet;
+use Packman\Schema\Enums\SchemaLifecycle;
+use Packman\Schema\Enums\SchemaScope;
 use Packman\Testkit\Concerns\Assertions\AssertsRegisteredErrors;
 
 require_once __DIR__.'/../Fixtures/TestContracts.php';
@@ -632,4 +637,61 @@ it('resolves configured plugin WithConfiguration optionsClass before FrozenContr
 
     expect($contributions)->toBeInstanceOf(FrozenContributions::class)
         ->and(app(ComposedPluginOptions::class))->toBe($options);
+});
+
+final readonly class EarlyPluginSchemaSetProvider implements SchemaSetProvider
+{
+    public function sets(): array
+    {
+        return [
+            new SchemaSet(
+                package: 'acme/early-plugin',
+                name: 'central',
+                scope: SchemaScope::Central,
+                path: __DIR__,
+                version: 1,
+                drivers: ['sqlite', 'pgsql'],
+                lifecycle: SchemaLifecycle::Platform,
+            ),
+        ];
+    }
+}
+
+final class EarlySchemaPlugin implements ExtensionPlugin, WithSchema
+{
+    use OwnsSchema;
+    use RegistersNothing;
+
+    public function manifest(): PluginManifest
+    {
+        return new PluginManifest(id: 'acme.early-schema', version: '1.0.0');
+    }
+
+    public function tablePrefix(): string
+    {
+        return 'ear_';
+    }
+
+    public function tableNouns(): array
+    {
+        return ['early_item'];
+    }
+
+    public function schemaSetProviders(): array
+    {
+        return [EarlyPluginSchemaSetProvider::class];
+    }
+}
+
+it('wires built-in plugin WithSchema providers and nouns when SchemaSets resolves before FrozenContributions', function (): void {
+    ExtensionRegistrar::builtIn(EarlySchemaPlugin::class);
+
+    expect(app()->resolved(FrozenContributions::class))->toBeFalse()
+        ->and(app()->resolved(PluginInspector::class))->toBeFalse();
+
+    $sets = app(SchemaSets::class);
+    $ids = array_map(static fn (SchemaSet $set): string => $set->id(), $sets->all());
+
+    expect($ids)->toContain('acme/early-plugin:central')
+        ->and(app(SchemaOwnership::class)->ownerOf('early_items'))->toBe('acme.early-schema');
 });
