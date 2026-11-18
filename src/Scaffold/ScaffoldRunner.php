@@ -28,13 +28,23 @@ final readonly class ScaffoldRunner
         $files = $plan();
         $existing = [];
         $planned = [];
+        /** @var array<string, true> $seenTargets */
+        $seenTargets = [];
 
         foreach ($files as $file) {
-            $target = Layout::absolute($basePath, $file->relativePath);
+            $target = self::normalizePath(Layout::absolute($basePath, $file->relativePath));
 
             if (is_dir($target)) {
                 throw ScaffoldCollisionException::targetIsDirectory($target);
             }
+
+            if (isset($seenTargets[$target])) {
+                $existing[] = $file->relativePath;
+
+                continue;
+            }
+
+            $seenTargets[$target] = true;
 
             if (is_file($target) && ! $file->overwrite) {
                 $existing[] = $file->relativePath;
@@ -78,10 +88,18 @@ final readonly class ScaffoldRunner
         $results = [];
         $staged = [];
         $committed = [];
+        /** @var array<string, true> $seenTargets */
+        $seenTargets = [];
 
         try {
             foreach ($planned as $entry) {
-                $target = $entry['target'];
+                $target = self::normalizePath($entry['target']);
+
+                if (isset($seenTargets[$target])) {
+                    throw ScaffoldCollisionException::existingFiles([$entry['target']]);
+                }
+
+                $seenTargets[$target] = true;
                 $file = $entry['file'];
                 $dir = dirname($target);
 
@@ -160,5 +178,32 @@ final readonly class ScaffoldRunner
                 }
             }
         }
+    }
+
+    private static function normalizePath(string $path): string
+    {
+        $normalized = str_replace('\\', '/', $path);
+        $isAbsolute = str_starts_with($normalized, '/');
+        $segments = [];
+
+        foreach (explode('/', $normalized) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+
+            if ($segment === '..') {
+                if ($segments !== [] && $segments[count($segments) - 1] !== '..') {
+                    array_pop($segments);
+                } elseif (! $isAbsolute) {
+                    $segments[] = '..';
+                }
+
+                continue;
+            }
+
+            $segments[] = $segment;
+        }
+
+        return ($isAbsolute ? '/' : '').implode('/', $segments);
     }
 }

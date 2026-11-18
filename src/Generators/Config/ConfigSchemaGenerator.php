@@ -234,25 +234,15 @@ final class ConfigSchemaGenerator
             }
         }
 
-        if ($item->value instanceof ConstFetch && strtolower($item->value->name->toString()) === 'null' && is_string($doc)) {
-            if (preg_match('/@var\s+\?(?:list|array)\b|@var\s+(?:list|array)(?:<[^>]*>)?\s*\|\s*null|@var\s+null\s*\|\s*(?:list|array)/', $doc) === 1) {
-                return ['type' => ['array', 'null'], 'default' => null];
-            }
+        $schema = $this->exprToSchema($item->value);
 
-            if (preg_match('/@var\s+\?int\b|@var\s+int\s*\|\s*null|@var\s+null\s*\|\s*int\b/', $doc) === 1) {
-                return ['type' => ['integer', 'null'], 'default' => null];
-            }
+        if (is_string($doc) && ($this->isNullLiteral($item->value) || $this->isEnvCall($item->value))) {
+            $docOverride = $this->docTypeOverride($doc, $schema);
 
-            if (preg_match('/@var\s+\?float\b|@var\s+float\s*\|\s*null|@var\s+null\s*\|\s*float\b/', $doc) === 1) {
-                return ['type' => ['number', 'null'], 'default' => null];
-            }
-
-            if (preg_match('/@var\s+\?bool\b|@var\s+bool\s*\|\s*null|@var\s+null\s*\|\s*bool\b/', $doc) === 1) {
-                return ['type' => ['boolean', 'null'], 'default' => null];
+            if ($docOverride !== null) {
+                return $docOverride;
             }
         }
-
-        $schema = $this->exprToSchema($item->value);
 
         if (is_string($doc) && preg_match('/@var\s+\?[a-zA-Z]|@var\s+[^\r\n*]*\|\s*null\b|@var\s+null\s*\|/', $doc) === 1) {
             if (is_string($schema['type'] ?? null) && $schema['type'] !== 'null') {
@@ -263,6 +253,83 @@ final class ConfigSchemaGenerator
         }
 
         return $schema;
+    }
+
+    private function isNullLiteral(Expr $expr): bool
+    {
+        return $expr instanceof ConstFetch && strtolower($expr->name->toString()) === 'null';
+    }
+
+    private function isEnvCall(Expr $expr): bool
+    {
+        return $expr instanceof FuncCall && $expr->name instanceof Name && strtolower($expr->name->toString()) === 'env';
+    }
+
+    /**
+     * @param  array<string, mixed>  $fallback
+     * @return array<string, mixed>|null
+     */
+    private function docTypeOverride(string $doc, array $fallback): ?array
+    {
+        if (preg_match('/@var\s+([^\r\n*]+)/', $doc, $match) !== 1) {
+            return null;
+        }
+
+        $typeExpr = trim($match[1]);
+        $nullable = str_starts_with($typeExpr, '?')
+            || preg_match('/(?:^|\|)\s*null\b|\bnull\s*\|/i', $typeExpr) === 1
+            || (array_key_exists('default', $fallback) && $fallback['default'] === null);
+
+        $wrapType = static fn (string $primary): string|array => $nullable ? [$primary, 'null'] : $primary;
+        $withDefault = static function (array $base) use ($fallback): array {
+            if (array_key_exists('default', $fallback)) {
+                $base['default'] = $fallback['default'];
+            }
+
+            return $base;
+        };
+
+        if (preg_match('/\barray<\s*(?:string|array-key)\s*,\s*bool(?:ean)?\s*>/i', $typeExpr) === 1) {
+            return $withDefault([
+                'type' => $wrapType('object'),
+                'additionalProperties' => ['type' => 'boolean'],
+            ]);
+        }
+
+        if (preg_match('/\barray<\s*(?:string|array-key)\s*,/i', $typeExpr) === 1) {
+            return $withDefault(['type' => $wrapType('object')]);
+        }
+
+        $outerType = $typeExpr;
+        while (preg_match('/<[^<>]*>/', $outerType) === 1) {
+            $outerType = (string) preg_replace('/<[^<>]*>/', '', $outerType);
+        }
+
+        if (preg_match('/\bobject\b/i', $outerType) === 1) {
+            return $withDefault(['type' => $wrapType('object')]);
+        }
+
+        if (preg_match('/\b(?:list|array)\b/i', $outerType) === 1) {
+            return $withDefault(['type' => $wrapType('array')]);
+        }
+
+        if (preg_match('/\bint(?:eger)?\b/i', $outerType) === 1) {
+            return $withDefault(['type' => $wrapType('integer')]);
+        }
+
+        if (preg_match('/\bfloat\b/i', $outerType) === 1) {
+            return $withDefault(['type' => $wrapType('number')]);
+        }
+
+        if (preg_match('/\bbool(?:ean)?\b/i', $outerType) === 1) {
+            return $withDefault(['type' => $wrapType('boolean')]);
+        }
+
+        if (preg_match('/\bstring\b/i', $outerType) === 1) {
+            return $withDefault(['type' => $wrapType('string')]);
+        }
+
+        return null;
     }
 
     /** @return array<string, mixed> */

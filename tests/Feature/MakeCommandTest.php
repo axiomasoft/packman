@@ -221,11 +221,33 @@ it('supports directory Place navigation, Layout helpers, PHP array registration,
             ->and(ProviderRegistration::registerInPhpArray((string) $inserted, ['panels', 'providers'], 'App\\Guards\\Admin\\AdminPanelProvider'))->toBe($inserted)
             ->and(ProviderRegistration::registerInPhpArray($configSource, ['missing', 'providers'], 'App\\Foo'))->toBeNull();
 
+        // Namespaced PHP file: must emit leading backslash so PHP does not resolve relative to App\Config
+        $namespacedSource = "<?php\n\nnamespace App\\Config;\n\nreturn [\n    'providers' => [],\n];\n";
+        $namespacedInserted = ProviderRegistration::registerInPhpArray($namespacedSource, ['providers'], '\\App\\Providers\\DemoProvider');
+        expect($namespacedInserted)->toContain('\\App\\Providers\\DemoProvider::class,')
+            ->and(ProviderRegistration::registerInPhpArray((string) $namespacedInserted, ['providers'], 'App\\Providers\\DemoProvider'))->toBe($namespacedInserted);
+
+        // Imported short name via `use`: deduplicates existing short ::class and uses short name when inserting
+        $importedExisting = "<?php\n\nuse App\\Providers\\DemoProvider;\n\nreturn [\n    'providers' => [\n        DemoProvider::class,\n    ],\n];\n";
+        expect(ProviderRegistration::registerInPhpArray($importedExisting, ['providers'], 'App\\Providers\\DemoProvider'))->toBe($importedExisting);
+
+        $importedEmpty = "<?php\n\nnamespace App\\Config;\n\nuse App\\Providers\\DemoProvider;\n\nreturn [\n    'providers' => [],\n];\n";
+        expect(ProviderRegistration::registerInPhpArray($importedEmpty, ['providers'], 'App\\Providers\\DemoProvider'))
+            ->toContain('DemoProvider::class,')
+            ->not->toContain('\\App\\Providers\\DemoProvider::class,');
+
         $ws->write('existing.php', 'original');
         chmod($ws->path('existing.php'), 0o640);
         mkdir($ws->path('dir-target.php'));
 
         $runner = new ScaffoldRunner;
+
+        // Intra-plan duplicate target path collision when target does not yet exist on disk
+        expect(static fn () => $runner->run($ws->root, static fn (): array => [
+            new GeneratedFile('Example.php', 'first'),
+            new GeneratedFile('./Example.php', 'second'),
+        ]))->toThrow(ScaffoldCollisionException::class)
+            ->and(is_file($ws->path('Example.php')))->toBeFalse();
         expect(static fn () => $runner->run($ws->root, static fn (): array => [
             new GeneratedFile('new.php', 'new'),
             new GeneratedFile('existing.php', 'overwrite-refused'),
@@ -241,6 +263,38 @@ it('supports directory Place navigation, Layout helpers, PHP array registration,
             ->and(file_get_contents($ws->path('existing.php')))->toBe('original')
             ->and(fileperms($ws->path('existing.php')) & 0o777)->toBe(0o640)
             ->and(is_file($ws->path('new.php')))->toBeFalse();
+    } finally {
+        $ws->cleanup();
+    }
+});
+
+it('registers providers accurately in namespaced PHP files and deduplicates imported short ::class names', function (): void {
+    $namespacedSource = "<?php\n\nnamespace App\\Config;\n\nreturn [\n    'providers' => [],\n];\n";
+    $namespacedInserted = ProviderRegistration::registerInPhpArray($namespacedSource, ['providers'], '\\App\\Providers\\DemoProvider');
+
+    expect($namespacedInserted)->toContain('\\App\\Providers\\DemoProvider::class,')
+        ->and(ProviderRegistration::registerInPhpArray((string) $namespacedInserted, ['providers'], 'App\\Providers\\DemoProvider'))->toBe($namespacedInserted);
+
+    $importedExisting = "<?php\n\nuse App\\Providers\\DemoProvider;\n\nreturn [\n    'providers' => [\n        DemoProvider::class,\n    ],\n];\n";
+    expect(ProviderRegistration::registerInPhpArray($importedExisting, ['providers'], 'App\\Providers\\DemoProvider'))->toBe($importedExisting);
+
+    $importedEmpty = "<?php\n\nnamespace App\\Config;\n\nuse App\\Providers\\DemoProvider;\n\nreturn [\n    'providers' => [],\n];\n";
+    expect(ProviderRegistration::registerInPhpArray($importedEmpty, ['providers'], 'App\\Providers\\DemoProvider'))
+        ->toContain('DemoProvider::class,')
+        ->not->toContain('\\App\\Providers\\DemoProvider::class,');
+});
+
+it('rejects intra-plan duplicate destination paths in ScaffoldRunner with zero files written', function (): void {
+    $ws = new TempWorkspace('packman-scaffold-dup-');
+
+    try {
+        $runner = new ScaffoldRunner;
+
+        expect(static fn () => $runner->run($ws->root, static fn (): array => [
+            new GeneratedFile('Example.php', 'first'),
+            new GeneratedFile('./Example.php', 'second'),
+        ]))->toThrow(ScaffoldCollisionException::class)
+            ->and(is_file($ws->path('Example.php')))->toBeFalse();
     } finally {
         $ws->cleanup();
     }
