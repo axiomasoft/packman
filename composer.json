@@ -9,7 +9,6 @@
     "require": {
         "php": "^8.4",
         "axiomasoft/packman": "^0.1|^1.0@dev",
-        "driftingly/rector-laravel": "^2.0",
         "illuminate/support": "^12.0|^13.0",
         "nette/neon": "^3.4",
         "nikic/php-parser": "^5.4",
@@ -20,6 +19,9 @@
         "symfony/finder": "^7.2|^8.0",
         "symfony/process": "^7.2|^8.0",
         "symfony/yaml": "^7.2|^8.0"
+    },
+    "suggest": {
+        "driftingly/rector-laravel": "Optional Laravel Rector rule sets (^2.0) alongside PackmanRectorSet."
     },
     "autoload": {
         "psr-4": {

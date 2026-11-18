@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\DevTools\Rector;
 
 use Packman\Attributes\Api;
+use Packman\DevTools\Internal\Rector\ArrayDimFetchContextNodeVisitor;
 use Packman\DevTools\Rector\Rules\Boundaries\BoundarySafeStringClassRector;
 use Packman\DevTools\Rector\Rules\Laravel\DispatchToHelperFunctionsRector;
 use Packman\DevTools\Rector\Rules\Laravel\ServerVariableToRequestFacadeRector;
@@ -12,7 +13,6 @@ use Rector\Config\RectorConfig;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
-use RectorLaravel\NodeVisitor\ArrayDimFetchContextNodeVisitor;
 
 /**
  * Reusable Packman Rector configuration bundling PHP 8.4 quality sets and boundary-safe custom rules.
