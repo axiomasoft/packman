@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Packman\Config\Internal\Commands;
 
+use Closure;
 use Illuminate\Console\Command;
 use Packman\Attributes\Internal;
 use Packman\Config\Contracts\ConfigReportSectionInterface;
 use Packman\Config\Data\SecretRef;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Config\Laravel\RuntimeConfigGate;
+use Packman\Doctor\Checks\ConfigValidCheck;
 use Throwable;
 use UnexpectedValueException;
 
@@ -97,10 +99,25 @@ final class ValidateConfigCommand extends Command
                 continue;
             }
 
-            $arguments = array_map($this->configArray(...), $keys);
+            try {
+                $arguments = array_map($this->configArray(...), $keys);
+                $class::fromArray(...$arguments);
+            } catch (InvalidConfiguration $exception) {
+                foreach ($exception->violations as $violation) {
+                    $this->errors[] = $this->redact($violation);
+                }
+            } catch (Throwable $exception) {
+                $this->errors[] = $this->redact($exception->getMessage());
+            }
+        }
+
+        foreach ($this->laravel->tagged(ConfigValidCheck::TAG) as $step) {
+            if (! $step instanceof Closure) {
+                continue;
+            }
 
             try {
-                $class::fromArray(...$arguments);
+                $step();
             } catch (InvalidConfiguration $exception) {
                 foreach ($exception->violations as $violation) {
                     $this->errors[] = $this->redact($violation);
@@ -198,9 +215,17 @@ final class ValidateConfigCommand extends Command
     /** @return array<array-key, mixed> */
     private function configArray(string $key): array
     {
-        $value = config($key, []);
+        if (! config()->has($key)) {
+            return [];
+        }
 
-        return is_array($value) ? $value : [];
+        $value = config($key);
+
+        if (! is_array($value)) {
+            throw new InvalidConfiguration([$key.': expected an array']);
+        }
+
+        return $value;
     }
 
     private function redact(string $text): string

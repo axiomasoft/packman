@@ -11,6 +11,7 @@ use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Config\Contracts\ConfigSection;
 use Packman\Config\Contracts\OptionsFactory;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Config\Laravel\ConfigSectionRegistration;
 use Packman\Doctor\Contracts\DoctorCheck;
 use Packman\Doctor\Contracts\HealthCheck;
@@ -76,30 +77,61 @@ final class ExtensionFacetRegistrar
                 $defaults = require $defaultConfigPath;
 
                 if (is_array($defaults)) {
-                    $existing = $configRepo->get($configRoot, []);
-                    /** @var array<array-key, mixed> $existingMap */
-                    $existingMap = is_array($existing) ? $existing : [];
-                    $configRepo->set($configRoot, self::mergeConfigDefaults($defaults, $existingMap));
+                    if (! $configRepo->has($configRoot)) {
+                        $configRepo->set($configRoot, $defaults);
+                    } else {
+                        $existing = $configRepo->get($configRoot);
+
+                        if (is_array($existing)) {
+                            $configRepo->set($configRoot, self::mergeConfigDefaults($defaults, $existing));
+                        }
+                    }
                 }
             }
 
             if ($optionsClass !== null && is_subclass_of($optionsClass, OptionsFactory::class)) {
                 $app->singletonIf($optionsClass, static function (Application $app) use ($optionsClass, $configRoot): OptionsFactory {
-                    $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get($configRoot, []) : [];
+                    if (! $app->bound(Repository::class)) {
+                        return $optionsClass::fromArray([], $configRoot);
+                    }
 
-                    return $optionsClass::fromArray(is_array($raw) ? $raw : [], $configRoot);
+                    $repo = $app->make(Repository::class);
+
+                    if (! $repo->has($configRoot)) {
+                        return $optionsClass::fromArray([], $configRoot);
+                    }
+
+                    $raw = $repo->get($configRoot);
+
+                    if (! is_array($raw)) {
+                        throw new InvalidConfiguration([$configRoot.': expected an array']);
+                    }
+
+                    return $optionsClass::fromArray($raw, $configRoot);
                 });
 
                 ConfigSectionRegistration::registerValidator(
                     $app,
                     $optionsClass,
                     static function () use ($app, $optionsClass, $configRoot): void {
-                        $raw = $app->bound(Repository::class) ? $app->make(Repository::class)->get($configRoot, []) : [];
-
-                        if (! is_array($raw)) {
-                            $optionsClass::fromArray(['__invalid_root' => $raw], $configRoot);
+                        if (! $app->bound(Repository::class)) {
+                            $optionsClass::fromArray([], $configRoot);
 
                             return;
+                        }
+
+                        $repo = $app->make(Repository::class);
+
+                        if (! $repo->has($configRoot)) {
+                            $optionsClass::fromArray([], $configRoot);
+
+                            return;
+                        }
+
+                        $raw = $repo->get($configRoot);
+
+                        if (! is_array($raw)) {
+                            throw new InvalidConfiguration([$configRoot.': expected an array']);
                         }
 
                         $optionsClass::fromArray($raw, $configRoot);

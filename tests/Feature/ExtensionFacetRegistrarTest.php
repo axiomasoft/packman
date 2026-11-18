@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Packman\Config\Contracts\OptionsFactory;
 use Packman\Config\Exceptions\InvalidConfiguration;
+use Packman\Config\Internal\Commands\ValidateConfigCommand;
 use Packman\Config\Laravel\ConfigSectionRegistration;
 use Packman\Config\Laravel\ConfigurationValidator;
 use Packman\Doctor\Contracts\DoctorCheck;
@@ -16,6 +17,7 @@ use Packman\Extensions\Concerns\Runtime\ProvidesDiagnostics;
 use Packman\Extensions\Contracts\Configuration\WithConfiguration;
 use Packman\Extensions\Contracts\Runtime\WithDiagnostics;
 use Packman\Extensions\Laravel\ExtensionFacetRegistrar;
+use Symfony\Component\Console\Tester\CommandTester;
 
 final readonly class FacetProbeOptions implements OptionsFactory
 {
@@ -122,6 +124,33 @@ it('merges associative defaults while letting explicit empty/short lists replace
             'items' => [],
             'nested' => ['enabled' => true, 'mode' => 'strict'],
         ]);
+    } finally {
+        @unlink($tempFile);
+    }
+});
+
+it('preserves an invalid scalar config root instead of overwriting it with defaults so validation rejects it', function (): void {
+    $tempFile = sys_get_temp_dir().'/packman_scalar_defaults_'.uniqid('', true).'.php';
+    file_put_contents($tempFile, "<?php return ['mode' => 'strict'];");
+
+    try {
+        config()->set('scalar_probe', 'oops');
+        ExtensionFacetRegistrar::registerConfiguration(app(), 'scalar_probe', $tempFile, FacetProbeOptions::class);
+
+        expect(config('scalar_probe'))->toBe('oops')
+            ->and(static fn () => app(FacetProbeOptions::class))->toThrow(InvalidConfiguration::class, 'scalar_probe: expected an array');
+
+        $doctorFindings = app(DoctorRegistryContract::class)->matching(['core.config'])[0]->run(new DoctorContext);
+        expect($doctorFindings[0]->code)->toBe('core.config.invalid')
+            ->and($doctorFindings[0]->message)->toContain('scalar_probe: expected an array');
+
+        $command = new ValidateConfigCommand;
+        $command->setLaravel(app());
+        $tester = new CommandTester($command);
+        $exit = $tester->execute([], ['capture_stderr_separately' => true]);
+
+        expect($exit)->toBe(1)
+            ->and($tester->getErrorOutput())->toContain('scalar_probe: expected an array');
     } finally {
         @unlink($tempFile);
     }
