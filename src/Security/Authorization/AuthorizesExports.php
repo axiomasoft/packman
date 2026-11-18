@@ -62,11 +62,19 @@ final class AuthorizesExports
                 $query->getQuery()->useWritePdo();
 
                 if ($query->getModel()::class === $resource::getModel()) {
-                    (clone $query)->each(static function (Model $record) use ($resource, &$authorized): bool {
-                        $authorized = FilamentGate::resource($resource, 'view', $record)->allowed();
+                    $authorized = true;
 
-                        return ! $authorized;
-                    }, 100);
+                    (clone $query)->chunkById(100, static function ($records) use ($resource, &$authorized): bool {
+                        foreach ($records as $record) {
+                            if (! FilamentGate::resource($resource, 'view', $record)->allowed()) {
+                                $authorized = false;
+
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    });
                 }
             }
         } catch (Throwable) {

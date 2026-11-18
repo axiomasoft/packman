@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
+use Filament\Actions\ExportAction;
 use Filament\Actions\Exports\Http\Controllers\DownloadExport;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Panel as FilamentPanel;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 use Packman\Filament\PackmanFilamentPlugin;
+use Packman\Filament\Security\Authorization\AuthorizesExports;
 use Packman\Filament\Tests\Support\FilamentTestListOrders;
 use Packman\Filament\Tests\Support\FilamentTestNoPolicyModel;
 use Packman\Filament\Tests\Support\FilamentTestOrder;
@@ -193,4 +195,38 @@ it('passes the refreshed write-PDO record to the fallback policy when no explici
 
     expect(FilamentTestOrderResource::canEdit($staleOrder))->toBeTrue()
         ->and($observedLocked)->toBe([true, false]);
+});
+
+it('denies exports when a second or later-chunk record fails per-row view authorization', function (): void {
+    $user = FilamentTestUser::query()->findOrFail(1);
+    $this->actingAs($user);
+
+    Gate::define('orders.view_any', static fn (): bool => true);
+    Gate::define('orders.view', static fn (FilamentTestUser $actor, ?FilamentTestOrder $order = null): bool => $order === null || ! $order->locked);
+
+    // Case 1: [record 1 (allowed), record 3 (denied)] in the first chunk
+    FilamentTestOrder::query()->create(['id' => 3, 'number' => 'ORD-3', 'secret' => false, 'locked' => true]);
+
+    $component = Livewire::test(FilamentTestListOrders::class)->instance();
+    $exportAction = ExportAction::make('export')->livewire($component);
+
+    expect(static fn () => (new AuthorizesExports)($exportAction))
+        ->toThrow(HttpException::class);
+
+    // Case 2: records 1..104 allowed (chunk 1 passes completely), record 105 in chunk 2 denied
+    FilamentTestOrder::query()->whereKey(3)->update(['locked' => false]);
+
+    for ($id = 4; $id <= 104; $id++) {
+        FilamentTestOrder::query()->create(['id' => $id, 'number' => "ORD-{$id}", 'secret' => false, 'locked' => false]);
+    }
+
+    FilamentTestOrder::query()->create(['id' => 105, 'number' => 'ORD-105', 'secret' => false, 'locked' => true]);
+
+    expect(static fn () => (new AuthorizesExports)($exportAction))
+        ->toThrow(HttpException::class);
+
+    // Case 3: once record 105 is allowed too, all chunks pass export authorization
+    FilamentTestOrder::query()->whereKey(105)->update(['locked' => false]);
+    (new AuthorizesExports)($exportAction);
+    expect(true)->toBeTrue();
 });
