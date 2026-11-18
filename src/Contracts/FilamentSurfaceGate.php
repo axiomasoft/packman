@@ -86,4 +86,19 @@ interface FilamentSurfaceGate
         array $arguments,
         FilamentPanelPlugin $plugin,
     ): ?bool;
+
+    /**
+     * Resolves a custom owner-resource ability declared on a relation manager or related-records page, or null to use the default.
+     *
+     * @param  class-string  $relationManager
+     */
+    public function resolveRelationAbility(
+        string $relationManager,
+        FilamentPanelPlugin $plugin,
+    ): ?string;
+
+    /**
+     * Verifies panel-level export prerequisites (such as primary-read mode) in enforced panels.
+     */
+    public function canExport(FilamentPanelPlugin $plugin): bool;
 }

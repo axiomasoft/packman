@@ -268,6 +268,39 @@ final readonly class DefaultFilamentSurfaceGate implements FilamentSurfaceGate
         return method_exists($policy, $method) ? null : false;
     }
 
+    /**
+     * @param  class-string  $relationManager
+     */
+    #[Override]
+    public function resolveRelationAbility(
+        string $relationManager,
+        FilamentPanelPlugin $plugin,
+    ): ?string {
+        return null;
+    }
+
+    #[Override]
+    public function canExport(FilamentPanelPlugin $plugin): bool
+    {
+        $guardPanelId = $plugin->getGuardPanel();
+
+        if ($guardPanelId === null) {
+            return true;
+        }
+
+        if ($this->panels === null) {
+            return false;
+        }
+
+        try {
+            $panel = $this->panels->find($guardPanelId);
+        } catch (Throwable) {
+            return false;
+        }
+
+        return $panel !== null && $panel->settings()->reads() === Reads::Primary;
+    }
+
     private function guardPanelAllows(FilamentPanelPlugin $plugin, string $ability, object $user): bool
     {
         $guardPanelId = $plugin->getGuardPanel();

@@ -321,7 +321,7 @@ final class AuthorizesActions
             return Response::deny();
         }
 
-        $response = FilamentGate::resource($owner[0], FilamentContext::relationAbility($livewire::class), $record);
+        $response = FilamentGate::resource($owner[0], FilamentGate::relationAbility($livewire::class), $record);
 
         if (! $response->allowed() || (! $action instanceof AttachAction && ! $action instanceof AssociateAction)) {
             return $response;
