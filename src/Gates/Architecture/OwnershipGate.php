@@ -47,6 +47,10 @@ final readonly class OwnershipGate implements QualityGate
         foreach ($context->config->packages as $package) {
             $ns = $package->normalizedNamespace();
 
+            if ($ns === '\\') {
+                continue;
+            }
+
             if (isset($seenNamespaces[$ns])) {
                 $violations[] = "Duplicate package namespace prefix [{$ns}] between {$seenNamespaces[$ns]} and {$package->name}.";
             }

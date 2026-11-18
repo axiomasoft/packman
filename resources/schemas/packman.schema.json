@@ -23,10 +23,10 @@
                 "properties": {
                     "name": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
                     "path": { "type": "string", "minLength": 1 },
-                    "namespace": { "type": "string", "pattern": "\\\\$" },
-                    "profile": { "enum": ["php-library", "laravel-package", "modular-platform", "product"] },
+                    "namespace": { "type": "string", "pattern": "^(|.*\\\\)$" },
+                    "profile": { "enum": ["php-library", "laravel-package", "modular-platform", "product", "metapackage"] },
                     "layer": { "enum": ["L1", "L2", "L3", "L4"] },
-                    "type": { "enum": ["kernel", "foundation", "addon", "domain", "capability", "integration", "dev", "tooling", "product"] },
+                    "type": { "enum": ["kernel", "foundation", "addon", "domain", "capability", "integration", "dev", "tooling", "product", "metapackage"] },
                     "dev_only": { "type": "boolean" },
                     "owns": {
                         "type": "array",

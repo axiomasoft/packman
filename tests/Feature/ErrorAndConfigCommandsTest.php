@@ -199,6 +199,10 @@ return [
     'enabled' => true,
     'retries' => env('CFG_RETRIES', 3),
     'mode' => 'strict',
+    /** @var ?string */
+    'delivery_class' => 'standard',
+    /** @var int|null */
+    'payment_due_minutes' => 4320,
     'flag' => (bool) env('CFG_FLAG', false),
     'optional_conn' => env('CFG_CONN'),
     'dynamic' => strtoupper('abc'),
@@ -210,6 +214,8 @@ PHP);
         $schema = (new ConfigSchemaGenerator)->generateForPackage('acme/cfg', $ws->path('packages/cfg'));
         expect($schema)->not->toBeNull()
             ->and($schema['properties']['cfg']['properties']['enabled']['type'] ?? null)->toBe('boolean')
+            ->and($schema['properties']['cfg']['properties']['delivery_class']['type'] ?? null)->toBe(['string', 'null'])
+            ->and($schema['properties']['cfg']['properties']['payment_due_minutes']['type'] ?? null)->toBe(['integer', 'null'])
             ->and($schema['properties']['cfg']['properties']['retries']['default'] ?? null)->toBe(3)
             ->and($schema['properties']['cfg']['properties']['flag']['type'] ?? null)->toBe('boolean')
             ->and(array_key_exists('default', $schema['properties']['cfg']['properties']['optional_conn']))->toBeTrue()
@@ -231,6 +237,8 @@ PHP);
                     'enabled' => true,
                     'retries' => 3,
                     'mode' => 'strict',
+                    'delivery_class' => null,
+                    'payment_due_minutes' => null,
                     'flag' => false,
                     'optional_conn' => null,
                     'dynamic' => 'ABC',

@@ -16,16 +16,31 @@ use Symfony\Component\Console\Attribute\AsCommand;
 final class PhpApiCommand extends AbstractSyncCommand
 {
     public function __construct(
-        string $defaultRootPath,
+        private readonly string $rootPathDefault,
         private readonly ApiManifestGenerator $generator = new ApiManifestGenerator,
-        PackmanManifestReader $manifestReader = new PackmanManifestReader,
+        private readonly PackmanManifestReader $reader = new PackmanManifestReader,
     ) {
-        parent::__construct($defaultRootPath, $manifestReader);
+        parent::__construct($rootPathDefault, $reader);
     }
 
     #[Override]
     protected function runSync(string $rootPath, array $packages, string $urnPrefix, bool $write): array
     {
-        return $this->generator->sync($rootPath, $packages, $write);
+        $config = $this->reader->read($rootPath);
+        $globalRequire = (bool) ($config->gates['require_api_manifest'] ?? true);
+        $filtered = [];
+
+        foreach ($config->packages as $package) {
+            $profile = $config->profileConfig($package->profile);
+            $requireManifest = $profile !== null && array_key_exists('require_php_api_manifest', $profile)
+                ? (bool) $profile['require_php_api_manifest']
+                : $globalRequire;
+
+            if ($requireManifest) {
+                $filtered[] = ['name' => $package->name, 'path' => $package->path];
+            }
+        }
+
+        return $this->generator->sync($rootPath, $filtered, $write);
     }
 }

@@ -43,47 +43,50 @@ final class ModuleLayoutGate implements QualityGate
                 continue;
             }
 
+            $composer = $context->readComposerJson($package);
+            $requireSrc = (bool) ($profile['require_src'] ?? true);
             $srcDir = $context->packageDirectory($package).'/src';
 
             if (! is_dir($srcDir)) {
-                $violations[] = "[{$package->name}] Missing src/ directory at {$package->path}/src.";
+                if ($requireSrc) {
+                    $violations[] = "[{$package->name}] Missing src/ directory at {$package->path}/src.";
 
-                continue;
-            }
+                    continue;
+                }
+            } else {
+                $extraPackman = is_array($composer['extra'] ?? null) && is_array($composer['extra']['packman'] ?? null)
+                    ? $composer['extra']['packman']
+                    : [];
+                $composerOwns = is_array($extraPackman['owns'] ?? null)
+                    ? array_values(array_filter($extraPackman['owns'], is_string(...)))
+                    : [];
 
-            $composer = $context->readComposerJson($package);
-            $extraPackman = is_array($composer['extra'] ?? null) && is_array($composer['extra']['packman'] ?? null)
-                ? $composer['extra']['packman']
-                : [];
-            $composerOwns = is_array($extraPackman['owns'] ?? null)
-                ? array_values(array_filter($extraPackman['owns'], is_string(...)))
-                : [];
+                $allowedDirs = is_array($profile['allowed_directories'] ?? null)
+                    ? array_values(array_filter($profile['allowed_directories'], is_string(...)))
+                    : [];
+                $permittedDirs = $allowedDirs === []
+                    ? []
+                    : array_values(array_unique([...$allowedDirs, ...$package->owns, ...$composerOwns]));
 
-            $allowedDirs = is_array($profile['allowed_directories'] ?? null)
-                ? array_values(array_filter($profile['allowed_directories'], is_string(...)))
-                : [];
-            $permittedDirs = $allowedDirs === []
-                ? []
-                : array_values(array_unique([...$allowedDirs, ...$package->owns, ...$composerOwns]));
+                $entries = scandir($srcDir);
 
-            $entries = scandir($srcDir);
+                if (is_array($entries)) {
+                    foreach ($entries as $entry) {
+                        if ($entry === '.' || $entry === '..') {
+                            continue;
+                        }
 
-            if (is_array($entries)) {
-                foreach ($entries as $entry) {
-                    if ($entry === '.' || $entry === '..') {
-                        continue;
-                    }
+                        $full = $srcDir.'/'.$entry;
 
-                    $full = $srcDir.'/'.$entry;
-
-                    if (is_dir($full) && $permittedDirs !== [] && ! in_array($entry, $permittedDirs, true)) {
-                        $violations[] = sprintf(
-                            '[%s] Directory %s/src/%s is not permitted under profile [%s].',
-                            $package->name,
-                            $package->path,
-                            $entry,
-                            $package->profile,
-                        );
+                        if (is_dir($full) && $permittedDirs !== [] && ! in_array($entry, $permittedDirs, true)) {
+                            $violations[] = sprintf(
+                                '[%s] Directory %s/src/%s is not permitted under profile [%s].',
+                                $package->name,
+                                $package->path,
+                                $entry,
+                                $package->profile,
+                            );
+                        }
                     }
                 }
             }

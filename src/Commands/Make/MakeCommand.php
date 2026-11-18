@@ -9,6 +9,8 @@ use Override;
 use Packman\Attributes\Api;
 use Packman\DevTools\Scaffold\Layout;
 use Packman\DevTools\Scaffold\Place;
+use Packman\DevTools\Scaffold\ScaffoldCollisionException;
+use Packman\DevTools\Scaffold\ScaffoldRunner;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -24,6 +26,7 @@ final class MakeCommand extends Command
     public function __construct(
         private readonly string $defaultRootPath,
         private readonly Layout $layout = new Layout,
+        private readonly ScaffoldRunner $runner = new ScaffoldRunner,
     ) {
         parent::__construct();
     }
@@ -73,32 +76,23 @@ final class MakeCommand extends Command
             return self::FAILURE;
         }
 
-        foreach ($files as $file) {
-            $target = $rootPath.'/'.$file->relativePath;
-
-            if (! $force && is_file($target) && ! $dryRun) {
-                $output->writeln("<error>Target file already exists (pass --force to overwrite): {$file->relativePath}</error>");
+        if ($dryRun) {
+            foreach ($files as $file) {
+                $output->writeln("<comment>PLAN</comment> {$file->relativePath}");
+            }
+        } else {
+            try {
+                $written = $this->runner->run($rootPath, static fn (): array => $files);
+            } catch (ScaffoldCollisionException $exception) {
+                $first = $exception->existingPaths[0] ?? $exception->getMessage();
+                $output->writeln("<error>Target file already exists (pass --force to overwrite): {$first}</error>");
 
                 return self::FAILURE;
             }
-        }
 
-        foreach ($files as $file) {
-            if ($dryRun) {
-                $output->writeln("<comment>PLAN</comment> {$file->relativePath}");
-
-                continue;
+            foreach ($written as $entry) {
+                $output->writeln("<info>CREATE</info> {$entry['relativePath']}");
             }
-
-            $target = $rootPath.'/'.$file->relativePath;
-            $parentDir = dirname($target);
-
-            if (! is_dir($parentDir)) {
-                mkdir($parentDir, 0775, true);
-            }
-
-            file_put_contents($target, $file->contents);
-            $output->writeln("<info>CREATE</info> {$file->relativePath}");
         }
 
         $output->writeln(sprintf(
