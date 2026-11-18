@@ -102,6 +102,8 @@ final class DatabaseRegistrar implements PackageRegistrar
     {
         /** @var array<class-string, true> $seenStateless */
         $seenStateless = [];
+        /** @var array<int, true> $seenObjects */
+        $seenObjects = [];
         $providers = [];
 
         foreach ($app->tagged(SchemaSetProvider::class) as $provider) {
@@ -109,14 +111,23 @@ final class DatabaseRegistrar implements PackageRegistrar
                 throw SchemaSetException::invalidSet('SchemaSetProvider tag');
             }
 
+            $objectId = spl_object_id($provider);
+
+            if (isset($seenObjects[$objectId])) {
+                continue;
+            }
+
             $reflection = new ReflectionClass($provider);
             $constructor = $reflection->getConstructor();
             $isStatelessNamed = ! $reflection->isAnonymous()
-                && ($constructor === null || $constructor->getNumberOfParameters() === 0);
+                && ($constructor === null || $constructor->getNumberOfParameters() === 0)
+                && (array) $provider === [];
 
-            if (($isStatelessNamed && isset($seenStateless[$provider::class])) || in_array($provider, $providers, true)) {
+            if ($isStatelessNamed && isset($seenStateless[$provider::class])) {
                 continue;
             }
+
+            $seenObjects[$objectId] = true;
 
             if ($isStatelessNamed) {
                 $seenStateless[$provider::class] = true;

@@ -23,6 +23,16 @@ final readonly class StatelessDoubleTaggedSchemaSetProvider implements SchemaSet
     }
 }
 
+final class StatefulZeroArgSchemaSetProvider implements SchemaSetProvider
+{
+    public string $dataset = 'platform';
+
+    public function sets(): array
+    {
+        return [schemaFixture($this->dataset)];
+    }
+}
+
 /**
  * @param  list<string>  $drivers
  * @param  list<string>  $requires
@@ -211,4 +221,22 @@ it('deduplicates a stateless SchemaSetProvider tagged both manually and via Sche
     $ids = array_map(static fn (SchemaSet $set): string => $set->id(), resolve(SchemaSets::class)->all());
 
     expect($ids)->toContain('fixture/platform:tenant');
+});
+
+it('preserves distinct zero-constructor SchemaSetProvider instances carrying different property state', function (): void {
+    app()->forgetInstance(SchemaSets::class);
+
+    $first = new StatefulZeroArgSchemaSetProvider;
+    $first->dataset = 'platform';
+
+    $second = new StatefulZeroArgSchemaSetProvider;
+    $second->dataset = 'module';
+
+    app()->instance('schema.stateful.first', $first);
+    app()->instance('schema.stateful.second', $second);
+    app()->tag(['schema.stateful.first', 'schema.stateful.second'], SchemaSetProvider::class);
+
+    $ids = array_map(static fn (SchemaSet $set): string => $set->id(), resolve(SchemaSets::class)->all());
+
+    expect($ids)->toContain('fixture/platform:tenant', 'fixture/module:tenant');
 });
