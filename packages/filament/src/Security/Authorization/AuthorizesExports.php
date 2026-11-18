@@ -11,8 +11,6 @@ use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Model;
 use Packman\Attributes\Internal;
 use Packman\Filament\Internal\Surface\FilamentContext;
-use Packman\Panels\Contracts\Registry\PanelRegistry;
-use Packman\Panels\Enums\Panel\Reads;
 use Throwable;
 
 /**
@@ -43,14 +41,8 @@ final class AuthorizesExports
         $authorized = false;
 
         try {
-            $guardPanelId = $context->guardPanel();
-
-            if ($guardPanelId !== null && app()->bound(PanelRegistry::class)) {
-                $panel = resolve(PanelRegistry::class)->find($guardPanelId);
-
-                if ($panel === null || $panel->settings()->reads() !== Reads::Primary) {
-                    abort(403);
-                }
+            if (! FilamentGate::canExport()) {
+                abort(403);
             }
 
             $user = Filament::auth()->user();

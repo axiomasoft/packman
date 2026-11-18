@@ -131,6 +131,35 @@ final class FilamentGate
         return resolve(FilamentSurfaceGate::class)->beforeGate($user, $ability, $arguments, $context->plugin);
     }
 
+    /**
+     * @param  class-string  $relationManager
+     */
+    public static function relationAbility(string $relationManager): string
+    {
+        $context = FilamentContext::current();
+
+        if ($context !== null) {
+            $resolved = resolve(FilamentSurfaceGate::class)->resolveRelationAbility($relationManager, $context->plugin);
+
+            if ($resolved !== null) {
+                return $resolved;
+            }
+        }
+
+        return FilamentContext::relationAbility($relationManager);
+    }
+
+    public static function canExport(): bool
+    {
+        $context = FilamentContext::serving() ?? FilamentContext::current();
+
+        if ($context === null || ! $context->enforced()) {
+            return true;
+        }
+
+        return resolve(FilamentSurfaceGate::class)->canExport($context->plugin);
+    }
+
     public static function refused(?FilamentErrorCode $code = null): Response
     {
         return Response::deny(code: ($code ?? FilamentErrorCode::AuthorizationDenied)->value())->withStatus(403);

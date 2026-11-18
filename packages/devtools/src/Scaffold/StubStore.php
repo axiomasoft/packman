@@ -56,10 +56,10 @@ final readonly class StubStore
     public static function imports(array $classes): string
     {
         $unique = array_values(array_unique(array_filter(
-            $classes,
-            static fn (string $class): bool => trim($class) !== '',
+            array_map(static fn (string $class): string => ltrim(trim($class), '\\'), $classes),
+            static fn (string $class): bool => $class !== '',
         )));
-        sort($unique, SORT_STRING);
+        usort($unique, static fn (string $a, string $b): int => strcasecmp(str_replace('\\', ' ', $a), str_replace('\\', ' ', $b)));
 
         return implode("\n", array_map(
             static fn (string $class): string => "use {$class};",

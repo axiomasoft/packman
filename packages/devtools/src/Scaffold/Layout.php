@@ -21,11 +21,72 @@ final readonly class Layout
         'packman-module',
     ];
 
+    private const string IDENTIFIER_SEGMENT = '/\A[A-Z][A-Za-z0-9]*\z/';
+
     private StubStore $stubs;
 
     public function __construct(?StubStore $stubs = null)
     {
         $this->stubs = $stubs ?? new StubStore(StubStore::defaultRoot());
+    }
+
+    public static function relative(string $basePath, string $path): string
+    {
+        $base = rtrim($basePath, '/').'/';
+
+        return str_starts_with($path, $base) ? substr($path, strlen($base)) : $path;
+    }
+
+    public static function absolute(string $basePath, string $path): string
+    {
+        return str_starts_with($path, '/') ? $path : rtrim($basePath, '/').'/'.$path;
+    }
+
+    public static function className(string $input, string $suffix = ''): string
+    {
+        $name = self::studlyIdentifier($input);
+
+        if ($suffix !== '' && str_ends_with($name, $suffix) && $name !== $suffix) {
+            $name = substr($name, 0, -strlen($suffix));
+        }
+
+        if (preg_match(self::IDENTIFIER_SEGMENT, $name) !== 1) {
+            throw new InvalidArgumentException('"'.$input.'" is not a valid class name.');
+        }
+
+        return $name.$suffix;
+    }
+
+    /**
+     * @return non-empty-list<string>
+     */
+    public static function segments(string $input): array
+    {
+        $trimmed = trim($input, '/\\');
+
+        if ($trimmed === '') {
+            throw new InvalidArgumentException('"'.$input.'" is not a valid path segment list.');
+        }
+
+        $segments = [];
+        foreach (explode('/', str_replace('\\', '/', $trimmed)) as $segment) {
+            $name = self::studlyIdentifier($segment);
+
+            if (preg_match(self::IDENTIFIER_SEGMENT, $name) !== 1) {
+                throw new InvalidArgumentException('"'.$input.'" contains invalid segment "'.$segment.'".');
+            }
+
+            $segments[] = $name;
+        }
+
+        return $segments;
+    }
+
+    private static function studlyIdentifier(string $value): string
+    {
+        $normalized = str_replace(['-', '_'], ' ', $value);
+
+        return str_replace(' ', '', ucwords($normalized));
     }
 
     public function descriptor(string $profile): ProfileDescriptor

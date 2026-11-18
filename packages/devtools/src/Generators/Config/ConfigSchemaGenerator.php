@@ -235,7 +235,7 @@ final class ConfigSchemaGenerator
         }
 
         if ($item->value instanceof ConstFetch && strtolower($item->value->name->toString()) === 'null' && is_string($doc)) {
-            if (preg_match('/@var\s+\?(?:list|array)\b|@var\s+(?:list|array)<[^>]*>\s*\|\s*null|@var\s+null\s*\|\s*(?:list|array)/', $doc) === 1) {
+            if (preg_match('/@var\s+\?(?:list|array)\b|@var\s+(?:list|array)(?:<[^>]*>)?\s*\|\s*null|@var\s+null\s*\|\s*(?:list|array)/', $doc) === 1) {
                 return ['type' => ['array', 'null'], 'default' => null];
             }
 
@@ -243,12 +243,26 @@ final class ConfigSchemaGenerator
                 return ['type' => ['integer', 'null'], 'default' => null];
             }
 
+            if (preg_match('/@var\s+\?float\b|@var\s+float\s*\|\s*null|@var\s+null\s*\|\s*float\b/', $doc) === 1) {
+                return ['type' => ['number', 'null'], 'default' => null];
+            }
+
             if (preg_match('/@var\s+\?bool\b|@var\s+bool\s*\|\s*null|@var\s+null\s*\|\s*bool\b/', $doc) === 1) {
                 return ['type' => ['boolean', 'null'], 'default' => null];
             }
         }
 
-        return $this->exprToSchema($item->value);
+        $schema = $this->exprToSchema($item->value);
+
+        if (is_string($doc) && preg_match('/@var\s+\?[a-zA-Z]|@var\s+[^\r\n*]*\|\s*null\b|@var\s+null\s*\|/', $doc) === 1) {
+            if (is_string($schema['type'] ?? null) && $schema['type'] !== 'null') {
+                $schema['type'] = [$schema['type'], 'null'];
+            } elseif (is_array($schema['type'] ?? null) && ! in_array('null', $schema['type'], true)) {
+                $schema['type'][] = 'null';
+            }
+        }
+
+        return $schema;
     }
 
     /** @return array<string, mixed> */

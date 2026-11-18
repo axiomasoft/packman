@@ -62,6 +62,66 @@ final readonly class Place
         );
     }
 
+    public static function fromDirectory(string $directory, string $namespace): self
+    {
+        $cleanDir = rtrim($directory, '/');
+        $cleanNamespace = trim($namespace, '\\');
+        $segments = explode('\\', $cleanNamespace);
+        $vendorSegment = $segments[0] !== '' ? $segments[0] : 'App';
+        $lastSegment = $segments[count($segments) - 1] !== '' ? $segments[count($segments) - 1] : 'Package';
+        $vendor = self::kebab($vendorSegment);
+        $slug = self::kebab($lastSegment);
+        $cleanedPrefix = preg_replace('/[^a-z]/', '', strtolower($slug));
+        $prefixLetters = is_string($cleanedPrefix) && $cleanedPrefix !== '' ? $cleanedPrefix : 'pm';
+        $tablePrefix = str_pad(substr($prefixLetters, 0, 2), 2, 'x');
+
+        return new self(
+            vendor: $vendor,
+            slug: $slug,
+            composerName: $vendor.'/'.$slug,
+            namespace: $cleanNamespace,
+            classPrefix: self::studly($lastSegment),
+            tablePrefix: $tablePrefix,
+            pluginId: "{$vendor}.{$slug}",
+            relativeDirectory: $cleanDir,
+        );
+    }
+
+    public function directory(): string
+    {
+        return $this->relativeDirectory;
+    }
+
+    public function in(string $relative): self
+    {
+        $clean = trim(str_replace('\\', '/', $relative), '/');
+
+        if ($clean === '') {
+            return $this;
+        }
+
+        $subNamespace = implode('\\', explode('/', $clean));
+
+        return self::fromDirectory(
+            rtrim($this->relativeDirectory, '/').'/'.$clean,
+            $this->namespace !== '' ? $this->namespace.'\\'.$subNamespace : $subNamespace,
+        );
+    }
+
+    public function file(string $class): string
+    {
+        return rtrim($this->relativeDirectory, '/').'/'.$class.'.php';
+    }
+
+    /** @return class-string */
+    public function fqcn(string $class): string
+    {
+        /** @var class-string $name */
+        $name = ($this->namespace !== '' ? $this->namespace.'\\' : '').ltrim($class, '\\');
+
+        return $name;
+    }
+
     private static function kebab(string $value): string
     {
         $converted = preg_replace('/([a-z0-9])([A-Z])/', '$1-$2', $value) ?? $value;

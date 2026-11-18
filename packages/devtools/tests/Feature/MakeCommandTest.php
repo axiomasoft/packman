@@ -5,9 +5,12 @@ declare(strict_types=1);
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
 use Packman\DevTools\Console\ApplicationFactory;
+use Packman\DevTools\Scaffold\GeneratedFile;
 use Packman\DevTools\Scaffold\Layout;
 use Packman\DevTools\Scaffold\Place;
 use Packman\DevTools\Scaffold\ProviderRegistration;
+use Packman\DevTools\Scaffold\ScaffoldCollisionException;
+use Packman\DevTools\Scaffold\ScaffoldRunner;
 use Packman\DevTools\Scaffold\StubStore;
 use Packman\DevTools\Tests\Support\TempWorkspace;
 use Packman\Extensions\ExtensionInspector;
@@ -188,6 +191,56 @@ it('verifies generated packman-plugin and packman-module implement contracts, di
             ->and($tagged[0])->toBeInstanceOf($providerClass);
     } finally {
         spl_autoload_unregister($autoloader);
+        $ws->cleanup();
+    }
+});
+
+it('supports directory Place navigation, Layout helpers, PHP array registration, and atomic ScaffoldRunner rollback', function (): void {
+    $ws = new TempWorkspace('packman-scaffold-helpers-');
+
+    try {
+        $rootPlace = Place::fromDirectory($ws->path('app/Guards'), 'App\\Guards');
+        $subPlace = $rootPlace->in('Admin/Permissions/Sales');
+
+        expect($subPlace->directory())->toBe($ws->path('app/Guards/Admin/Permissions/Sales'))
+            ->and($subPlace->namespace)->toBe('App\\Guards\\Admin\\Permissions\\Sales')
+            ->and($subPlace->file('OrderPermission'))->toBe($ws->path('app/Guards/Admin/Permissions/Sales/OrderPermission.php'))
+            ->and($subPlace->fqcn('OrderPermission'))->toBe('App\\Guards\\Admin\\Permissions\\Sales\\OrderPermission')
+            ->and(Layout::className('sales-desk', 'Source'))->toBe('SalesDeskSource')
+            ->and(Layout::className('SalesDeskSource', 'Source'))->toBe('SalesDeskSource')
+            ->and(Layout::segments('Sales/Orders'))->toBe(['Sales', 'Orders'])
+            ->and(Layout::relative($ws->root, $ws->path('app/Guards/Admin')))->toBe('app/Guards/Admin')
+            ->and(Layout::absolute($ws->root, 'app/Guards/Admin'))->toBe($ws->path('app/Guards/Admin'))
+            ->and(StubStore::imports(['App\\Zebra', 'App\\A\\Beta', 'App\\AB']))->toBe("use App\\A\\Beta;\nuse App\\AB;\nuse App\\Zebra;");
+
+        $configSource = "<?php\n\nreturn [\n    // Keep comment\n    'panels' => [\n        'providers' => [],\n    ],\n];\n";
+        $inserted = ProviderRegistration::registerInPhpArray($configSource, ['panels', 'providers'], 'App\\Guards\\Admin\\AdminPanelProvider');
+        expect($inserted)->toContain('// Keep comment')
+            ->and($inserted)->toContain('App\\Guards\\Admin\\AdminPanelProvider::class,')
+            ->and(ProviderRegistration::registerInPhpArray((string) $inserted, ['panels', 'providers'], 'App\\Guards\\Admin\\AdminPanelProvider'))->toBe($inserted)
+            ->and(ProviderRegistration::registerInPhpArray($configSource, ['missing', 'providers'], 'App\\Foo'))->toBeNull();
+
+        $ws->write('existing.php', 'original');
+        chmod($ws->path('existing.php'), 0o640);
+        mkdir($ws->path('dir-target.php'));
+
+        $runner = new ScaffoldRunner;
+        expect(static fn () => $runner->run($ws->root, static fn (): array => [
+            new GeneratedFile('new.php', 'new'),
+            new GeneratedFile('existing.php', 'overwrite-refused'),
+        ]))->toThrow(ScaffoldCollisionException::class, 'existing.php already exists.')
+            ->and(is_file($ws->path('new.php')))->toBeFalse()
+            ->and(file_get_contents($ws->path('existing.php')))->toBe('original');
+
+        expect(static fn () => $runner->write([
+            ['target' => $ws->path('existing.php'), 'file' => new GeneratedFile('existing.php', 'replaced', overwrite: true)],
+            ['target' => $ws->path('new.php'), 'file' => new GeneratedFile('new.php', 'created')],
+            ['target' => $ws->path('dir-target.php'), 'file' => new GeneratedFile('dir-target.php', 'fails')],
+        ]))->toThrow(RuntimeException::class, 'Unable to move scaffold file into place')
+            ->and(file_get_contents($ws->path('existing.php')))->toBe('original')
+            ->and(fileperms($ws->path('existing.php')) & 0o777)->toBe(0o640)
+            ->and(is_file($ws->path('new.php')))->toBeFalse();
+    } finally {
         $ws->cleanup();
     }
 });
