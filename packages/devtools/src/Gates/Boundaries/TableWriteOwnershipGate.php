@@ -67,6 +67,9 @@ final readonly class TableWriteOwnershipGate implements QualityGate
     {
         $violations = [];
         $finder = new NodeFinder;
+        $tableOwners = is_array($context->config->gates['table_owners'] ?? null)
+            ? $context->config->gates['table_owners']
+            : [];
 
         foreach ($context->config->packages as $package) {
             if ($package->devOnly || in_array($package->name, self::SYSTEM_OWNER_PACKAGES, true)) {
@@ -100,7 +103,7 @@ final readonly class TableWriteOwnershipGate implements QualityGate
                         continue;
                     }
 
-                    if ($this->isProtectedSystemTable($tableName)) {
+                    if ($this->isProtectedSystemTable($tableName) && ($tableOwners[$tableName] ?? null) !== $package->name) {
                         $violations[] = sprintf(
                             '[%s] Forbidden direct write ->%s() on protected system table "%s" in %s:%d.',
                             $package->name,

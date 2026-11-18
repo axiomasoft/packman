@@ -7,6 +7,7 @@ namespace Packman\DevTools\Rector\Rules\Laravel;
 use Illuminate\Support\Facades\Request;
 use Override;
 use Packman\Attributes\Api;
+use Packman\DevTools\Internal\Rector\ArrayDimFetchContextNodeVisitor;
 use Packman\DevTools\Internal\Rector\PreservedPaths;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
@@ -14,7 +15,6 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Scalar\String_;
 use Rector\Rector\AbstractRector;
-use RectorLaravel\NodeVisitor\ArrayDimFetchContextNodeVisitor;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 

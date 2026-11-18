@@ -1919,6 +1919,16 @@
                     "return": "?string",
                     "doc": []
                 },
+                "hasTables": {
+                    "visibility": "protected",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "bool",
+                    "doc": []
+                },
                 "identityPrimary": {
                     "visibility": "protected",
                     "static": false,
