@@ -9,8 +9,8 @@ use Packman\Attributes\SpiKind;
 use Packman\Modules\Contracts\Compiler\Extender;
 
 /**
- * 6. AzGuard permission group `{panel}.{entity}.{action}`, claimed into
- * mod_records on enable. `scopeable()` opts into the aut_role_matrix scope
+ * 6. Authorization permission group `{panel}.{entity}.{action}`, claimed into
+ * mod_records on enable. `scopeable()` opts into the role-matrix scope
  * axis (none/own/dept/dept_tree/workspace/account).
  */
 #[Spi(kind: SpiKind::Call, since: '1.0')]

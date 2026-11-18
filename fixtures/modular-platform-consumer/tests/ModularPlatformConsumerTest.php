@@ -97,9 +97,9 @@ final class ModularPlatformConsumerTest extends PackageTestCase
     protected function installedExtensionPackages(): array
     {
         return [
-            'axiomasoft/packman' => new InstalledPackageVersion('axiomasoft/packman', '1.0.0', null),
-            'axiomasoft/packman-modules' => new InstalledPackageVersion('axiomasoft/packman-modules', '1.0.0', null),
-            'fixture/crm-module' => new InstalledPackageVersion('fixture/crm-module', '1.0.0', null),
+            'axiomasoft/packman' => new InstalledPackageVersion('axiomasoft/packman', '0.1.0', null),
+            'axiomasoft/packman-modules' => new InstalledPackageVersion('axiomasoft/packman-modules', '0.1.0', null),
+            'fixture/crm-module' => new InstalledPackageVersion('fixture/crm-module', '0.1.0', null),
         ];
     }
 
@@ -145,6 +145,7 @@ final class ModularPlatformConsumerTest extends PackageTestCase
         $app['config']->set('modules.cache_path', 'bootstrap/cache/modules.php');
 
         $compiledViews = sys_get_temp_dir().'/packman_fixture_views_'.getmypid();
+
         if (! is_dir($compiledViews)) {
             mkdir($compiledViews, 0775, true);
         }
@@ -287,6 +288,7 @@ final class ModularPlatformConsumerTest extends PackageTestCase
 
         $this->app->make(FilamentPanelRegistry::class)->register($filamentPanel);
         $routes = dirname((string) (new ReflectionClass(FilamentServiceProvider::class))->getFileName()).'/../routes/web.php';
+
         if (is_file($routes)) {
             require $routes;
             $this->app->make(Router::class)->getRoutes()->refreshNameLookups();

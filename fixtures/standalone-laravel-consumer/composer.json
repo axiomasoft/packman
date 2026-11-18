@@ -10,7 +10,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman": "1.0.x-dev"
+                    "axiomasoft/packman": "0.1.0"
                 }
             }
         },
@@ -20,7 +20,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman-plugins": "1.0.x-dev"
+                    "axiomasoft/packman-plugins": "0.1.0"
                 }
             }
         },
@@ -30,7 +30,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman-schema": "1.0.x-dev"
+                    "axiomasoft/packman-schema": "0.1.0"
                 }
             }
         },
@@ -40,19 +40,19 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman-testkit": "1.0.x-dev"
+                    "axiomasoft/packman-testkit": "0.1.0"
                 }
             }
         }
     ],
     "require": {
         "php": "^8.4",
-        "axiomasoft/packman": "^1.0@dev",
-        "axiomasoft/packman-plugins": "^1.0@dev",
-        "axiomasoft/packman-schema": "^1.0@dev"
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-plugins": "^0.1",
+        "axiomasoft/packman-schema": "^0.1"
     },
     "require-dev": {
-        "axiomasoft/packman-testkit": "^1.0@dev",
+        "axiomasoft/packman-testkit": "^0.1",
         "phpunit/phpunit": "^13.4"
     },
     "autoload": {

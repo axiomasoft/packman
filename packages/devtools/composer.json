@@ -8,7 +8,7 @@
     ],
     "require": {
         "php": "^8.4",
-        "axiomasoft/packman": "^0.1|^1.0@dev",
+        "axiomasoft/packman": "^0.1",
         "illuminate/support": "^12.0|^13.0",
         "nette/neon": "^3.4",
         "nikic/php-parser": "^5.4",

@@ -5,13 +5,23 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Packman\Schema\Contracts\Migration\SchemaMigrator;
+use Packman\Schema\Contracts\Migration\SchemaSetProvider;
 use Packman\Schema\Contracts\Migration\SchemaSets;
 use Packman\Schema\Data\Migration\SchemaSet;
 use Packman\Schema\Enums\SchemaLifecycle;
 use Packman\Schema\Enums\SchemaScope;
 use Packman\Schema\Exceptions\SchemaSetException;
 use Packman\Schema\Internal\Migration\TaggedSchemaSets;
+use Packman\Schema\Laravel\SchemaExtensions;
 use Packman\Schema\Tests\Fixtures\FixtureSchemaSets;
+
+final readonly class StatelessDoubleTaggedSchemaSetProvider implements SchemaSetProvider
+{
+    public function sets(): array
+    {
+        return [schemaFixture()];
+    }
+}
 
 /**
  * @param  list<string>  $drivers
@@ -191,4 +201,14 @@ it('accepts absolute POSIX drive and UNC paths without accepting relative paths'
         expect((new SchemaSet('fixture/path', 'tenant', SchemaScope::Tenant, $path, 1))->path)->toBe($path);
     }
     expect(static fn (): SchemaSet => new SchemaSet('fixture/path', 'tenant', SchemaScope::Tenant, 'relative/schema', 1))->toThrow(SchemaSetException::class, 'invalid_set');
+});
+
+it('deduplicates a stateless SchemaSetProvider tagged both manually and via SchemaExtensions', function (): void {
+    app()->forgetInstance(SchemaSets::class);
+    app()->tag([StatelessDoubleTaggedSchemaSetProvider::class], SchemaSetProvider::class);
+    SchemaExtensions::registerProviders(app(), StatelessDoubleTaggedSchemaSetProvider::class);
+
+    $ids = array_map(static fn (SchemaSet $set): string => $set->id(), resolve(SchemaSets::class)->all());
+
+    expect($ids)->toContain('fixture/platform:tenant');
 });

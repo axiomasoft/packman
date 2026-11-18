@@ -5,8 +5,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "axiomasoft/packman": "^1.0@dev",
-        "axiomasoft/packman-modules": "^1.0@dev"
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-modules": "^0.1"
     },
     "autoload": {
         "psr-4": {

@@ -24,6 +24,7 @@ use Packman\Schema\Internal\Commands\SchemaStatusCommand;
 use Packman\Schema\Internal\Compiler\SchemaOwnershipRegistry;
 use Packman\Schema\Internal\Migration\DefaultSchemaMigrator;
 use Packman\Schema\Internal\Migration\TaggedSchemaSets;
+use ReflectionClass;
 
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class DatabaseRegistrar implements PackageRegistrar
@@ -99,11 +100,28 @@ final class DatabaseRegistrar implements PackageRegistrar
 
     private static function schemaSets(Application $app): SchemaSets
     {
+        /** @var array<class-string, true> $seenStateless */
+        $seenStateless = [];
         $providers = [];
+
         foreach ($app->tagged(SchemaSetProvider::class) as $provider) {
             if (! $provider instanceof SchemaSetProvider) {
                 throw SchemaSetException::invalidSet('SchemaSetProvider tag');
             }
+
+            $reflection = new ReflectionClass($provider);
+            $constructor = $reflection->getConstructor();
+            $isStatelessNamed = ! $reflection->isAnonymous()
+                && ($constructor === null || $constructor->getNumberOfParameters() === 0);
+
+            if (($isStatelessNamed && isset($seenStateless[$provider::class])) || in_array($provider, $providers, true)) {
+                continue;
+            }
+
+            if ($isStatelessNamed) {
+                $seenStateless[$provider::class] = true;
+            }
+
             $providers[] = $provider;
         }
 
