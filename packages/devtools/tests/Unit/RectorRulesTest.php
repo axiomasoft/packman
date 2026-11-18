@@ -26,6 +26,10 @@ final class SampleController
     public function handle(): array
     {
         $_SERVER['PACKMAN_WRITE_TEST'] = 'ok';
+        foreach ($_SERVER['counters'] as &$counter) {
+            $counter++;
+        }
+        unset($counter);
         $host = $_SERVER['HTTP_HOST'];
         $hasHost = isset($_SERVER['HTTP_HOST']);
         $argv = $_SERVER['argv'];
@@ -140,6 +144,7 @@ PHP);
         $updatedController = (string) file_get_contents($domainFile);
         expect($updatedController)
             ->toContain("\$_SERVER['PACKMAN_WRITE_TEST'] = 'ok'")
+            ->toContain("foreach (\$_SERVER['counters'] as &\$counter)")
             ->toContain("isset(\$_SERVER['HTTP_HOST'])")
             ->toContain('Request::server(\'HTTP_HOST\')')
             ->toContain('$_SERVER[\'argv\']')
@@ -156,6 +161,72 @@ PHP);
 
         $preservedTestCaller = (string) file_get_contents($testCallerFile);
         expect($preservedTestCaller)->toContain("SendWelcomeJob::dispatch('u-test')");
+    } finally {
+        $ws->cleanup();
+    }
+});
+
+it('marks foreach by-reference superglobal iterables in write context so Rector preserves them', function (): void {
+    $ws = new TempWorkspace('packman-rector-foreach-ref-');
+
+    try {
+        $targetFile = $ws->write('packages/demo/src/CounterMutator.php', <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Acme\Demo;
+
+final class CounterMutator
+{
+    public function mutate(): void
+    {
+        foreach ($_SERVER['counters'] as &$counter) {
+            $counter++;
+        }
+        unset($counter);
+
+        foreach ($_SERVER['readonly_items'] as $item) {
+            $_ = $item;
+        }
+    }
+}
+PHP);
+
+        $repoRoot = dirname(__DIR__, 4);
+        $rectorBin = $repoRoot.'/vendor/bin/rector';
+        $autoloadFile = $repoRoot.'/vendor/autoload.php';
+
+        $configFile = $ws->write('rector.php', <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+use Packman\DevTools\Rector\PackmanRectorSet;
+use Rector\Config\RectorConfig;
+
+return static function (RectorConfig $rectorConfig): void {
+    $rectorConfig->paths([__DIR__.'/packages/demo/src']);
+    PackmanRectorSet::configure($rectorConfig);
+};
+PHP);
+
+        $process = new Process([
+            PHP_BINARY,
+            $rectorBin,
+            'process',
+            '--config='.$configFile,
+            '--autoload-file='.$autoloadFile,
+            '--no-progress-bar',
+        ], $ws->root);
+        $process->run();
+
+        expect($process->isSuccessful())->toBeTrue($process->getErrorOutput()."\n".$process->getOutput());
+
+        $updated = (string) file_get_contents($targetFile);
+        expect($updated)
+            ->toContain("foreach (\$_SERVER['counters'] as &\$counter)")
+            ->toContain("Request::server('readonly_items')");
     } finally {
         $ws->cleanup();
     }

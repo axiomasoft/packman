@@ -376,3 +376,69 @@ it('validates representative configuration payloads against all generated monore
         }
     }
 });
+
+it('emits object|null for nullable associative @var maps and honors @var types on env() defaults', function (): void {
+    $ws = new TempWorkspace('packman-config-docvar-');
+
+    try {
+        $pkg = $ws->seedCleanMonorepoPackage('acme/demo', 'packages/demo', 'Acme\\Demo\\');
+        $ws->write('packages/demo/config/demo.php', <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+return [
+    /** @var array<string, bool>|null */
+    'flags' => null,
+
+    /** @var ?array<string, mixed> */
+    'metadata' => null,
+
+    /** @var list<string>|null */
+    'tags' => null,
+
+    /** @var int|null */
+    'limit' => env('LIMIT', null),
+
+    /** @var ?bool */
+    'enabled_override' => env('ENABLED_OVERRIDE', null),
+
+    /** @var ?float */
+    'ratio' => env('RATIO', null),
+];
+PHP);
+
+        $sync = (new ConfigSchemaGenerator)->sync($ws->root, [$pkg], write: true);
+        expect($sync['ok'])->toBeTrue();
+
+        $schemaPath = $ws->path('packages/demo/resources/schemas/config.schema.json');
+        expect(is_file($schemaPath))->toBeTrue();
+
+        expect(JsonSchemaValidator::validateJsonAgainstFile(
+            '{"demo":{"flags":{"k":true},"metadata":{"env":"prod"},"tags":["a","b"],"limit":42,"enabled_override":false,"ratio":0.75}}',
+            $schemaPath,
+        ))->toBe([]);
+
+        expect(JsonSchemaValidator::validateJsonAgainstFile(
+            '{"demo":{"flags":null,"metadata":null,"tags":null,"limit":null,"enabled_override":null,"ratio":null}}',
+            $schemaPath,
+        ))->toBe([]);
+
+        expect(JsonSchemaValidator::validateJsonAgainstFile(
+            '{"demo":{"flags":["list"],"limit":42}}',
+            $schemaPath,
+        ))->not->toBe([]);
+
+        expect(JsonSchemaValidator::validateJsonAgainstFile(
+            '{"demo":{"metadata":["list"],"limit":42}}',
+            $schemaPath,
+        ))->not->toBe([]);
+
+        expect(JsonSchemaValidator::validateJsonAgainstFile(
+            '{"demo":{"flags":{"k":true},"limit":"42"}}',
+            $schemaPath,
+        ))->not->toBe([]);
+    } finally {
+        $ws->cleanup();
+    }
+});

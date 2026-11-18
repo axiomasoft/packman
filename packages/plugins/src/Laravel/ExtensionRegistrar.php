@@ -29,9 +29,12 @@ use Packman\Plugins\Internal\Graph\PluginCatalog;
 use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
 use Packman\Plugins\Laravel\Console\ExtensionsCommand;
 use Packman\Schema\Contracts\Compiler\SchemaOwnership;
+use Packman\Schema\Contracts\Migration\SchemaMigrator;
+use Packman\Schema\Contracts\Migration\SchemaSets;
 use Packman\Schema\Laravel\SchemaExtensions;
 use ReflectionClass;
 use Throwable;
+use WeakMap;
 
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class ExtensionRegistrar implements PackageRegistrar
@@ -120,6 +123,8 @@ final class ExtensionRegistrar implements PackageRegistrar
         $app->afterResolving(FrozenContributions::class, static function (FrozenContributions $contributions, Application $app): void {
             self::wirePluginFacets($app, $contributions);
         });
+
+        self::registerSchemaResolutionHooks($app);
 
         $app->singleton(Capabilities::class, static fn (Application $app): Capabilities => new CapabilitiesRegistry(
             $app->make(FrozenContributions::class),
@@ -226,8 +231,63 @@ final class ExtensionRegistrar implements PackageRegistrar
         }
     }
 
+    private static function registerSchemaResolutionHooks(Application $app): void
+    {
+        $ensurePluginsWired = static function (string $abstract, array $parameters, mixed $container): void {
+            /** @var WeakMap<Application, true>|null $resolvingApps */
+            static $resolvingApps = null;
+            $resolvingApps ??= new WeakMap;
+
+            if (! $container instanceof Application || isset($resolvingApps[$container]) || $container->resolved(FrozenContributions::class)) {
+                return;
+            }
+
+            if (! self::hasPendingPlugins($container)) {
+                return;
+            }
+
+            $resolvingApps[$container] = true;
+
+            try {
+                $contributions = $container->make(FrozenContributions::class);
+                self::wirePluginFacets($container, $contributions);
+            } finally {
+                unset($resolvingApps[$container]);
+            }
+        };
+
+        foreach ([SchemaMigrator::class, SchemaSets::class, SchemaOwnership::class] as $contract) {
+            if (interface_exists($contract)) {
+                $app->beforeResolving($contract, $ensurePluginsWired);
+            }
+        }
+    }
+
     private static function wirePluginFacets(Application $app, FrozenContributions $contributions): void
     {
+        /** @var WeakMap<FrozenContributions, WeakMap<Application, true>>|null $wired */
+        static $wired = null;
+
+        if (! $wired instanceof WeakMap) {
+            /** @var WeakMap<FrozenContributions, WeakMap<Application, true>> $outer */
+            $outer = new WeakMap;
+            $wired = $outer;
+        }
+
+        if (! $wired->offsetExists($contributions)) {
+            /** @var WeakMap<Application, true> $inner */
+            $inner = new WeakMap;
+            $wired->offsetSet($contributions, $inner);
+        }
+
+        $appsForContributions = $wired->offsetGet($contributions);
+
+        if ($appsForContributions->offsetExists($app)) {
+            return;
+        }
+
+        $appsForContributions->offsetSet($app, true);
+
         $schemaNouns = [];
         $hasSchemaExtensions = false;
 

@@ -104,6 +104,10 @@ final class ArrayDimFetchContextNodeVisitor extends NodeVisitorAbstract implemen
         }
 
         if ($node instanceof Foreach_) {
+            if ($node->byRef) {
+                $this->markWriteTarget($node->expr);
+            }
+
             if ($node->keyVar instanceof Expr) {
                 $this->markWriteTarget($node->keyVar);
             }

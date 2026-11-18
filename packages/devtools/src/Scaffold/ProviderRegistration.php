@@ -5,6 +5,20 @@ declare(strict_types=1);
 namespace Packman\DevTools\Scaffold;
 
 use Packman\Attributes\Api;
+use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
+use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt\GroupUse;
+use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Node\Stmt\Return_;
+use PhpParser\Node\Stmt\Use_;
+use PhpParser\NodeFinder;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
+use PhpParser\ParserFactory;
+use Throwable;
 
 /** Registry-aware helper formatting PSR-4 composer/provider registrations cleanly without duplicate entries. */
 #[Api(since: '1.0')]
@@ -88,14 +102,160 @@ final class ProviderRegistration
         }
 
         [$open, $close, $key] = $current;
-        $entries = implode('', array_column(array_slice($tokens, $open + 1, $close - $open - 1), 'text'));
         $cleanProvider = ltrim($provider, '\\');
+        $context = self::resolvePhpSourceContext($source, $keyPath, $cleanProvider);
 
-        if (preg_match('/(?<![\w\\\\])\\\\?'.preg_quote($cleanProvider, '/').'::class\b/', $entries) === 1) {
+        if ($context['alreadyRegistered']) {
             return $source;
         }
 
-        return self::insertProvider($source, $cleanProvider, $tokens[$open]['offset'] + 1, $tokens[$key]['offset']);
+        $entries = implode('', array_column(array_slice($tokens, $open + 1, $close - $open - 1), 'text'));
+
+        if (! $context['hasNamespace'] && preg_match('/(?<![\w\\\\])\\\\?'.preg_quote($cleanProvider, '/').'::class\b/', $entries) === 1) {
+            return $source;
+        }
+
+        return self::insertProvider($source, $context['formatted'], $tokens[$open]['offset'] + 1, $tokens[$key]['offset']);
+    }
+
+    /**
+     * @param  non-empty-list<string>  $keyPath
+     * @return array{alreadyRegistered: bool, hasNamespace: bool, formatted: string}
+     */
+    private static function resolvePhpSourceContext(string $source, array $keyPath, string $cleanProvider): array
+    {
+        try {
+            $ast = new ParserFactory()->createForNewestSupportedVersion()->parse($source);
+        } catch (Throwable) {
+            $ast = null;
+        }
+
+        if ($ast === null) {
+            return [
+                'alreadyRegistered' => false,
+                'hasNamespace' => false,
+                'formatted' => $cleanProvider,
+            ];
+        }
+
+        $traverser = new NodeTraverser;
+        $traverser->addVisitor(new NameResolver);
+        $resolved = $traverser->traverse($ast);
+
+        $finder = new NodeFinder;
+        /** @var list<Namespace_> $namespaces */
+        $namespaces = $finder->findInstanceOf($resolved, Namespace_::class);
+        $hasNamespace = array_any($namespaces, static fn (Namespace_ $ns): bool => $ns->name !== null);
+
+        /** @var array<string, string> $imports */
+        $imports = [];
+
+        /** @var list<Use_> $uses */
+        $uses = $finder->findInstanceOf($resolved, Use_::class);
+        foreach ($uses as $use) {
+            if ($use->type !== Use_::TYPE_NORMAL) {
+                continue;
+            }
+
+            foreach ($use->uses as $useItem) {
+                $alias = strtolower($useItem->getAlias()->toString());
+                $imports[$alias] = ltrim($useItem->name->toString(), '\\');
+            }
+        }
+
+        /** @var list<GroupUse> $groupUses */
+        $groupUses = $finder->findInstanceOf($resolved, GroupUse::class);
+        foreach ($groupUses as $groupUse) {
+            $prefix = ltrim($groupUse->prefix->toString(), '\\');
+
+            foreach ($groupUse->uses as $useItem) {
+                $effectiveType = $groupUse->type !== Use_::TYPE_UNKNOWN ? $groupUse->type : $useItem->type;
+
+                if ($effectiveType !== Use_::TYPE_NORMAL) {
+                    continue;
+                }
+
+                $alias = strtolower($useItem->getAlias()->toString());
+                $imports[$alias] = $prefix.'\\'.ltrim($useItem->name->toString(), '\\');
+            }
+        }
+
+        $targetArray = self::findTargetArray($resolved, $keyPath);
+        $alreadyRegistered = false;
+
+        if ($targetArray instanceof Array_) {
+            foreach ($targetArray->items as $item) {
+                if (
+                    $item->value instanceof ClassConstFetch
+                    && $item->value->class instanceof Name
+                    && $item->value->name instanceof Identifier
+                    && $item->value->name->toString() === 'class'
+                    && ltrim($item->value->class->toString(), '\\') === $cleanProvider
+                ) {
+                    $alreadyRegistered = true;
+
+                    break;
+                }
+            }
+        }
+
+        $lastSlash = strrpos($cleanProvider, '\\');
+        $shortName = $lastSlash === false ? $cleanProvider : substr($cleanProvider, $lastSlash + 1);
+
+        if (($imports[strtolower($shortName)] ?? null) === $cleanProvider) {
+            $formatted = $shortName;
+        } elseif ($hasNamespace) {
+            $formatted = '\\'.$cleanProvider;
+        } else {
+            $formatted = $cleanProvider;
+        }
+
+        return [
+            'alreadyRegistered' => $alreadyRegistered,
+            'hasNamespace' => $hasNamespace,
+            'formatted' => $formatted,
+        ];
+    }
+
+    /**
+     * @param  array<mixed>  $stmts
+     * @param  non-empty-list<string>  $keyPath
+     */
+    private static function findTargetArray(array $stmts, array $keyPath): ?Array_
+    {
+        foreach ($stmts as $stmt) {
+            if ($stmt instanceof Namespace_) {
+                $found = self::findTargetArray($stmt->stmts, $keyPath);
+
+                if ($found !== null) {
+                    return $found;
+                }
+            }
+
+            if ($stmt instanceof Return_ && $stmt->expr instanceof Array_) {
+                $current = $stmt->expr;
+
+                foreach ($keyPath as $segment) {
+                    $next = null;
+
+                    foreach ($current->items as $item) {
+                        if ($item->key instanceof String_ && $item->key->value === $segment && $item->value instanceof Array_) {
+                            $next = $item->value;
+                        }
+                    }
+
+                    if ($next === null) {
+                        return null;
+                    }
+
+                    $current = $next;
+                }
+
+                return $current;
+            }
+        }
+
+        return null;
     }
 
     /**
