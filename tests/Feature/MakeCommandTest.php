@@ -64,7 +64,8 @@ it('scaffolds valid PHP files and valid composer.json escaping for all 4 profile
 
         $composer = json_decode((string) file_get_contents($ws->path("{$packageDir}/composer.json")), true, 512, JSON_THROW_ON_ERROR);
         expect($composer['autoload']['psr-4'] ?? [])->toBe([$expectedNamespace.'\\' => 'src/'])
-            ->and($composer['autoload-dev']['psr-4'] ?? [])->toBe([$expectedNamespace.'\\Tests\\' => 'tests/']);
+            ->and($composer['autoload-dev']['psr-4'] ?? [])->toBe([$expectedNamespace.'\\Tests\\' => 'tests/'])
+            ->and($composer['require']['axiomasoft/packman'] ?? null)->toBe('^0.1');
 
         if ($expectedProvider !== null) {
             expect($composer['extra']['laravel']['providers'] ?? [])->toBe([$expectedProvider])
