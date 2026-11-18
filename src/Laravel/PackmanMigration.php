@@ -27,13 +27,18 @@ abstract class PackmanMigration extends Migration
 {
     public function getConnection(): ?string
     {
-        return $this->tables()->connection();
+        return $this->hasTables() ? $this->tables()->connection() : parent::getConnection();
     }
 
-    /** Physical name of a logical table. */
+    /** Physical name of a logical table (or physical table name directly when `TableNames` is not bound). */
     protected function table(string $logical): string
     {
-        return $this->tables()->table($logical);
+        return $this->hasTables() ? $this->tables()->table($logical) : $logical;
+    }
+
+    protected function hasTables(): bool
+    {
+        return Container::getInstance()->bound(TableNames::class);
     }
 
     protected function tables(): TableNames
