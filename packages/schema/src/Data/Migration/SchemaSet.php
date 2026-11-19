@@ -18,7 +18,8 @@ final readonly class SchemaSet
 {
     /**
      * @param  list<string>  $drivers
-     * @param  list<string>  $requires
+     * @param  list<string>  $requires  Composer packages that contribute schema sets
+     * @param  list<string>  $prerequisiteSets  Full schema set IDs to migrate before this set
      */
     public function __construct(
         public string $package,
@@ -30,11 +31,18 @@ final readonly class SchemaSet
         public SchemaLifecycle $lifecycle = SchemaLifecycle::Platform,
         public array $requires = [],
         public ?string $connection = null,
+        public array $prerequisiteSets = [],
     ) {
         if (preg_match('/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/', $package) !== 1 || $path === '' || ! self::absolutePath($path) || $connection === ''
             || preg_match('/^[a-z0-9-]+$/', $name) !== 1 || $version < 1 || ! in_array('pgsql', $drivers, true)
             || ($scope === SchemaScope::Dedicated) !== ($connection !== null)) {
             throw SchemaSetException::invalidSet($package.':'.$name);
+        }
+
+        foreach ($prerequisiteSets as $id) {
+            if (preg_match('/\A[a-z0-9_.-]+\/[a-z0-9_.-]+:[a-z0-9-]+\z/', $id) !== 1) {
+                throw SchemaSetException::invalidPrerequisite($this->id(), 'expected a full package:set ID');
+            }
         }
     }
 
