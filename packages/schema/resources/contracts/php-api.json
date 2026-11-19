@@ -246,6 +246,46 @@
             "enum_cases": [],
             "spi_kind": "implement"
         },
+        "Packman\\Schema\\Contracts\\Compiler\\ScopedSchemaOwnership": {
+            "kind": "interface",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": false,
+            "readonly": false,
+            "abstract": false,
+            "extends": [
+                "Packman\\Schema\\Contracts\\Compiler\\SchemaOwnership"
+            ],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "forPrefix": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "prefix",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "Packman\\Schema\\Contracts\\Compiler\\SchemaOwnership",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
         "Packman\\Schema\\Contracts\\Migration\\ModuleMigrationBoundary": {
             "kind": "interface",
             "layer": "spi",
@@ -791,6 +831,15 @@
                             "optional": false,
                             "default": null,
                             "flags": 0
+                        },
+                        {
+                            "name": "owner",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 0
                         }
                     ],
                     "return": "array",
@@ -828,6 +877,24 @@
                             "variadic": false,
                             "optional": true,
                             "default": "'packman.schema.table_prefix'",
+                            "flags": 0
+                        },
+                        {
+                            "name": "owner",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 0
+                        },
+                        {
+                            "name": "ownsLegacy",
+                            "type": "?Closure",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
                             "flags": 0
                         }
                     ],
@@ -1105,6 +1172,24 @@
                             "optional": true,
                             "default": "'packman.schema.table_prefix'",
                             "flags": 68
+                        },
+                        {
+                            "name": "owner",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 68
+                        },
+                        {
+                            "name": "ownsLegacy",
+                            "type": "?Closure",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 68
                         }
                     ],
                     "return": null,
@@ -1320,6 +1405,15 @@
                             "variadic": false,
                             "optional": true,
                             "default": "null",
+                            "flags": 1
+                        },
+                        {
+                            "name": "prerequisiteSets",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "[]",
                             "flags": 1
                         }
                     ],
@@ -1592,6 +1686,35 @@
                     "by_reference": false,
                     "parameters": [],
                     "return": "Packman\\Errors\\Data\\ErrorDescriptor",
+                    "doc": []
+                },
+                "invalidPrerequisite": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "set",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "reason",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
                     "doc": []
                 },
                 "invalidSet": {
@@ -2209,6 +2332,35 @@
             "uses": [],
             "doc": [],
             "methods": {
+                "ownershipFor": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "ownership",
+                            "type": "Packman\\Schema\\Contracts\\Compiler\\SchemaOwnership",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "prefix",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "Packman\\Schema\\Contracts\\Compiler\\SchemaOwnership",
+                    "doc": []
+                },
                 "register": {
                     "visibility": "public",
                     "static": true,

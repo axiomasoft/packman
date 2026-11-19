@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Packman\Filament\Concerns\Authorization\AuthorizesPage;
 use Packman\Filament\Concerns\Authorization\AuthorizesRelationManager;
 use Packman\Filament\Concerns\Authorization\AuthorizesResource;
@@ -69,6 +70,7 @@ final class PackmanFilamentPlugin implements FilamentPanelPlugin
 
     private ?bool $middlewareWithTenancy = null;
 
+    #[Internal('Constructed by the package registrar.')]
     public function __construct(private readonly FilamentOptions $options)
     {
         $this->guardPanel = $options->guardPanel;

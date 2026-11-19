@@ -12,6 +12,7 @@ use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Extensions\ExtensionInspector;
 use Packman\Schema\Contracts\Compiler\SchemaOwnership;
+use Packman\Schema\Contracts\Compiler\ScopedSchemaOwnership;
 use Packman\Schema\Contracts\Migration\ModuleMigrationBoundary;
 use Packman\Schema\Contracts\Migration\SchemaSetProvider;
 use WeakMap;
@@ -42,8 +43,9 @@ final class SchemaExtensions
             return;
         }
 
-        $declare = static function (SchemaOwnership $ownership) use ($owner, $nouns): void {
-            $ownership->declare($owner, $nouns);
+        $prefix = $profile->tablePrefix;
+        $declare = static function (SchemaOwnership $ownership) use ($owner, $nouns, $prefix): void {
+            self::ownershipFor($ownership, $prefix)->declare($owner, $nouns);
         };
 
         if ($app->resolved(SchemaOwnership::class)) {
@@ -57,6 +59,13 @@ final class SchemaExtensions
                 $declare($ownership);
             }
         });
+    }
+
+    public static function ownershipFor(SchemaOwnership $ownership, ?string $prefix): SchemaOwnership
+    {
+        return $prefix !== null && $prefix !== '' && $ownership instanceof ScopedSchemaOwnership
+            ? $ownership->forPrefix($prefix)
+            : $ownership;
     }
 
     /** @param class-string ...$providers */

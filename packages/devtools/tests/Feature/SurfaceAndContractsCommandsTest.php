@@ -111,6 +111,36 @@ PHP);
     }
 });
 
+it('omits internal members while publishing readable properties of a hidden constructor', function (): void {
+    $ws = new TempWorkspace('packman-member-surface-');
+
+    try {
+        $ws->write('src/Options.php', <<<'PHP'
+<?php
+namespace Acme;
+use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
+
+#[Api]
+final readonly class Options {
+    #[Internal] public const string SOURCE = 'internal';
+    #[Internal] public string $hidden;
+    #[Internal] public function __construct(public string $id, private int $state) {}
+    #[Internal] public function initialize(): void {}
+    public function read(): string { return $this->id; }
+}
+PHP);
+        $report = (new SurfaceScanner)->scanPackage('acme/proof', $ws->path('src'));
+        $entry = $report->symbols['Acme\\Options'];
+        expect($report->ok())->toBeTrue()
+            ->and(array_keys($entry['methods']))->toBe(['read'])
+            ->and(array_keys($entry['properties']))->toBe(['id'])
+            ->and($entry['constants'])->toBe([]);
+    } finally {
+        $ws->cleanup();
+    }
+});
+
 it('encodes an empty public surface as a schema-valid symbol map', function (): void {
     $report = new SurfaceReport('acme/sample', [], []);
     $json = PhpApiDocument::encode($report);

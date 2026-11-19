@@ -671,7 +671,7 @@
                             "flags": 0
                         }
                     ],
-                    "return": "Packman\\Modules\\Internal\\Gate\\ModuleActivationDecision",
+                    "return": "Packman\\Modules\\Data\\Lifecycle\\ModuleActivationDecision",
                     "doc": []
                 }
             },
@@ -2597,6 +2597,16 @@
                     "visibility": "public",
                     "static": false,
                     "default": "null",
+                    "doc": [],
+                    "hooks": []
+                },
+                "model": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
                     "doc": [],
                     "hooks": []
                 },
@@ -4617,6 +4627,16 @@
                     "doc": [],
                     "hooks": []
                 },
+                "handle": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
                 "icon": {
                     "flags": 1,
                     "type": "?string",
@@ -4644,6 +4664,16 @@
                     "visibility": "public",
                     "static": false,
                     "default": "null",
+                    "doc": [],
+                    "hooks": []
+                },
+                "panel": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
                     "doc": [],
                     "hooks": []
                 },
@@ -4736,6 +4766,26 @@
                 }
             },
             "properties": {
+                "actions": {
+                    "flags": 1,
+                    "type": "array",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "entity": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
                 "isScopeable": {
                     "flags": 1,
                     "type": "bool",
@@ -4743,6 +4793,16 @@
                     "visibility": "public",
                     "static": false,
                     "default": "false",
+                    "doc": [],
+                    "hooks": []
+                },
+                "panel": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
                     "doc": [],
                     "hooks": []
                 }
@@ -4848,6 +4908,26 @@
                 }
             },
             "properties": {
+                "file": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "kind": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
                 "middlewares": {
                     "flags": 1,
                     "type": "array",
@@ -4958,6 +5038,16 @@
                     "doc": [],
                     "hooks": []
                 },
+                "kind": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
                 "stepClass": {
                     "flags": 1,
                     "type": "?string",
@@ -4965,6 +5055,94 @@
                     "visibility": "public",
                     "static": false,
                     "default": "null",
+                    "doc": [],
+                    "hooks": []
+                }
+            },
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
+        "Packman\\Modules\\Data\\Lifecycle\\ModuleActivationDecision": {
+            "kind": "class",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": true,
+            "readonly": true,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "allow": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "self",
+                    "doc": []
+                },
+                "deny": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "reason",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "upgradeHint",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                }
+            },
+            "properties": {
+                "allowed": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "reason": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "upgradeHint": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
                     "doc": [],
                     "hooks": []
                 }
@@ -5015,7 +5193,38 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "constraint": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "kind": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "package": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
@@ -9393,7 +9602,18 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "fingerprint": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": [],

@@ -1459,7 +1459,28 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "present": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "value": {
+                    "flags": 1,
+                    "type": "mixed",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []

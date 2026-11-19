@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace Packman\Plugins\Internal\Graph;
 
+use Closure;
+use Packman\Plugins\Contracts\Contributions\DeclaredContributions;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Data\Capabilities\CapabilityDefinition;
 use Packman\Plugins\Data\Capabilities\CapabilityProvider;
 use Packman\Plugins\Data\Contributions\ContributionKind;
 use Packman\Plugins\Data\Contributions\SlotContribution;
 use Packman\Plugins\Data\Contributions\SlotDefinition;
+use Packman\Plugins\Laravel\PluginRegistrar;
 
 /** What one plugin declared inside `register()`; sealed immediately afterwards. */
-final class PluginDeclarations
+final class PluginDeclarations implements DeclaredContributions
 {
     /** @var list<ContributionKind> */
     private array $kinds = [];
@@ -32,6 +36,24 @@ final class PluginDeclarations
     private array $slotContributions = [];
 
     private bool $sealed = false;
+
+    /** @param (Closure(PluginRegistrar): void)|null $beforeRegistration */
+    public static function record(ExtensionPlugin $plugin, string $pluginId, ?Closure $beforeRegistration = null): self
+    {
+        $declarations = new self;
+        $registrar = new PluginRegistrar($declarations, $pluginId);
+
+        try {
+            if ($beforeRegistration !== null) {
+                $beforeRegistration($registrar);
+            }
+            $plugin->register($registrar);
+        } finally {
+            $declarations->seal();
+        }
+
+        return $declarations;
+    }
 
     public function addKind(ContributionKind $kind): void
     {

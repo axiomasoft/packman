@@ -178,6 +178,27 @@ it('refuses a prefix that differs from the installed one', function (): void {
         });
 });
 
+it('isolates named schema owners on one connection and recognizes an older installation', function (): void {
+    $db = DB::connection('pgsql');
+    $legacy = SchemaFingerprint::document('pmn_');
+    $ownsPmn = static fn ($connection, string $prefix): bool => $prefix === 'pmn_' && $connection->getSchemaBuilder()->hasTable('pmn_operation_receipts');
+
+    SchemaFingerprint::verify($db, 'ac_', owner: 'acme/commerce');
+    SchemaFingerprint::verify($db, 'pmn_', owner: 'acme/commerce', ownsLegacy: $ownsPmn);
+    expect(fn () => SchemaFingerprint::verify($db, 'new_', owner: 'acme/commerce', ownsLegacy: $ownsPmn))
+        ->toThrow(InvalidConfiguration::class, "installed with prefix 'pmn_'");
+
+    $labelled = SchemaFingerprint::document('pmn_', 'acme/commerce');
+    $db->table('pmn_schema_state')->where('key', SchemaFingerprint::KEY)->update(['value' => json_encode($labelled, JSON_THROW_ON_ERROR)]);
+    SchemaFingerprint::verify($db, 'abc_', owner: 'acme/another');
+    SchemaFingerprint::verify($db, 'pmn_', owner: 'acme/commerce');
+    expect($labelled['hash'])->not->toBe($legacy['hash'])
+        ->and(fn () => SchemaFingerprint::verify($db, 'pmn_', owner: 'acme/another'))
+        ->toThrow(InvalidConfiguration::class, 'belongs to another package')
+        ->and(fn () => SchemaFingerprint::verify($db, 'new_', owner: 'acme/commerce'))
+        ->toThrow(InvalidConfiguration::class, "installed with prefix 'pmn_'");
+});
+
 it('ignores host tables that only look like a state table', function (): void {
     DB::connection('pgsql')->statement('create table abc_schema_state (key text primary key, value text)');
     DB::connection('pgsql')->table('abc_schema_state')->insert(['key' => 'fingerprint', 'value' => '{"prefix":"zzz_"}']);

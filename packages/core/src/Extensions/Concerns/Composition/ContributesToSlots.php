@@ -14,7 +14,7 @@ use Packman\Extensions\Contracts\Composition\WithSlots;
 #[Spi(kind: SpiKind::Implement, since: '1.0')]
 trait ContributesToSlots
 {
-    /** @return array<class-string, array{kind: string, cardinality?: string}> */
+    /** @return array<class-string, array{kind: string, cardinality?: string, shared?: bool}> */
     public function definedSlots(): array
     {
         return [];

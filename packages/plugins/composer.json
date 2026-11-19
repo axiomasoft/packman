@@ -5,11 +5,14 @@
     "type": "library",
     "require": {
         "php": "^8.4",
-        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman": "^0.1.1",
         "illuminate/console": "^12.0|^13.0",
         "illuminate/container": "^12.0|^13.0",
         "illuminate/contracts": "^12.0|^13.0",
         "illuminate/support": "^12.0|^13.0"
+    },
+    "conflict": {
+        "axiomasoft/packman-schema": "<0.1.1"
     },
     "suggest": {
         "axiomasoft/packman-schema": "Optional schema ownership integration for plugins declaring owned schema nouns."

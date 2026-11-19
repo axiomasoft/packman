@@ -20,5 +20,6 @@ final readonly class SlotDefinition
         public string $pluginId,
         public SlotKind $kind,
         public Cardinality $cardinality = Cardinality::Many,
+        public bool $shared = false,
     ) {}
 }

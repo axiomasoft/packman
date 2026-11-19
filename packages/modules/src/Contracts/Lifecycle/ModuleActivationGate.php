@@ -7,7 +7,7 @@ namespace Packman\Modules\Contracts\Lifecycle;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Context\Contracts\ContextScopeInterface;
-use Packman\Modules\Internal\Gate\ModuleActivationDecision;
+use Packman\Modules\Data\Lifecycle\ModuleActivationDecision;
 
 /**
  * Cloud billing/edition gate. Boxed installs bind

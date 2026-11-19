@@ -10,7 +10,6 @@ use Override;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Errors\Contracts\ProblemRegistry;
-use Packman\Errors\Internal\CompiledProblemRegistry;
 use Packman\Errors\Internal\PackageProblemDefinitions;
 use Packman\Foundation\Concerns\RegistersNothingOnBoot;
 use Packman\Foundation\Contracts\PackageRegistrar;
@@ -37,7 +36,7 @@ final class ErrorsRegistrar implements PackageRegistrar
             return new PackageProblemDefinitions($urnPrefix);
         });
 
-        $app->singleton(ProblemRegistry::class, static fn (Application $app): CompiledProblemRegistry => (new ProblemRegistryFactory)->make($app));
+        $app->singleton(ProblemRegistry::class, static fn (Application $app): ProblemRegistry => (new ProblemRegistryFactory)->make($app));
         $app->booted(static fn (Application $app) => $app->make(ProblemRegistry::class));
     }
 }

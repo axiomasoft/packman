@@ -6,6 +6,7 @@ namespace Packman\Modules\Internal\Gate;
 
 use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Modules\Contracts\Lifecycle\ModuleActivationGate;
+use Packman\Modules\Data\Lifecycle\ModuleActivationDecision;
 
 /**
  * Boxed default — no billing gate exists outside cloud, so every

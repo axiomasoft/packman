@@ -49,12 +49,30 @@ final class ExtensionRegistrar implements PackageRegistrar
     /** @param class-string<ExtensionPlugin> ...$plugins */
     public static function builtInFor(ContainerContract $container, string ...$plugins): void
     {
-        $container->singletonIf(PluginCatalog::class, static fn (): PluginCatalog => new PluginCatalog);
-        $catalog = $container->make(PluginCatalog::class);
+        $catalog = self::catalog($container);
 
         foreach ($plugins as $plugin) {
             $catalog->builtIn($plugin);
         }
+    }
+
+    /** @param class-string<PluginActivationGate> $gate */
+    public static function addActivationGate(ContainerContract $container, string $gate): void
+    {
+        self::catalog($container)->addActivationGate($gate);
+    }
+
+    /** @param class-string<PluginActivationGate>|null $except Optional local gate replaced by an explicit preview configuration. */
+    public static function activationGateFor(ContainerContract $container, ?string $except = null): ?PluginActivationGate
+    {
+        return self::catalog($container)->activationGate($container, $except);
+    }
+
+    private static function catalog(ContainerContract $container): PluginCatalog
+    {
+        $container->singletonIf(PluginCatalog::class, static fn (): PluginCatalog => new PluginCatalog);
+
+        return $container->make(PluginCatalog::class);
     }
 
     public static function hasPendingPlugins(Application $app): bool
@@ -105,12 +123,9 @@ final class ExtensionRegistrar implements PackageRegistrar
                     : [];
             }
 
-            $gate = $app->bound(PluginActivationGate::class)
-                ? $app->make(PluginActivationGate::class)
-                : null;
-
             $catalog = $app->make(PluginCatalog::class);
             $catalog->seal();
+            $gate = $catalog->activationGate($app);
 
             return new PluginGraphCompiler($app, activationGate: $gate)->compile($catalog->entries($configured), $disabled);
         });
@@ -318,7 +333,7 @@ final class ExtensionRegistrar implements PackageRegistrar
                 $hasSchemaExtensions = true;
 
                 if ($facet->tableNouns !== []) {
-                    $schemaNouns[$plugin->id] = $facet->tableNouns;
+                    $schemaNouns[$plugin->id] = [$facet->tablePrefix, $facet->tableNouns];
                 }
 
                 if ($facet->schemaSetProviders !== [] && class_exists(SchemaExtensions::class)) {
@@ -340,8 +355,8 @@ final class ExtensionRegistrar implements PackageRegistrar
 
         if ($schemaNouns !== [] && interface_exists(SchemaOwnership::class) && class_exists(SchemaExtensions::class)) {
             $declareAll = static function (SchemaOwnership $ownership) use ($schemaNouns): void {
-                foreach ($schemaNouns as $owner => $nouns) {
-                    $ownership->declare($owner, $nouns);
+                foreach ($schemaNouns as $owner => [$prefix, $nouns]) {
+                    SchemaExtensions::ownershipFor($ownership, $prefix)->declare($owner, $nouns);
                 }
             };
 

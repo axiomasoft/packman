@@ -8,6 +8,7 @@ use Illuminate\Contracts\Container\Container;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Extensions\Data\ExtensionFacetProfile;
 use Packman\Extensions\ExtensionInspector;
+use Packman\Foundation\DependencyOrder;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Contracts\Registry\PluginActivationGate;
 use Packman\Plugins\Data\Capabilities\CapabilityDefinition;
@@ -142,11 +143,9 @@ final readonly class PluginGraphCompiler
                 $plugin = new ($entry->class)();
                 $manifest = $plugin->manifest();
                 $facets = ExtensionInspector::inspect($plugin);
-                $declarations = new PluginDeclarations;
-                $registrar = new PluginRegistrar($declarations, $manifest->id);
-                $this->applyFacets($registrar, $facets);
-                $plugin->register($registrar);
-                $declarations->seal();
+                $declarations = PluginDeclarations::record($plugin, $manifest->id, function (PluginRegistrar $registrar) use ($facets): void {
+                    $this->applyFacets($registrar, $facets);
+                });
             } catch (InvalidConfiguration $e) {
                 throw new InvalidConfiguration(["{$entry->origin}: {$entry->class}: ".$e->getMessage()]);
             }
@@ -201,7 +200,7 @@ final readonly class PluginGraphCompiler
                 throw new InvalidConfiguration(["plugin.slot.cardinality: unknown cardinality '{$cardinalityValue}' for {$contract}"]);
             }
 
-            $registrar->defineSlot($contract, $kind, $cardinality);
+            $registrar->defineSlot($contract, $kind, $cardinality, $spec['shared'] ?? false);
         }
 
         foreach ($facets->slotContributions as $contribution) {
@@ -260,26 +259,14 @@ final readonly class PluginGraphCompiler
      */
     private function order(array $nodes, array $dependencies): array
     {
-        $remaining = $dependencies;
-        $order = [];
+        ksort($dependencies, SORT_STRING);
+        $result = DependencyOrder::resolve($dependencies);
 
-        while ($remaining !== []) {
-            $ready = array_keys(array_filter($remaining, static fn (array $after): bool => array_diff($after, $order) === []));
-
-            if ($ready === []) {
-                $cycle = array_keys($remaining);
-                sort($cycle, SORT_STRING);
-
-                throw $this->fail($nodes[$cycle[0]], 'dependency cycle among '.implode(', ', $cycle));
-            }
-
-            sort($ready, SORT_STRING);
-            $next = $ready[0];
-            $order[] = $next;
-            unset($remaining[$next]);
+        if ($result->blocked !== []) {
+            throw $this->fail($nodes[$result->blocked[0]], 'dependency cycle among '.implode(', ', $result->blocked));
         }
 
-        return $order;
+        return $result->ordered;
     }
 
     /**
@@ -421,14 +408,21 @@ final readonly class PluginGraphCompiler
     private function compileSlots(array $nodes, array $order, array $ancestors): array
     {
         $slots = [];
+        $owners = [];
 
         foreach ($order as $id) {
             foreach ($nodes[$id]->declarations->slotDefinitions() as $slot) {
-                if (isset($slots[$slot->contract])) {
+                $definition = $slots[$slot->contract] ?? null;
+
+                if ($definition !== null && (
+                    ! $definition->shared || ! $slot->shared || $definition->kind !== $slot->kind
+                    || $definition->cardinality !== $slot->cardinality || isset($owners[$slot->contract][$id])
+                )) {
                     throw $this->fail($nodes[$id], sprintf('slot %s is defined by both "%s" and "%s"', $slot->contract, $slots[$slot->contract]->pluginId, $id));
                 }
 
-                $slots[$slot->contract] = $slot;
+                $owners[$slot->contract][$id] = true;
+                $slots[$slot->contract] ??= $slot;
             }
         }
 
@@ -444,7 +438,9 @@ final readonly class PluginGraphCompiler
                     throw $this->fail($node, sprintf('contributes to %s under the malformed id "%s"', $contribution->slot, $contribution->id));
                 }
 
-                if ($slot->pluginId !== $id && ! isset($ancestors[$id][$slot->pluginId])) {
+                $slotOwners = $owners[$slot->contract];
+
+                if (! isset($slotOwners[$id]) && array_intersect_key($slotOwners, $ancestors[$id]) === []) {
                     throw $this->fail($node, sprintf('contributes "%s" to %s but does not require "%s", which defines it', $contribution->id, $contribution->slot, $slot->pluginId));
                 }
 
