@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
+use Packman\Plugins\Concerns\RegistersNothing;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
+use Packman\Plugins\Data\Plugin\PluginManifest;
+
+#[Spi(kind: SpiKind::Implement, since: '1.0')]
+final class {{ class_prefix }}Plugin implements ExtensionPlugin
+{
+    use RegistersNothing;
+
+    public function manifest(): PluginManifest
+    {
+        return new PluginManifest(
+            id: '{{ plugin_id }}',
+            version: '1.0.0',
+        );
+    }
+}

@@ -1,0 +1,32 @@
+{
+    "name": "{{ composer_name }}",
+    "description": "Packman module {{ composer_name }}.",
+    "type": "packman-module",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "axiomasoft/packman": "^0.1",
+        "axiomasoft/packman-modules": "^0.1.1"
+    },
+    "require-dev": {
+        "axiomasoft/packman-testkit": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "{{ namespace_escaped }}": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "{{ namespace_escaped }}Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "packman": {
+            "profile": "packman-module",
+            "module": "{{ namespace_escaped }}{{ class_prefix }}Module"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

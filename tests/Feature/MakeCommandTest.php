@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Foundation\Application;
 use Packman\DevTools\Console\ApplicationFactory;
 use Packman\DevTools\Scaffold\GeneratedFile;
 use Packman\DevTools\Scaffold\Layout;
@@ -16,6 +17,8 @@ use Packman\DevTools\Tests\Support\TempWorkspace;
 use Packman\Extensions\ExtensionInspector;
 use Packman\Modules\Contracts\Definition\ModuleDefinition;
 use Packman\Modules\Internal\Discovery\ModuleDiscovery;
+use Packman\Plugins\Contracts\Registry\PluginInspector;
+use Packman\Plugins\Laravel\ExtensionRegistrar;
 use Packman\Schema\Contracts\Migration\SchemaSetProvider;
 use Packman\Schema\Data\Migration\SchemaSet;
 use Packman\Schema\Enums\SchemaLifecycle;
@@ -102,6 +105,52 @@ it('scaffolds valid PHP files and valid composer.json escaping for all 4 profile
     'packman-plugin' => ['packman-plugin', 'packages/sample-packman-plugin/src/SamplePackmanPluginPlugin.php', 'packages/sample-packman-plugin', 'Acme\\SamplePackmanPlugin', 'Acme\\SamplePackmanPlugin\\Laravel\\SamplePackmanPluginServiceProvider'],
     'packman-module' => ['packman-module', 'packages/sample-packman-module/src/SamplePackmanModuleModule.php', 'packages/sample-packman-module', 'Acme\\SamplePackmanModule', 'Acme\\SamplePackmanModule\\Laravel\\SamplePackmanModuleServiceProvider'],
 ]);
+
+it('scaffolds code-only modules and plugins for hosts without database settings', function (): void {
+    $previous = Container::getInstance();
+    $ws = new TempWorkspace('packman-minimal-');
+    $tester = new CommandTester(ApplicationFactory::create($ws->root)->find('make'));
+
+    try {
+        foreach (['Module', 'Plugin'] as $type) {
+            $slug = 'plain-'.strtolower($type);
+            $profile = 'packman-'.strtolower($type);
+            expect($tester->execute(['profile' => $profile, 'name' => 'acme/'.$slug, '--minimal' => true]))->toBe(0);
+            $path = 'packages/'.$slug;
+            $meta = json_decode((string) file_get_contents($ws->path($path.'/composer.json')), true, flags: JSON_THROW_ON_ERROR);
+            $namespace = array_key_first($meta['autoload']['psr-4']);
+            $class = 'Plain'.$type.$type;
+            require_once $ws->path($path.'/src/'.$class.'.php');
+            $extension = $namespace.$class;
+            $facets = ExtensionInspector::inspect(new $extension);
+            expect(is_dir($ws->path($path.'/database')))->toBeFalse()
+                ->and(is_dir($ws->path($path.'/config')))->toBeFalse()
+                ->and($facets->hasConfiguration)->toBeFalse()
+                ->and($facets->hasDatabaseSettings)->toBeFalse()
+                ->and($facets->hasSchema)->toBeFalse();
+
+            if ($type === 'Module') {
+                $ws->writeJson('vendor/composer/installed.json', ['packages' => [$meta]]);
+                $manifests = (new ModuleDiscovery(installedJsonPath: $ws->path('vendor/composer/installed.json')))->discover();
+                expect($manifests)->toHaveCount(1)
+                    ->and($manifests[0]->composerName)->toBe('acme/plain-module')
+                    ->and($meta['extra'])->not->toHaveKey('laravel');
+            } else {
+                require_once $ws->path($path.'/src/Laravel/PlainPluginServiceProvider.php');
+                $container = new Application($ws->root);
+                $container->instance('config', new Repository);
+                (new ExtensionRegistrar)->register($container);
+                $provider = $meta['extra']['laravel']['providers'][0];
+                (new $provider($container))->register();
+                expect($container->make(PluginInspector::class)->describe()[0]->class)->toBe($extension);
+            }
+        }
+        expect($tester->execute(['profile' => 'php-library', 'name' => 'acme/plain', '--minimal' => true]))->toBe(1);
+    } finally {
+        Container::setInstance($previous);
+        $ws->cleanup();
+    }
+});
 
 it('verifies generated packman-plugin and packman-module implement contracts, discover via ModuleDiscovery, and expose SchemaSetProvider', function (): void {
     $ws = new TempWorkspace('packman-make-contracts-');

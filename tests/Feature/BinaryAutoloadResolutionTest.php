@@ -59,6 +59,18 @@ PHP);
         expect($composerProc->isSuccessful())->toBeTrue($composerProc->getErrorOutput().$composerProc->getOutput())
             ->and($composerProc->getOutput())->toContain('Packman DevTools '.InstalledVersions::getPrettyVersion('axiomasoft/packman-devtools'))
             ->and(file_get_contents($ws->path('loaded-autoload.txt')))->toBe('composer-supplied');
+
+        unlink($ws->path('packman.json'));
+        $ws->writeJson('composer.json', ['name' => 'acme/consumer']);
+        $ws->write('vendor/bin/packman', <<<'PHP'
+<?php
+$GLOBALS['_composer_autoload_path'] = __DIR__.'/../autoload.php';
+return include dirname(__DIR__).'/axiomasoft/packman-devtools/bin/packman';
+PHP);
+        $scaffold = new Process([PHP_BINARY, $ws->path('vendor/bin/packman'), 'make', 'packman-plugin', 'acme/installed'], $ws->root);
+        $scaffold->mustRun();
+        expect(is_file($ws->path('packages/installed/src/InstalledPlugin.php')))->toBeTrue()
+            ->and(is_dir($ws->path('vendor/bin/packages')))->toBeFalse();
     } finally {
         $ws->cleanup();
     }
