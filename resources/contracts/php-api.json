@@ -313,7 +313,20 @@
                 }
             },
             "properties": {},
-            "constants": [],
+            "constants": [
+                {
+                    "name": "DEFAULT_PACKAGE_TYPES",
+                    "type": "array",
+                    "visibility": "public",
+                    "final": false
+                },
+                {
+                    "name": "DEFAULT_EXTRA_KEYS",
+                    "type": "array",
+                    "visibility": "public",
+                    "final": false
+                }
+            ],
             "enum_backing": null,
             "enum_cases": [],
             "spi_kind": "implement"
@@ -1256,6 +1269,47 @@
             "enum_backing": null,
             "enum_cases": []
         },
+        "Packman\\Modules\\Contracts\\Registry\\VersionedModuleStateReader": {
+            "kind": "interface",
+            "layer": "spi",
+            "since": "0.1.1",
+            "final": false,
+            "readonly": false,
+            "abstract": false,
+            "extends": [
+                "Packman\\Modules\\Contracts\\Registry\\ModuleStateReader"
+            ],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "versionFor": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "ctx",
+                            "type": "Packman\\Context\\Contracts\\ContextScopeInterface",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "int",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": [],
+            "spi_kind": "implement"
+        },
         "Packman\\Modules\\Data\\Compiler\\CompiledEntityField": {
             "kind": "class",
             "layer": "spi",
@@ -1841,6 +1895,83 @@
             "enum_backing": null,
             "enum_cases": [],
             "spi_kind": "call"
+        },
+        "Packman\\Modules\\Data\\Compiler\\CompiledSettingDefault": {
+            "kind": "class",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": true,
+            "readonly": true,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "__construct": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "namespace",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 1
+                        },
+                        {
+                            "name": "definition",
+                            "type": "Packman\\Modules\\Data\\Settings\\DefaultSettingDefinition",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 1
+                        }
+                    ],
+                    "return": null,
+                    "doc": []
+                },
+                "fromArray": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "data",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "toArray": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "array",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
         },
         "Packman\\Modules\\Data\\Compiler\\ExtensionReplacement": {
             "kind": "class",
@@ -4077,6 +4208,470 @@
             "enum_cases": [],
             "spi_kind": "call"
         },
+        "Packman\\Modules\\Data\\Extenders\\Filament": {
+            "kind": "class",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": true,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [
+                "Packman\\Modules\\Contracts\\Compiler\\Extender"
+            ],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "pages": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "pages",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "panel",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "'app'",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "resources": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "resources",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "panel",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "'app'",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "tab": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "entityHandle",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "tabClass",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "panel",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "'app'",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "widgets": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "widgets",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "panel",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "'app'",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                }
+            },
+            "properties": {
+                "classes": {
+                    "flags": 1,
+                    "type": "array",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "[]",
+                    "doc": [],
+                    "hooks": []
+                },
+                "entityHandle": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "null",
+                    "doc": [],
+                    "hooks": []
+                },
+                "kind": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "panel": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
+        "Packman\\Modules\\Data\\Extenders\\Menu": {
+            "kind": "class",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": true,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [
+                "Packman\\Modules\\Contracts\\Compiler\\Extender"
+            ],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "after": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "siblingHandle",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "badge": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "badgeResolverClass",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "group": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "panel",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "handle",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "label",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "icon": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "icon",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "item": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "panel",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "handle",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "label": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "label",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "permission": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "permission",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "route": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "routeName",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                }
+            },
+            "properties": {
+                "afterHandle": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "null",
+                    "doc": [],
+                    "hooks": []
+                },
+                "badgeResolverClass": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "null",
+                    "doc": [],
+                    "hooks": []
+                },
+                "icon": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "null",
+                    "doc": [],
+                    "hooks": []
+                },
+                "isGroup": {
+                    "flags": 1,
+                    "type": "bool",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "false",
+                    "doc": [],
+                    "hooks": []
+                },
+                "label": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "null",
+                    "doc": [],
+                    "hooks": []
+                },
+                "permission": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "null",
+                    "doc": [],
+                    "hooks": []
+                },
+                "routeName": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "null",
+                    "doc": [],
+                    "hooks": []
+                }
+            },
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
         "Packman\\Modules\\Data\\Extenders\\Permissions": {
             "kind": "class",
             "layer": "spi",
@@ -4156,6 +4751,274 @@
             "enum_backing": null,
             "enum_cases": [],
             "spi_kind": "call"
+        },
+        "Packman\\Modules\\Data\\Extenders\\Routes": {
+            "kind": "class",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": true,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [
+                "Packman\\Modules\\Contracts\\Compiler\\Extender"
+            ],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "api": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "file",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "middleware": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "mw",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "prefix": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "prefix",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "web": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "file",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                }
+            },
+            "properties": {
+                "middlewares": {
+                    "flags": 1,
+                    "type": "array",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "[]",
+                    "doc": [],
+                    "hooks": []
+                },
+                "routePrefix": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "null",
+                    "doc": [],
+                    "hooks": []
+                }
+            },
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
+        "Packman\\Modules\\Data\\Extenders\\Workflow": {
+            "kind": "class",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": true,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [
+                "Packman\\Modules\\Contracts\\Compiler\\Extender"
+            ],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "stepType": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "stepClass",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "trigger": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "entityHandle",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "eventNames",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                }
+            },
+            "properties": {
+                "entityHandle": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "null",
+                    "doc": [],
+                    "hooks": []
+                },
+                "eventNames": {
+                    "flags": 1,
+                    "type": "array",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "[]",
+                    "doc": [],
+                    "hooks": []
+                },
+                "stepClass": {
+                    "flags": 1,
+                    "type": "?string",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "null",
+                    "doc": [],
+                    "hooks": []
+                }
+            },
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
+        "Packman\\Modules\\Data\\Lifecycle\\ModuleDependency": {
+            "kind": "class",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": true,
+            "readonly": true,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "module": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "composerName",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "constraint",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "'*'",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
         },
         "Packman\\Modules\\Data\\Lifecycle\\ModuleManifest": {
             "kind": "class",
@@ -5005,6 +5868,139 @@
                         }
                     ],
                     "return": null,
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
+        "Packman\\Modules\\Data\\Settings\\DefaultSettingDefinition": {
+            "kind": "class",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": true,
+            "readonly": true,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "__construct": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "key",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 1
+                        },
+                        {
+                            "name": "default",
+                            "type": "mixed",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 1
+                        },
+                        {
+                            "name": "workspaceScoped",
+                            "type": "bool",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "false",
+                            "flags": 1
+                        },
+                        {
+                            "name": "userScoped",
+                            "type": "bool",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "false",
+                            "flags": 1
+                        },
+                        {
+                            "name": "sensitive",
+                            "type": "bool",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "false",
+                            "flags": 1
+                        }
+                    ],
+                    "return": null,
+                    "doc": []
+                },
+                "make": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "key",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "default",
+                            "type": "mixed",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
+                "sensitive": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "self",
+                    "doc": []
+                },
+                "userScoped": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "self",
+                    "doc": []
+                },
+                "workspaceScoped": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "self",
                     "doc": []
                 }
             },

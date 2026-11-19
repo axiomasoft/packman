@@ -12,13 +12,12 @@ use Packman\Features\Data\FeatureFlagDefinition;
 use Packman\Modules\Contracts\Compiler\Extender;
 use Packman\Modules\Data\Entities\EntityDefinition;
 use Packman\Modules\Data\Extenders\Api;
+use Packman\Modules\Data\Extenders\Filament;
+use Packman\Modules\Data\Extenders\Menu;
 use Packman\Modules\Data\Extenders\Permissions;
+use Packman\Modules\Data\Extenders\Routes;
+use Packman\Modules\Data\Extenders\Workflow;
 use Packman\Modules\Exceptions\Compiler\CompilationException;
-use Packman\Modules\Internal\Compiler\CompiledSettingDefault;
-use Packman\Modules\Internal\Extend\Filament;
-use Packman\Modules\Internal\Extend\Menu;
-use Packman\Modules\Internal\Extend\Routes;
-use Packman\Modules\Internal\Extend\Workflow;
 use ReflectionClass;
 
 /**

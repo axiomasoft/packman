@@ -6,7 +6,7 @@ namespace Packman\Modules\Tests\Stubs\Lifecycle;
 
 use Packman\Modules\Contracts\Definition\ModuleDefinition;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
-use Packman\Modules\Internal\Definition\ModuleDependency;
+use Packman\Modules\Data\Lifecycle\ModuleDependency;
 
 /** Requires {@see StubBaseModule} — exercises AC-6/AC-8/cascade. */
 final class StubDependentModule extends ModuleDefinition

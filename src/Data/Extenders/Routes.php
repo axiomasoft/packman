@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Packman\Modules\Internal\Extend;
+namespace Packman\Modules\Data\Extenders;
 
+use Packman\Attributes\Api;
 use Packman\Modules\Contracts\Compiler\Extender;
 
 /**
  * 7. Route files (plain Laravel routing), grouped per-module by the
  * activity middleware. `api()` auto-prefixes `/api/{module_short}`.
- *
- * @internal spec: B-10 §4.2
  */
+#[Api(since: '0.1.1')]
 final class Routes implements Extender
 {
     /** @var list<string> */
@@ -40,5 +40,10 @@ final class Routes implements Extender
         $this->routePrefix = $prefix;
 
         return $this;
+    }
+
+    public static function web(string $file): self
+    {
+        return new self('web', $file);
     }
 }

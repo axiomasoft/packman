@@ -7,9 +7,8 @@ namespace Packman\Modules\Internal\Discovery;
 use Packman\Extensions\ExtensionInspector;
 use Packman\Modules\Contracts\Definition\ModuleDefinition;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Data\Settings\DefaultSettingDefinition;
 use Packman\Modules\Exceptions\Compiler\InvalidManifestException;
-use Packman\Modules\Internal\Settings\DefaultSettingDefinition;
-use Packman\Modules\Internal\Support\ModulesOptions;
 
 /**
  * Finds installed modules and builds their manifests. Default source is
@@ -29,8 +28,8 @@ final readonly class ModuleDiscovery implements \Packman\Modules\Contracts\Defin
     public function __construct(
         private array $fallbackModules = [],
         private ?string $installedJsonPath = null,
-        private array $packageTypes = ModulesOptions::DEFAULT_PACKAGE_TYPES,
-        private array $extraKeys = ModulesOptions::DEFAULT_EXTRA_KEYS,
+        private array $packageTypes = self::DEFAULT_PACKAGE_TYPES,
+        private array $extraKeys = self::DEFAULT_EXTRA_KEYS,
     ) {}
 
     /** @return list<ModuleManifest> */

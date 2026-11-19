@@ -66,8 +66,8 @@ final class CompilationException extends CodedException
     public static function missingTablePrefix(string $composerName): self
     {
         return new self(sprintf(
-            'Module [%s] manifest is missing tablePrefix() — mandatory as of D37, no auto-derivation from the '
-            .'composer name (that was the D9 hole: a third-party module could legally land on a reserved prefix).',
+            'Module [%s] manifest is missing tablePrefix(). Entity owners require a table prefix. '
+            .'Settings require either settingsNamespace() or a table prefix.',
             $composerName,
         ));
     }
@@ -86,9 +86,7 @@ final class CompilationException extends CodedException
     public static function tablePrefixInvariantBypassed(string $composerName): self
     {
         return new self(sprintf(
-            'Module [%s] reached compile with a null tablePrefix — validateRequiredFields() bypassed. '
-            .'tablePrefix is mandatory (D37) and validation must reject a prefix-less manifest before the '
-            .'pipeline runs; hitting this defensive guard means that invariant was broken.',
+            'Module [%s] reached a compiler operation requiring a prefix after validation accepted a null tablePrefix.',
             $composerName,
         ));
     }

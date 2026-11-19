@@ -55,7 +55,7 @@ final class CompiledModuleRegistry implements ModuleRegistry
     private ?CompiledRegistry $registry = null;
 
     /**
-     * @param  Closure(ContextScopeInterface):int  $versionResolver  Monotonic per-account registry epoch.
+     * @param  (Closure(ContextScopeInterface):int)|null  $versionResolver  Monotonic per-account registry epoch.
      *
      * @internal spec: D39
      */
@@ -63,7 +63,7 @@ final class CompiledModuleRegistry implements ModuleRegistry
         private readonly string $cachePath,
         private readonly ModuleStateReader $stateReader,
         private readonly ModuleRegistryCache $cache,
-        private readonly Closure $versionResolver,
+        private readonly ?Closure $versionResolver = null,
         private readonly bool $failIfMissing = false,
         private readonly string $compileCommand = 'modules:compile',
     ) {}
@@ -140,10 +140,10 @@ final class CompiledModuleRegistry implements ModuleRegistry
     /** @return array<string, array{state: string, edition: string}> */
     private function enabledFor(ContextScopeInterface $ctx): array
     {
-        // Epoch: the version is read fresh on every call (a cheap read
-        // from the shared DB) and stamped into the key. A transition in
-        // ANOTHER process bumps the version there, so this process routes to a
-        // new key and reads fresh — no forget(), no tags().
+        if ($this->versionResolver === null) {
+            return $this->stateReader->enabledFor($ctx);
+        }
+
         $version = ($this->versionResolver)($ctx);
 
         return $this->cache->rememberEnabled(

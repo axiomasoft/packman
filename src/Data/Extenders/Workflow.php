@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Packman\Modules\Internal\Extend;
+namespace Packman\Modules\Data\Extenders;
 
+use Packman\Attributes\Api;
 use Packman\Modules\Contracts\Compiler\Extender;
 
 /**
  * 8. Workflow-builder step types and entity trigger events. `stepType`/
  * `trigger` are pure declarations consumed via the host ActionRegistry.
- *
- * @internal spec: B-10 §4.2, B-12
  */
+#[Api(since: '0.1.1')]
 final class Workflow implements Extender
 {
     /** @var class-string|null */
@@ -31,6 +31,15 @@ final class Workflow implements Extender
         $workflow = new self('trigger');
         $workflow->entityHandle = $entityHandle;
         $workflow->eventNames = $eventNames;
+
+        return $workflow;
+    }
+
+    /** @param  class-string  $stepClass */
+    public static function stepType(string $stepClass): self
+    {
+        $workflow = new self('stepType');
+        $workflow->stepClass = $stepClass;
 
         return $workflow;
     }

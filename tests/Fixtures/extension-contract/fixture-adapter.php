@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Packman\Modules\Data\Compiler\InstalledPackageVersion;
 use Packman\Modules\Data\Entities\Entity;
 use Packman\Modules\Data\Entities\FieldDefinition;
+use Packman\Modules\Data\Extenders\Menu;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
-use Packman\Modules\Internal\Extend\Menu;
 
 /**
  * Scalar fixtures are shared by the root ratchet and external extension tests.

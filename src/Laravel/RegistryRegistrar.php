@@ -7,8 +7,6 @@ namespace Packman\Modules\Laravel;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Override;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
@@ -16,6 +14,7 @@ use Packman\Foundation\Concerns\RegistersNothingOnBoot;
 use Packman\Foundation\Contracts\PackageRegistrar;
 use Packman\Modules\Contracts\Compiler\FieldCastRegistry;
 use Packman\Modules\Contracts\Compiler\ManifestSectionCompiler;
+use Packman\Modules\Contracts\Compiler\ModuleCompilation;
 use Packman\Modules\Contracts\Definition\ModuleDiscovery as ModuleDiscoveryContract;
 use Packman\Modules\Contracts\Entities\EntityRegistry;
 use Packman\Modules\Contracts\Lifecycle\ModuleActivationGate;
@@ -23,6 +22,7 @@ use Packman\Modules\Contracts\Registry\ModuleRegistry;
 use Packman\Modules\Contracts\Registry\ModuleRegistryCache;
 use Packman\Modules\Contracts\Registry\ModuleStateReader;
 use Packman\Modules\Contracts\Registry\RegistryIntrospection;
+use Packman\Modules\Contracts\Registry\VersionedModuleStateReader;
 use Packman\Modules\Internal\Compiler\FieldCastMap;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
 use Packman\Modules\Internal\Discovery\ModuleDiscovery;
@@ -48,10 +48,14 @@ final class RegistryRegistrar implements PackageRegistrar
             $primary = (array) $config->get('modules', []);
             $scoped = (array) $config->get('packman.modules', []);
 
-            return ModulesOptions::fromArray(array_replace_recursive($primary, $scoped));
+            // Lists replace the complete discovery policy, including each path's segments.
+            $discovery = array_intersect_key($scoped, array_flip(['package_types', 'extra_keys']));
+
+            return ModulesOptions::fromArray($discovery + array_replace_recursive($primary, $scoped));
         });
 
         $app->singleton(FieldCastRegistry::class, FieldCastMap::class);
+        $app->bindIf(ModuleCompilation::class, RegistryCompiler::class);
         $app->when(RegistryCompiler::class)->needs('$sections')->giveTagged(ManifestSectionCompiler::class);
         $app->when(RegistryCompiler::class)->needs('$installedJsonPath')->give(static fn (Application $app): string => $app->basePath(self::INSTALLED_JSON));
         $app->when(RegistryCompiler::class)->needs('$compilerPackage')->give(static fn (Application $app): string => $app->make(ModulesOptions::class)->compilerPackage);
@@ -80,7 +84,10 @@ final class RegistryRegistrar implements PackageRegistrar
                 extraKeys: $options->extraKeys,
             );
         });
-        $app->alias(ModuleDiscovery::class, ModuleDiscoveryContract::class);
+
+        if (! $app->bound(ModuleDiscoveryContract::class)) {
+            $app->alias(ModuleDiscovery::class, ModuleDiscoveryContract::class);
+        }
 
         // Boxed default: billing/entitlement gate is an application concern.
         $app->singleton(ModuleActivationGate::class, AllowAllActivationGate::class);
@@ -91,14 +98,16 @@ final class RegistryRegistrar implements PackageRegistrar
             options: $app->make(ModulesOptions::class),
         ));
 
-        $app->singleton(ModuleRegistry::class, function (Application $app): CompiledModuleRegistry {
+        $app->singleton(ModuleRegistry::class, static function (Application $app): CompiledModuleRegistry {
             $options = $app->make(ModulesOptions::class);
+
+            $stateReader = $app->make(ModuleStateReader::class);
 
             return new CompiledModuleRegistry(
                 cachePath: $app->basePath($options->cachePath),
-                stateReader: $app->make(ModuleStateReader::class),
+                stateReader: $stateReader,
                 cache: $app->make(ModuleRegistryCache::class),
-                versionResolver: fn (mixed $ctx): int => $this->registryVersion($app),
+                versionResolver: $stateReader instanceof VersionedModuleStateReader ? $stateReader->versionFor(...) : null,
                 failIfMissing: $app->environment('production'),
                 compileCommand: $options->compileCommand,
             );
@@ -115,19 +124,5 @@ final class RegistryRegistrar implements PackageRegistrar
                 installedJsonPath: $app->basePath(self::INSTALLED_JSON),
             );
         });
-    }
-
-    /**
-     * Monotonic registry epoch: the count of applied lifecycle transitions in `mod_lifecycle_log`.
-     */
-    private function registryVersion(Application $app): int
-    {
-        $options = $app->make(ModulesOptions::class);
-
-        if (! Schema::connection($options->connection)->hasTable($options->lifecycleLogTable)) {
-            return 0;
-        }
-
-        return DB::connection($options->connection)->table($options->lifecycleLogTable)->count();
     }
 }

@@ -9,9 +9,8 @@ use Packman\Attributes\SpiKind;
 use Packman\Features\Data\FeatureFlagDefinition;
 use Packman\Modules\Contracts\Compiler\Extender;
 use Packman\Modules\Data\Compiler\ExtensionReplacement;
+use Packman\Modules\Data\Settings\DefaultSettingDefinition;
 use Packman\Modules\Exceptions\Compiler\InvalidManifestException;
-use Packman\Modules\Internal\Definition\ModuleDependency;
-use Packman\Modules\Internal\Settings\DefaultSettingDefinition;
 
 /**
  * Fluent module manifest. A module's `manifest()` method builds one of

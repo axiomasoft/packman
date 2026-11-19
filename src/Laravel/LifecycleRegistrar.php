@@ -14,11 +14,11 @@ use Packman\Context\Contracts\ActorResolverInterface;
 use Packman\Context\Contracts\ContextResolverInterface;
 use Packman\Foundation\Concerns\RegistersNothingOnBoot;
 use Packman\Foundation\Contracts\PackageRegistrar;
+use Packman\Modules\Contracts\Definition\ModuleDiscovery;
 use Packman\Modules\Contracts\Lifecycle\ModuleLifecycle;
 use Packman\Modules\Contracts\Lifecycle\RecordsRegistrar;
 use Packman\Modules\Contracts\Registry\ModuleRegistry;
 use Packman\Modules\Contracts\Registry\ModuleStateReader;
-use Packman\Modules\Internal\Discovery\ModuleDiscovery;
 use Packman\Modules\Internal\Lifecycle\DatabaseModuleLifecycle;
 use Packman\Modules\Internal\Lifecycle\DatabaseModuleStateReader;
 use Packman\Modules\Internal\Lifecycle\DatabaseRecordsRegistrar;
@@ -49,13 +49,14 @@ final class LifecycleRegistrar implements PackageRegistrar
             $app->singleton(ModuleMigrationBoundary::class, ModulesMigrationBoundary::class);
         }
 
-        $app->singleton(ModuleStateReader::class, static function (Application $app): DatabaseModuleStateReader {
+        $app->singletonIf(ModuleStateReader::class, static function (Application $app): DatabaseModuleStateReader {
             $options = $app->make(ModulesOptions::class);
 
             return new DatabaseModuleStateReader(
                 connections: $app->make(ConnectionResolverInterface::class),
                 connection: $options->connection,
                 modulesTable: $options->modulesTable,
+                lifecycleLogTable: $options->lifecycleLogTable,
             );
         });
 

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Packman\Modules\Contracts\Definition\ModuleDiscovery;
+
 return [
     'connection' => env('PACKMAN_MODULES_CONNECTION'),
 
@@ -11,19 +13,9 @@ return [
         'prefix' => env('PACKMAN_MODULES_CACHE_PREFIX', 'modules'),
     ],
 
-    'package_types' => [
-        'packman-module',
-        'packman-plugin',
-        'module',
-        'plugin',
-    ],
+    'package_types' => [...ModuleDiscovery::DEFAULT_PACKAGE_TYPES],
 
-    'extra_keys' => [
-        ['packman', 'module'],
-        ['packman', 'plugin'],
-        ['module'],
-        ['plugin'],
-    ],
+    'extra_keys' => [...ModuleDiscovery::DEFAULT_EXTRA_KEYS],
 
     'cache_path' => 'bootstrap/cache/modules.php',
 

@@ -11,6 +11,22 @@ use Packman\Modules\Data\Lifecycle\ModuleManifest;
 #[Spi(kind: SpiKind::Implement, since: '1.0')]
 interface ModuleDiscovery
 {
+    /** @var list<string> */
+    public const array DEFAULT_PACKAGE_TYPES = [
+        'packman-module',
+        'packman-plugin',
+        'module',
+        'plugin',
+    ];
+
+    /** @var list<list<string>> */
+    public const array DEFAULT_EXTRA_KEYS = [
+        ['packman', 'module'],
+        ['packman', 'plugin'],
+        ['module'],
+        ['plugin'],
+    ];
+
     /** @return list<ModuleManifest> */
     public function discover(): array;
 }

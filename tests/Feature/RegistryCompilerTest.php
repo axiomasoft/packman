@@ -10,18 +10,18 @@ use Packman\Modules\Data\Entities\Entity;
 use Packman\Modules\Data\Entities\EntityField;
 use Packman\Modules\Data\Entities\FieldDefinition;
 use Packman\Modules\Data\Extenders\Api;
+use Packman\Modules\Data\Extenders\Filament;
+use Packman\Modules\Data\Extenders\Menu;
 use Packman\Modules\Data\Extenders\Permissions;
+use Packman\Modules\Data\Extenders\Routes;
+use Packman\Modules\Data\Extenders\Workflow;
+use Packman\Modules\Data\Lifecycle\ModuleDependency;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Data\Settings\DefaultSettingDefinition;
 use Packman\Modules\Enums\Entities\Capability;
 use Packman\Modules\Exceptions\Compiler\CompilationException;
 use Packman\Modules\Internal\Compiler\InstalledPackages;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
-use Packman\Modules\Internal\Definition\ModuleDependency;
-use Packman\Modules\Internal\Extend\Filament;
-use Packman\Modules\Internal\Extend\Menu;
-use Packman\Modules\Internal\Extend\Routes;
-use Packman\Modules\Internal\Extend\Workflow;
-use Packman\Modules\Internal\Settings\DefaultSettingDefinition;
 use Packman\Modules\Tests\Stubs\StubEntityAlphaThing;
 use Packman\Modules\Tests\Stubs\StubEntityBetaThing;
 use Packman\Modules\Tests\Stubs\StubRogueExtender;
@@ -67,27 +67,29 @@ it('rejects a duplicate tablePrefix across manifests', function () use ($registr
         ->toThrow(CompilationException::class, 'Table prefix [alp]');
 });
 
-it('rejects a manifest with no tablePrefix() call — D37, no auto-derivation', function (): void {
-    $noPrefix = ModuleManifest::make('packman/stub-no-prefix')->title('No Prefix');
+it('compiles code-only and settings-only modules without claiming a table prefix', function (): void {
+    $code = ModuleManifest::make('acme/code')->title('Code');
+    $settings = ModuleManifest::make('acme/preferences')->title('Preferences')
+        ->settingsNamespace('preferences')
+        ->settings([DefaultSettingDefinition::make('theme', 'light')]);
 
-    $thrown = null;
+    $registry = resolve(RegistryCompiler::class)->compile([$code, $settings]);
 
-    try {
-        resolve(RegistryCompiler::class)->compile([$noPrefix]);
-    } catch (CompilationException $e) {
-        $thrown = $e;
+    expect($registry->entities)->toBe([])
+        ->and($registry->settings)->toHaveCount(1)
+        ->and($registry->settings[0]->namespace)->toBe('preferences');
+});
+
+it('requires a prefix for entity ownership and a namespace or prefix for settings', function (): void {
+    $entity = ModuleManifest::make('acme/entities')->title('Entities')
+        ->extends([Entity::make(StubEntityAlphaThing::class)]);
+    $settings = ModuleManifest::make('acme/preferences')->title('Preferences')
+        ->settings([DefaultSettingDefinition::make('theme', 'light')]);
+
+    foreach ([$entity, $settings] as $manifest) {
+        expect(fn () => resolve(RegistryCompiler::class)->compile([$manifest]))
+            ->toThrow(CompilationException::class, 'missing tablePrefix()');
     }
-
-    // Assert the VALIDATION-stage message specifically (P3.7): the module name
-    // alone is carried by RegistryCompiler's defensive throws too, so a mutant
-    // that removes CompilationValidator's check would still throw a
-    // CompilationException naming the module and slip past a bare-name assert.
-    // 'missing tablePrefix()' is emitted ONLY by validateRequiredFields — the
-    // defensive fall-through throws tablePrefixInvariantBypassed instead — so
-    // this pins the validation layer and reddens under the P1.17 saboteur.
-    expect($thrown)->toBeInstanceOf(CompilationException::class)
-        ->and($thrown->getMessage())->toContain('packman/stub-no-prefix')
-        ->and($thrown->getMessage())->toContain('missing tablePrefix()');
 });
 
 it('rejects a manifest with no title() call', function (): void {
@@ -261,6 +263,27 @@ it('round-trips the whole CompiledRegistry (all 10 slices) through toArray/fromA
     // enums restored, CompiledEntityField rewrapped, CompiledSettingDefault/
     // FeatureFlagDefinition rebuilt).
     expect(CompiledRegistry::fromArray($array))->toEqual($compiled);
+});
+
+it('round-trips public declarations for panel extensions, web routes, workflow steps and scoped settings', function (): void {
+    $manifest = ModuleManifest::make('acme/reports')->title('Reports')->settingsNamespace('reports')
+        ->settings([DefaultSettingDefinition::make('theme', 'light')->workspaceScoped()->userScoped()->sensitive()])
+        ->extends([
+            Filament::pages([Widget::class]), Filament::widgets([Widget::class]),
+            Filament::tab('reports.summary', Widget::class),
+            Menu::group('app', 'reports', 'Reports')->route('reports.index')->badge(Widget::class),
+            Routes::web('routes/reports.php'), Workflow::stepType(Widget::class),
+        ]);
+    $compiled = resolve(RegistryCompiler::class)->compile([$manifest]);
+    $restored = CompiledRegistry::fromArray($compiled->toArray());
+
+    expect(array_column($restored->filament, 'kind'))->toBe(['pages', 'widgets', 'tab'])
+        ->and($restored->menu[0]->isGroup)->toBeTrue()
+        ->and($restored->menu[0]->routeName)->toBe('reports.index')
+        ->and($restored->menu[0]->badgeResolverClass)->toBe(Widget::class)
+        ->and($restored->routes[0]->kind)->toBe('web')
+        ->and($restored->workflow[0]->stepClass)->toBe(Widget::class)
+        ->and($restored->settings[0]->definition)->toEqual(new DefaultSettingDefinition('theme', 'light', true, true, true));
 });
 
 it('collects settings/featureFlags off plain manifest properties, not an Extender (P1.25, A68)', function (): void {

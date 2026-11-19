@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Packman\Modules\Internal\Definition;
+namespace Packman\Modules\Data\Lifecycle;
+
+use Packman\Attributes\Api;
 
 /**
  * ModuleManifest dependency declaration: a module or a PHP extension.
  * `requires()` deps mirror composer `require` — the compiler rejects a
  * mismatch; `suggests()` deps are soft hints only.
- *
- * @internal spec: B-10 §3.2, P1.4
  */
+#[Api(since: '0.1.1')]
 final readonly class ModuleDependency
 {
     private function __construct(

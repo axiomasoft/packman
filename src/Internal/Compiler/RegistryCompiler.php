@@ -13,6 +13,7 @@ use Packman\Modules\Contracts\Compiler\ManifestSectionCompiler;
 use Packman\Modules\Contracts\Compiler\ModuleCompilation;
 use Packman\Modules\Data\Compiler\CompiledEntityField;
 use Packman\Modules\Data\Compiler\CompiledRegistry;
+use Packman\Modules\Data\Compiler\CompiledSettingDefault;
 use Packman\Modules\Data\Compiler\InstalledPackageVersion;
 use Packman\Modules\Data\Compiler\NormalizedExtension;
 use Packman\Modules\Data\Entities\Entity;
@@ -20,14 +21,14 @@ use Packman\Modules\Data\Entities\EntityDefinition;
 use Packman\Modules\Data\Entities\EntityField;
 use Packman\Modules\Data\Entities\FieldDefinition;
 use Packman\Modules\Data\Extenders\Api;
+use Packman\Modules\Data\Extenders\Filament;
+use Packman\Modules\Data\Extenders\Menu;
 use Packman\Modules\Data\Extenders\Permissions;
+use Packman\Modules\Data\Extenders\Routes;
+use Packman\Modules\Data\Extenders\Workflow;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
 use Packman\Modules\Enums\Entities\Capability;
 use Packman\Modules\Exceptions\Compiler\CompilationException;
-use Packman\Modules\Internal\Extend\Filament;
-use Packman\Modules\Internal\Extend\Menu;
-use Packman\Modules\Internal\Extend\Routes;
-use Packman\Modules\Internal\Extend\Workflow;
 
 /**
  * Applies the closed 8-extender set to a set of manifests in a fixed,
@@ -171,10 +172,8 @@ final readonly class RegistryCompiler implements ModuleCompilation
         $settings = [];
 
         foreach ($manifests as $manifest) {
-            $namespace = $this->settingsNamespaceFor($manifest);
-
             foreach ($manifest->settings as $default) {
-                $settings[] = new CompiledSettingDefault(namespace: $namespace, definition: $default);
+                $settings[] = new CompiledSettingDefault(namespace: $this->settingsNamespaceFor($manifest), definition: $default);
             }
         }
 
@@ -183,15 +182,8 @@ final readonly class RegistryCompiler implements ModuleCompilation
 
     private function settingsNamespaceFor(ModuleManifest $manifest): string
     {
-        // Guarded by CompilationValidator::validateRequiredFields()
-        // (tablePrefix is mandatory) before this method ever runs — see
-        // compileEntity()'s identical guard. A DISTINCT throw: reaching
-        // it means validation was bypassed, not that the manifest is bad.
-        $tablePrefix = $manifest->tablePrefix ?? throw CompilationException::tablePrefixInvariantBypassed($manifest->composerName);
-
-        return $manifest->settingsNamespace !== null && $manifest->settingsNamespace !== ''
-            ? $manifest->settingsNamespace
-            : $tablePrefix;
+        return $manifest->settingsNamespace ?? $manifest->tablePrefix
+            ?? throw CompilationException::tablePrefixInvariantBypassed($manifest->composerName);
     }
 
     /**
@@ -248,7 +240,7 @@ final readonly class RegistryCompiler implements ModuleCompilation
 
         if ($modulePrefix === null) {
             // Guarded by CompilationValidator::validateRequiredFields() before the pipeline
-            // starts (tablePrefix is mandatory, no auto-derivation from the composer
+            // starts (entity owners declare their prefix, no auto-derivation from the composer
             // name); this branch only matters if compileEntity() is ever reached directly.
             // Distinct throw: a validation bypass, not an ordinary rejection.
             throw CompilationException::tablePrefixInvariantBypassed($manifest->composerName);
@@ -517,12 +509,10 @@ final readonly class RegistryCompiler implements ModuleCompilation
                 array_push($records, ...$this->normalizeExtender(manifest: $manifest, extender: $extender, ownerVersion: $ownerVersion));
             }
 
-            $namespace = $this->settingsNamespaceFor($manifest);
-
             foreach ($manifest->settings as $setting) {
                 $records[] = new NormalizedExtension(
                     point: 'settings',
-                    id: $namespace.':'.$setting->key,
+                    id: $this->settingsNamespaceFor($manifest).':'.$setting->key,
                     owner: $manifest->composerName,
                     ownerVersion: $ownerVersion,
                     payload: [

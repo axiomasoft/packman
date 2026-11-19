@@ -6,7 +6,7 @@ namespace Packman\Modules\Internal\Settings;
 
 use Override;
 use Packman\Modules\Contracts\Registry\ModuleRegistry;
-use Packman\Modules\Internal\Compiler\CompiledSettingDefault;
+use Packman\Modules\Data\Compiler\CompiledSettingDefault;
 use Packman\Settings\Contracts\SettingDefaultsProviderInterface;
 
 /**

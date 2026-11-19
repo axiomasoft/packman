@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Commands;
 
 use Illuminate\Console\Command;
+use Packman\Modules\Contracts\Compiler\ModuleCompilation;
+use Packman\Modules\Contracts\Definition\ModuleDiscovery;
 use Packman\Modules\Data\Compiler\CompiledModule;
 use Packman\Modules\Exceptions\Compiler\CompilationException;
 use Packman\Modules\Exceptions\Compiler\InvalidManifestException;
-use Packman\Modules\Internal\Compiler\RegistryCompiler;
-use Packman\Modules\Internal\Discovery\ModuleDiscovery;
 use Packman\Modules\Internal\Registry\CompiledModuleRegistry;
 use Packman\Modules\Internal\Support\ModulesOptions;
 use Packman\Modules\ModulesServiceProvider;
@@ -39,7 +39,7 @@ final class CompileModulesCommand extends Command
         parent::__construct();
     }
 
-    public function handle(ModuleDiscovery $discovery, RegistryCompiler $compiler, ?ModulesOptions $options = null): int
+    public function handle(ModuleDiscovery $discovery, ModuleCompilation $compiler, ?ModulesOptions $options = null): int
     {
         try {
             $manifests = $discovery->discover();

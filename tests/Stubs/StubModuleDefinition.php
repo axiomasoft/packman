@@ -6,7 +6,7 @@ namespace Packman\Modules\Tests\Stubs;
 
 use Packman\Modules\Contracts\Definition\ModuleDefinition;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
-use Packman\Modules\Internal\Settings\DefaultSettingDefinition;
+use Packman\Modules\Data\Settings\DefaultSettingDefinition;
 
 final class StubModuleDefinition extends ModuleDefinition
 {
