@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Packman\Plugins\Laravel;
 
 use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Packman\Config\Exceptions\InvalidConfiguration;
+use Packman\Plugins\Contracts\Contributions\DeclaredContributions;
+use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Data\Capabilities\CapabilityDefinition;
 use Packman\Plugins\Data\Capabilities\CapabilityProvider;
 use Packman\Plugins\Data\Contributions\ContributionKind;
@@ -23,7 +26,13 @@ use Packman\Plugins\Internal\Graph\PluginDeclarations;
 final readonly class PluginRegistrar
 {
     /** @internal created by the plugin graph compiler */
+    #[Internal('Constructed by the package registrar.')]
     public function __construct(private PluginDeclarations $declarations, public string $pluginId) {}
+
+    public static function collect(ExtensionPlugin $plugin): DeclaredContributions
+    {
+        return PluginDeclarations::record($plugin, $plugin->manifest()->id);
+    }
 
     public function declareKind(ContributionKind $kind): void
     {
@@ -76,10 +85,10 @@ final readonly class PluginRegistrar
     }
 
     /** @param class-string $contract */
-    public function defineSlot(string $contract, SlotKind $kind, Cardinality $cardinality = Cardinality::Many): self
+    public function defineSlot(string $contract, SlotKind $kind, Cardinality $cardinality = Cardinality::Many, bool $shared = false): self
     {
         $this->guard();
-        $this->declarations->addSlotDefinition(new SlotDefinition($contract, $this->pluginId, $kind, $cardinality));
+        $this->declarations->addSlotDefinition(new SlotDefinition($contract, $this->pluginId, $kind, $cardinality, $shared));
 
         return $this;
     }

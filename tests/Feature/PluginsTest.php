@@ -35,10 +35,12 @@ use Packman\Plugins\Contracts\Registry\PluginActivationGate;
 use Packman\Plugins\Contracts\Registry\PluginInspector;
 use Packman\Plugins\Data\Contributions\ContributionKind;
 use Packman\Plugins\Data\Plugin\PluginManifest;
+use Packman\Plugins\Enums\Contributions\SlotKind;
 use Packman\Plugins\Enums\Plugin\PluginSource;
 use Packman\Plugins\Enums\PluginErrorCode;
 use Packman\Plugins\Exceptions\Graph\InvalidExtensionGraphException;
 use Packman\Plugins\Exceptions\Graph\MissingExtensionException;
+use Packman\Plugins\Exceptions\Registry\RegistryFrozenException;
 use Packman\Plugins\Exceptions\Registry\UnsupportedContribution;
 use Packman\Plugins\Internal\Contributions\FrozenContributions;
 use Packman\Plugins\Internal\Graph\PluginEntry;
@@ -460,6 +462,75 @@ it('operates purely as stateless code extensions with disabled config ids and wi
         ->toThrow(InvalidConfiguration::class, "requires 'test.owner', which is disabled");
 });
 
+final class SharedGreetingA extends PlgBase
+{
+    protected function spec(): array
+    {
+        return ['shared.a'];
+    }
+
+    public function register(PluginRegistrar $registrar): void
+    {
+        $registrar->defineSlot(Greeter::class, SlotKind::Contributor, shared: true);
+    }
+}
+
+final class SharedGreetingB extends PlgBase
+{
+    protected function spec(): array
+    {
+        return ['shared.b'];
+    }
+
+    public function register(PluginRegistrar $registrar): void
+    {
+        $registrar->defineSlot(Greeter::class, SlotKind::Contributor, shared: true);
+    }
+}
+
+class SharedGreetingContributor extends PlgBase
+{
+    protected function spec(): array
+    {
+        return ['shared.child', ['shared.b']];
+    }
+
+    public function register(PluginRegistrar $registrar): void
+    {
+        $registrar->contributeSlot(Greeter::class, 'shared.hello', HelloGreeter::class);
+    }
+}
+
+final class UnrelatedSharedContributor extends SharedGreetingContributor
+{
+    protected function spec(): array
+    {
+        return ['shared.unrelated'];
+    }
+}
+
+final class PrivateGreeting extends PlgBase
+{
+    protected function spec(): array
+    {
+        return ['private.slot'];
+    }
+
+    public function register(PluginRegistrar $registrar): void
+    {
+        $registrar->defineSlot(Greeter::class, SlotKind::Handler);
+    }
+}
+
+it('accepts matching shared slots from independent owners and retains the required dependency boundary', function (): void {
+    $graph = PluginGraph::compile(app(), [SharedGreetingA::class, SharedGreetingB::class, SharedGreetingContributor::class]);
+    expect($graph->slotContributions()[Greeter::class][0]->pluginId)->toBe('shared.child')
+        ->and(fn () => PluginGraph::compile(app(), [SharedGreetingA::class, PrivateGreeting::class]))
+        ->toThrow(InvalidConfiguration::class, 'is defined by both')
+        ->and(fn () => PluginGraph::compile(app(), [SharedGreetingA::class, SharedGreetingB::class, UnrelatedSharedContributor::class]))
+        ->toThrow(InvalidConfiguration::class, 'does not require');
+});
+
 it('supports optional stateful PluginActivationGate bindings for modular hosts', function (): void {
     config(['packman.plugins' => [PlgOwner::class, PlgOptional::class]]);
 
@@ -476,6 +547,38 @@ it('supports optional stateful PluginActivationGate bindings for modular hosts',
     expect($registry->has('greeter', 'test.hello'))->toBeTrue()
         ->and(array_map(static fn ($p): string => $p->id, app(PluginInspector::class)->describe()))->toBe(['test.owner'])
         ->and($registry->disabledIds())->toBe(['test.optional']);
+});
+
+it('intersects package and host activation policies and freezes their catalog with the graph', function (): void {
+    $app = app();
+    $ownerGate = new class implements PluginActivationGate
+    {
+        public function isEnabled(string $pluginId): bool
+        {
+            return $pluginId !== 'test.owner';
+        }
+    };
+    $app->instance($ownerGate::class, $ownerGate);
+    ExtensionRegistrar::addActivationGate($app, $ownerGate::class);
+    ExtensionRegistrar::addActivationGate($app, $ownerGate::class);
+    $app->instance(PluginActivationGate::class, new class implements PluginActivationGate
+    {
+        public function isEnabled(string $pluginId): bool
+        {
+            return $pluginId !== 'test.optional';
+        }
+    });
+    ExtensionRegistrar::builtInFor($app, PlgOwner::class, PlgOptional::class);
+    expect(ExtensionRegistrar::activationGateFor($app, except: $ownerGate::class)?->isEnabled('test.optional'))->toBeFalse()
+        ->and($app->make(Contributions::class)->disabledIds())->toBe(['test.optional', 'test.owner'])
+        ->and(fn () => ExtensionRegistrar::addActivationGate($app, $ownerGate::class))
+        ->toThrow(RegistryFrozenException::class);
+});
+
+it('exposes imperative declarations without requiring a host plugin graph', function (): void {
+    $declarations = PluginRegistrar::collect(new PlgCore);
+    expect($declarations->kinds()[0]->name)->toBe('core_hook')
+        ->and($declarations->kinds()[0]->ownerPluginId)->toBe('test.core');
 });
 
 final readonly class ComposedPluginOptions implements OptionsFactory

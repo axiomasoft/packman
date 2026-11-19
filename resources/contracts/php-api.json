@@ -224,6 +224,84 @@
             "enum_backing": null,
             "enum_cases": []
         },
+        "Packman\\Plugins\\Contracts\\Contributions\\DeclaredContributions": {
+            "kind": "interface",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": false,
+            "readonly": false,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "capabilityDefinitions": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "array",
+                    "doc": []
+                },
+                "capabilityProviders": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "array",
+                    "doc": []
+                },
+                "contributions": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "array",
+                    "doc": []
+                },
+                "kinds": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "array",
+                    "doc": []
+                },
+                "slotContributions": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "array",
+                    "doc": []
+                },
+                "slotDefinitions": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [],
+                    "return": "array",
+                    "doc": []
+                }
+            },
+            "properties": {},
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
+        },
         "Packman\\Plugins\\Contracts\\Contributions\\Extensions": {
             "kind": "interface",
             "layer": "api",
@@ -1000,6 +1078,15 @@
                             "optional": true,
                             "default": "\\Packman\\Plugins\\Enums\\Contributions\\Cardinality::Many",
                             "flags": 1
+                        },
+                        {
+                            "name": "shared",
+                            "type": "bool",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "false",
+                            "flags": 1
                         }
                     ],
                     "return": null,
@@ -1684,6 +1771,64 @@
             "uses": [],
             "doc": [],
             "methods": {
+                "activationGateFor": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "container",
+                            "type": "Illuminate\\Contracts\\Container\\Container",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "except",
+                            "type": "?string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "null",
+                            "flags": 0
+                        }
+                    ],
+                    "return": "?Packman\\Plugins\\Contracts\\Registry\\PluginActivationGate",
+                    "doc": []
+                },
+                "addActivationGate": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "container",
+                            "type": "Illuminate\\Contracts\\Container\\Container",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "gate",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "void",
+                    "doc": []
+                },
                 "boot": {
                     "visibility": "public",
                     "static": false,
@@ -1812,33 +1957,24 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
+                "collect": {
                     "visibility": "public",
-                    "static": false,
+                    "static": true,
                     "final": false,
                     "abstract": false,
                     "by_reference": false,
                     "parameters": [
                         {
-                            "name": "declarations",
-                            "type": "Packman\\Plugins\\Internal\\Graph\\PluginDeclarations",
+                            "name": "plugin",
+                            "type": "Packman\\Plugins\\Contracts\\Registry\\ExtensionPlugin",
                             "by_reference": false,
                             "variadic": false,
                             "optional": false,
                             "default": null,
-                            "flags": 4
-                        },
-                        {
-                            "name": "pluginId",
-                            "type": "string",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 1
+                            "flags": 0
                         }
                     ],
-                    "return": null,
+                    "return": "Packman\\Plugins\\Contracts\\Contributions\\DeclaredContributions",
                     "doc": []
                 },
                 "contribute": {
@@ -2008,6 +2144,15 @@
                             "optional": true,
                             "default": "\\Packman\\Plugins\\Enums\\Contributions\\Cardinality::Many",
                             "flags": 0
+                        },
+                        {
+                            "name": "shared",
+                            "type": "bool",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "false",
+                            "flags": 0
                         }
                     ],
                     "return": "self",
@@ -2081,7 +2226,18 @@
                     "doc": []
                 }
             },
-            "properties": {},
+            "properties": {
+                "pluginId": {
+                    "flags": 1,
+                    "type": "string",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
             "constants": [],
             "enum_backing": null,
             "enum_cases": []
