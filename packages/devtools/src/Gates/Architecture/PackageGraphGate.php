@@ -53,6 +53,7 @@ final readonly class PackageGraphGate implements QualityGate
             $requireDev = is_array($composer['require-dev'] ?? null) ? array_keys($composer['require-dev']) : [];
             $suggest = is_array($composer['suggest'] ?? null) ? array_keys($composer['suggest']) : [];
             $declared = array_values(array_unique(array_merge($require, $suggest)));
+            $bundled = $this->bundledRoots($context, $package, $composer);
 
             foreach ($require as $depName) {
                 $target = $context->config->findPackageByName((string) $depName);
@@ -98,8 +99,18 @@ final readonly class PackageGraphGate implements QualityGate
                         $violations[] = "[{$package->name}] Source file {$rel} imports higher layer [{$target->name}] ({$target->layer}): {$fqcn}.";
                     }
 
+                    if (isset($bundled[$target->name])) {
+                        $source = $bundled[$target->name];
+                        $relative = str_replace('\\', '/', substr($fqcn, strlen($target->normalizedNamespace())));
+                        $filePath = realpath($source.'/'.$relative.'.php');
+
+                        if ($filePath !== false && is_file($filePath) && str_starts_with($filePath, $source.'/')) {
+                            continue;
+                        }
+                    }
+
                     if (! in_array($target->name, $declared, true)) {
-                        $violations[] = "[{$package->name}] Source file {$rel} imports [{$target->name}] ({$fqcn}) without declaring it in composer.json require/suggest.";
+                        $violations[] = "[{$package->name}] Source file {$rel} imports [{$target->name}] ({$fqcn}) without a declared dependency (require/suggest) or bundled Composer replacement.";
                     }
                 }
             }
@@ -112,6 +123,58 @@ final readonly class PackageGraphGate implements QualityGate
         return $violations === []
             ? GateResult::pass($this->id(), $this->category(), [sprintf('Verified %d packages in acyclic layer graph.', count($context->config->packages))])
             : GateResult::fail($this->id(), $this->category(), $violations);
+    }
+
+    /**
+     * A replacement may supply a nested package under its own PSR-4 namespace.
+     *
+     * @param  array<string, mixed>  $composer
+     * @return array<string, string> replaced package to its physical, autoloaded source directory
+     */
+    private function bundledRoots(GateContext $context, PackageManifest $package, array $composer): array
+    {
+        $replacements = $composer['replace'] ?? null;
+        $autoload = $composer['autoload'] ?? null;
+
+        if (! is_array($replacements) || ! is_array($autoload) || ! is_array($autoload['psr-4'] ?? null)) {
+            return [];
+        }
+
+        $root = realpath($context->packageDirectory($package));
+
+        if ($root === false) {
+            return [];
+        }
+
+        $bundled = [];
+        foreach ($replacements as $name => $constraint) {
+            if (! is_string($name) || ! is_string($constraint) || $constraint === '') {
+                continue;
+            }
+
+            $target = $context->config->findPackageByName($name);
+
+            if (! $target instanceof PackageManifest) {
+                continue;
+            }
+
+            $source = realpath($context->packageDirectory($target).'/src');
+
+            if ($source === false || ! str_starts_with($source, $root.'/')) {
+                continue;
+            }
+
+            $paths = $autoload['psr-4'][$target->normalizedNamespace()] ?? [];
+            foreach (is_array($paths) ? $paths : [$paths] as $path) {
+                if (is_string($path) && realpath($root.'/'.$path) === $source) {
+                    $bundled[$name] = $source;
+
+                    break;
+                }
+            }
+        }
+
+        return $bundled;
     }
 
     /**
