@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Composer\InstalledVersions;
 use Packman\DevTools\Tests\Support\TempWorkspace;
 use Symfony\Component\Process\Process;
 
@@ -34,7 +35,7 @@ PHP);
         $consumerProc->run();
 
         expect($consumerProc->isSuccessful())->toBeTrue($consumerProc->getErrorOutput().$consumerProc->getOutput())
-            ->and($consumerProc->getOutput())->toContain('Packman DevTools')
+            ->and($consumerProc->getOutput())->toContain('Packman DevTools '.InstalledVersions::getPrettyVersion('axiomasoft/packman-devtools'))
             ->and(file_get_contents($ws->path('loaded-autoload.txt')))->toBe('consumer-vendor');
 
         // 2. Composer-supplied $_composer_autoload_path takes precedence over fallback paths
@@ -56,7 +57,7 @@ PHP);
         $composerProc->run();
 
         expect($composerProc->isSuccessful())->toBeTrue($composerProc->getErrorOutput().$composerProc->getOutput())
-            ->and($composerProc->getOutput())->toContain('Packman DevTools')
+            ->and($composerProc->getOutput())->toContain('Packman DevTools '.InstalledVersions::getPrettyVersion('axiomasoft/packman-devtools'))
             ->and(file_get_contents($ws->path('loaded-autoload.txt')))->toBe('composer-supplied');
     } finally {
         $ws->cleanup();
