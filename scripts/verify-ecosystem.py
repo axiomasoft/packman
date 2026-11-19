@@ -286,7 +286,7 @@ class Check:
         self.receipt["status"] = "passed"
         self.receipt["limits"] = [
             "Consumer archives are exact development snapshots, not published consumer tags.",
-            "The full graph uses local owner archives; this does not prove anonymous download of private AzGuard.",
+            "The full graph uses local owner archives; this does not by itself verify remote downloads.",
             "SQLite verifies media persistence, not PostgreSQL-only product persistence or physical tenant cloning.",
             "Upgrade changes Packman 0.1.1 to 0.1.2 and baseline Vaulter to current HEAD in the same application; other consumers stay fixed.",
         ]

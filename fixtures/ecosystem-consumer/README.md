@@ -66,5 +66,7 @@ The test host supplies its own account resolver and explicitly declares shared
 facility ownership for Tenant's `laravel-scoped` profile. It does not weaken the
 physical PostgreSQL profile or install a new Sockit Laravel layer. PostgreSQL-only
 product persistence, physical database cloning and financial behavior are outside
-this fixture. It also does not prove public distribution of private AzGuard or
+this fixture. Local archives do not by themselves verify remote downloads or
 publication of consumer versions; the release installation check is separate.
+AzGuard's [source repository](https://github.com/axiomasoft/azguard-private) is public.
+Source availability and discovery of nested Composer packages are separate concerns.
