@@ -9,6 +9,7 @@ use Illuminate\Database\DatabaseManager;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Panels\Internal\Configuration\PanelsOptions;
+use Packman\Panels\SavedViews\Contracts\SavedViewRepository;
 use Packman\Panels\SavedViews\Contracts\ViewAccessPolicy;
 use Packman\Panels\SavedViews\Contracts\ViewSchemaProvider;
 use Packman\Panels\SavedViews\Internal\SqlSavedViewRepository;
@@ -19,7 +20,7 @@ use Psr\Clock\ClockInterface;
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class SavedViewRepositoryFactory
 {
-    public function make(Application $app): SqlSavedViewRepository
+    public function make(Application $app): SavedViewRepository
     {
         /** @var DatabaseManager $database */
         $database = $app->make('db');

@@ -16,7 +16,6 @@ use Packman\Panels\SavedViews\Contracts\SavedViewRepository;
 use Packman\Panels\SavedViews\Contracts\ViewAccessPolicy;
 use Packman\Panels\SavedViews\Contracts\ViewSchemaProvider;
 use Packman\Panels\SavedViews\Internal\DenyViewAccessPolicy;
-use Packman\Panels\SavedViews\Internal\SqlSavedViewRepository;
 use Packman\Panels\SavedViews\Internal\UnavailableViewSchemaProvider;
 use Packman\Panels\SavedViews\Internal\ViewConfigValidator;
 
@@ -39,6 +38,6 @@ final class SavedViewsBindingsRegistrar implements PackageRegistrar
 
         $app->singletonIf(ViewAccessPolicy::class, DenyViewAccessPolicy::class);
         $app->singleton(ViewConfigValidator::class);
-        $app->singleton(SavedViewRepository::class, static fn (Application $app): SqlSavedViewRepository => (new SavedViewRepositoryFactory)->make($app));
+        $app->singleton(SavedViewRepository::class, static fn (Application $app): SavedViewRepository => (new SavedViewRepositoryFactory)->make($app));
     }
 }

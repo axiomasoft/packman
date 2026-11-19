@@ -8,6 +8,7 @@ use BackedEnum;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Packman\Attributes\Api;
+use Packman\Attributes\Internal;
 use Packman\Panels\Contracts\Registry\PanelPlugin;
 use Packman\Panels\Data\Admission\PermissionDefinition;
 use Packman\Panels\Data\Panel\PanelSettings;
@@ -38,6 +39,7 @@ final class PanelBuilder
     /**
      * @internal built by the panel registry
      */
+    #[Internal('Constructed by the package registrar.')]
     public function __construct(private readonly PanelRecipe $recipe) {}
 
     /**
