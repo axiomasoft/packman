@@ -4308,6 +4308,15 @@
                             "optional": true,
                             "default": "false",
                             "flags": 0
+                        },
+                        {
+                            "name": "minimal",
+                            "type": "bool",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": true,
+                            "default": "false",
+                            "flags": 0
                         }
                     ],
                     "return": "array",

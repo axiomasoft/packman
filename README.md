@@ -23,6 +23,8 @@ public function register(): void
 
 A module that supplies code can return `ModuleManifest::make('acme/reports')->title('Reports')`. A module that owns entity tables also declares its table prefix. Hosts can supply their own discovery and activation implementations. See the [plugin example](packages/plugins/README.md), [module configuration](packages/modules/README.md), and [tested consumer applications](fixtures).
 
+Generate a code-only extension in a Composer project with `vendor/bin/packman make packman-module acme/reports --minimal` or `vendor/bin/packman make packman-plugin acme/reports --minimal`.
+
 ## Subpackages Overview (8 Packages Total under `packages/`)
 
 | Layer | Subpackage | Composer Name | PSR-4 Root | Responsibility |

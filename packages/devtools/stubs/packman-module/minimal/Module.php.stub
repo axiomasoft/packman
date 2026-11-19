@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
+use Packman\Modules\Contracts\Definition\ModuleDefinition;
+use Packman\Modules\Data\Lifecycle\ModuleManifest;
+
+#[Spi(kind: SpiKind::Implement, since: '1.0')]
+final class {{ class_prefix }}Module extends ModuleDefinition
+{
+    public function manifest(): ModuleManifest
+    {
+        return ModuleManifest::make('{{ composer_name }}')->title('{{ class_prefix }}');
+    }
+}

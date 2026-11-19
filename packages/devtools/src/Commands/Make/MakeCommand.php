@@ -39,6 +39,7 @@ final class MakeCommand extends Command
             ->addArgument('name', InputArgument::REQUIRED, 'Package name or vendor/package slug.')
             ->addOption('vendor', null, InputOption::VALUE_REQUIRED, 'Override vendor segment.')
             ->addOption('dir', null, InputOption::VALUE_REQUIRED, 'Base output directory relative to root.', 'packages')
+            ->addOption('minimal', null, InputOption::VALUE_NONE, 'Create a module or plugin with only its registration contract.')
             ->addOption('force', null, InputOption::VALUE_NONE, 'Overwrite existing files.')
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'Print planned file paths without writing to disk.')
             ->addOption('root', null, InputOption::VALUE_REQUIRED, 'Target workspace root.', $this->defaultRootPath);
@@ -69,7 +70,7 @@ final class MakeCommand extends Command
 
         try {
             $place = Place::fromInput($name, $vendor, $dir);
-            $files = $this->layout->filesFor($profile, $place, $force);
+            $files = $this->layout->filesFor($profile, $place, $force, (bool) $input->getOption('minimal'));
         } catch (InvalidArgumentException $exception) {
             $output->writeln("<error>{$exception->getMessage()}</error>");
 

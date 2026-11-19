@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }}\Laravel;
+
+use Illuminate\Support\ServiceProvider;
+use Packman\Attributes\Spi;
+use Packman\Attributes\SpiKind;
+use Packman\Plugins\Laravel\ExtensionRegistrar;
+use {{ namespace }}\{{ class_prefix }}Plugin;
+
+#[Spi(kind: SpiKind::Call, since: '1.0')]
+final class {{ class_prefix }}ServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        ExtensionRegistrar::builtInFor($this->app, {{ class_prefix }}Plugin::class);
+    }
+}

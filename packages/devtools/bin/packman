@@ -30,6 +30,8 @@ if ($autoload === null) {
 require_once $autoload;
 
 $cwd = getcwd();
-$root = is_string($cwd) && is_file($cwd.'/packman.json') ? $cwd : dirname($autoload, 2);
+$root = is_string($cwd) && (is_file($cwd.'/packman.json') || is_file($cwd.'/composer.json'))
+    ? $cwd
+    : dirname(realpath($autoload) ?: $autoload, 2);
 
 exit(ApplicationFactory::create($root)->run());

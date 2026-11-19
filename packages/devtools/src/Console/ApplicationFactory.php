@@ -44,7 +44,7 @@ final class ApplicationFactory
     {
         $cwd = getcwd();
 
-        if (is_string($cwd) && is_file($cwd.'/packman.json')) {
+        if (is_string($cwd) && (is_file($cwd.'/packman.json') || is_file($cwd.'/composer.json'))) {
             return $cwd;
         }
 

@@ -101,17 +101,35 @@ final readonly class Layout
     }
 
     /** @return list<GeneratedFile> */
-    public function filesFor(string $profile, Place $place, bool $overwrite = false): array
+    public function filesFor(string $profile, Place $place, bool $overwrite = false, bool $minimal = false): array
     {
         $this->descriptor($profile);
+
+        if ($minimal && ! in_array($profile, ['packman-module', 'packman-plugin'], true)) {
+            throw new InvalidArgumentException('--minimal applies to packman-module and packman-plugin.');
+        }
+
         $vars = $this->variablesFor($profile, $place);
         $base = $place->relativeDirectory;
+        $composerStub = $minimal && $profile === 'packman-module' ? "{$profile}/minimal/composer.json.stub" : "{$profile}/composer.json.stub";
 
         $files = [
-            new GeneratedFile("{$base}/composer.json", $this->stubs->render("{$profile}/composer.json.stub", $vars), $overwrite),
+            new GeneratedFile("{$base}/composer.json", $this->stubs->render($composerStub, $vars), $overwrite),
             new GeneratedFile("{$base}/README.md", $this->stubs->render("{$profile}/README.md.stub", $vars), $overwrite),
             new GeneratedFile("{$base}/CHANGELOG.md", $this->stubs->render("{$profile}/CHANGELOG.md.stub", $vars), $overwrite),
         ];
+
+        if ($minimal) {
+            $type = $profile === 'packman-module' ? 'Module' : 'Plugin';
+            $files[] = new GeneratedFile("{$base}/src/{$place->classPrefix}{$type}.php", $this->stubs->render("{$profile}/minimal/{$type}.php.stub", $vars), $overwrite);
+            $files[] = new GeneratedFile("{$base}/tests/Feature/{$place->classPrefix}{$type}Test.php", $this->stubs->render("{$profile}/tests/Feature/{$type}ContractTest.php.stub", $vars), $overwrite);
+
+            if ($profile === 'packman-plugin') {
+                $files[] = new GeneratedFile("{$base}/src/Laravel/{$place->classPrefix}ServiceProvider.php", $this->stubs->render("{$profile}/minimal/ServiceProvider.php.stub", $vars), $overwrite);
+            }
+
+            return $files;
+        }
 
         return match ($profile) {
             'php-library' => [
