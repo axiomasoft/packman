@@ -21,7 +21,7 @@ use Packman\Schema\Data\Compiler\TableNames;
 use Packman\Schema\Exceptions\SchemaSetException;
 use Packman\Schema\Internal\Commands\MigrateSchemaCommand;
 use Packman\Schema\Internal\Commands\SchemaStatusCommand;
-use Packman\Schema\Internal\Compiler\SchemaOwnershipRegistry;
+use Packman\Schema\Internal\Compiler\ScopedOwnershipRegistry;
 use Packman\Schema\Internal\Migration\DefaultSchemaMigrator;
 use Packman\Schema\Internal\Migration\TaggedSchemaSets;
 use ReflectionClass;
@@ -31,7 +31,7 @@ final class DatabaseRegistrar implements PackageRegistrar
 {
     public function register(Application $app): void
     {
-        $app->singletonIf(SchemaOwnership::class, static fn (): SchemaOwnership => new SchemaOwnershipRegistry);
+        $app->singletonIf(SchemaOwnership::class, static fn (): SchemaOwnership => new ScopedOwnershipRegistry);
 
         $app->singleton(TableNames::class, static function (Application $app): TableNames {
             $prefix = 'pmn_';
@@ -51,7 +51,7 @@ final class DatabaseRegistrar implements PackageRegistrar
 
             return new TableNames(
                 prefix: $prefix,
-                ownership: $app->make(SchemaOwnership::class),
+                ownership: SchemaExtensions::ownershipFor($app->make(SchemaOwnership::class), $prefix),
                 connections: $app->make('db'),
                 connection: $connection,
             );

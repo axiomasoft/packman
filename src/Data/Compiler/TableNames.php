@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Data\Compiler;
 
+use Closure;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\ConnectionResolverInterface;
 use InvalidArgumentException;
 use LogicException;
@@ -22,12 +24,15 @@ final class TableNames
 
     private readonly TablePrefix $tablePrefix;
 
+    /** @param  (Closure(ConnectionInterface, string): bool)|null  $ownsLegacy */
     public function __construct(
         TablePrefix|string $prefix,
         private readonly SchemaOwnership $ownership,
         private readonly ConnectionResolverInterface $connections,
         private readonly ?string $connection = null,
         private readonly string $configPath = 'packman.schema.table_prefix',
+        private readonly ?string $owner = null,
+        private readonly ?Closure $ownsLegacy = null,
     ) {
         $this->tablePrefix = $prefix instanceof TablePrefix
             ? $prefix
@@ -60,6 +65,8 @@ final class TableNames
                 $this->connections->connection($this->connection),
                 $this->tablePrefix->value(),
                 $this->configPath,
+                $this->owner,
+                $this->ownsLegacy,
             );
             $this->verified = true;
         }

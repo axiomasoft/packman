@@ -16,7 +16,7 @@ final class SchemaOwnershipRegistry implements SchemaOwnership
     /** @var array<string, string|null> logical table => owner, memoized */
     private array $resolved = [];
 
-    public function __construct(private readonly string $configPath = 'packman.schema.nouns') {}
+    public function __construct(private readonly string $configPath = 'packman.schema.nouns', private readonly ?SchemaOwnership $fallback = null) {}
 
     public function declare(string $owner, array $nouns): void
     {
@@ -40,7 +40,7 @@ final class SchemaOwnershipRegistry implements SchemaOwnership
     public function ownerOf(string $logical): ?string
     {
         if (array_key_exists($logical, $this->resolved)) {
-            return $this->resolved[$logical];
+            return $this->resolved[$logical] ?? $this->fallback?->ownerOf($logical);
         }
 
         $owner = null;
@@ -58,15 +58,19 @@ final class SchemaOwnershipRegistry implements SchemaOwnership
             }
         }
 
-        return $this->resolved[$logical] = $owner;
+        $this->resolved[$logical] = $owner;
+
+        return $owner ?? $this->fallback?->ownerOf($logical);
     }
 
     public function owners(): array
     {
-        $owners = [];
+        $owners = $this->fallback?->owners() ?? [];
 
         foreach ($this->nouns as $noun => $owner) {
-            $owners[$owner][] = $noun;
+            if (! in_array($noun, $owners[$owner] ?? [], true)) {
+                $owners[$owner][] = $noun;
+            }
         }
 
         return $owners;
