@@ -16,8 +16,11 @@ final class PhpApiDocument
     /** @throws JsonException */
     public static function encode(SurfaceReport $report): string
     {
+        $manifest = $report->toManifestArray();
+        $manifest['symbols'] = (object) $manifest['symbols'];
+
         return json_encode(
-            $report->toManifestArray(),
+            $manifest,
             JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES,
         )."\n";
     }
