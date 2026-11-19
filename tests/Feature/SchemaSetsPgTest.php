@@ -79,7 +79,7 @@ it('ignores central legacy journal entries when tenant sets share one PostgreSQL
     $this->artisan('packman:schema:status', ['--database' => 'pgsql'])->assertSuccessful();
 });
 
-it('routes PostgreSQL module migrations through the registered ModuleMigrationBoundary and runs prerequisite set', function (): void {
+it('routes PostgreSQL module migrations through the registered ModuleMigrationBoundary and runs prerequisite set', function (SchemaScope $moduleScope): void {
     $platformPath = realpath(__DIR__.'/../Fixtures/migrations/platform');
     $modulePath = realpath(__DIR__.'/../Fixtures/migrations/module');
     assert(is_string($platformPath) && is_string($modulePath));
@@ -87,7 +87,7 @@ it('routes PostgreSQL module migrations through the registered ModuleMigrationBo
     $registry = new TaggedSchemaSets([
         new FixtureSchemaSets([
             new SchemaSet('fixture/prerequisite', 'tenant', SchemaScope::Tenant, $platformPath, 1, ['pgsql', 'sqlite']),
-            new SchemaSet('fixture/module', 'tenant', SchemaScope::Tenant, $modulePath, 1, ['pgsql', 'sqlite'], SchemaLifecycle::Module),
+            new SchemaSet('fixture/module', 'tenant', $moduleScope, $modulePath, 1, ['pgsql', 'sqlite'], SchemaLifecycle::Module),
         ]),
     ]);
     app()->instance(SchemaSets::class, $registry);
@@ -111,11 +111,11 @@ it('routes PostgreSQL module migrations through the registered ModuleMigrationBo
     $this->migrateSchemaSets(['fixture/module:tenant'], 'pgsql');
 
     $expectedFile = realpath($modulePath.'/2026_10_01_980030_create_schema_module.php');
-    expect(Schema::connection('pgsql')->hasTable('schema_platform'))->toBeTrue()
+    expect(Schema::connection('pgsql')->hasTable('schema_platform'))->toBe($moduleScope === SchemaScope::Tenant)
         ->and(Schema::connection('pgsql')->hasTable('schema_module'))->toBeTrue()
         ->and($captured['connection'])->toBe('pgsql')
         ->and($captured['owners'])->toBe([$expectedFile => 'fixture/module']);
-});
+})->with([SchemaScope::Tenant, SchemaScope::Central]);
 
 it('refuses PostgreSQL module migrations when ModuleMigrationBoundary is missing', function (): void {
     $modulePath = realpath(__DIR__.'/../Fixtures/migrations/module');
