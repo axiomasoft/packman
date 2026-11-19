@@ -6,10 +6,12 @@ namespace Packman\Schema\Internal\Services;
 
 use Closure;
 use Illuminate\Database\Connection;
+use Packman\Attributes\Internal;
 use Packman\Schema\Internal\Contracts\SchemaWriter;
 use Packman\Schema\Internal\Data\SchemaObject;
 
 /** Executes a step's DDL on the space connection. */
+#[Internal]
 final readonly class LiveSchemaWriter implements SchemaWriter
 {
     public function __construct(private Connection $connection)

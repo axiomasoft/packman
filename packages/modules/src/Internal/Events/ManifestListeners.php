@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Events;
 
 use Illuminate\Events\Dispatcher;
+use Packman\Attributes\Internal;
 use Packman\Context\Contracts\ContextResolverInterface;
 use Packman\Context\Exceptions\ScopeUnavailableException;
 use Packman\Modules\Contracts\Registry\ModuleRegistry;
 use Packman\Modules\Data\Compiler\CompiledRegistry;
 
+#[Internal]
 final class ManifestListeners
 {
     /** @var array<string, true> */

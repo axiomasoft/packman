@@ -8,6 +8,10 @@
 
 ## Write a module or plugin
 
+Install version `0.1.2` from the [public versioned Composer repository](docs/reference/installation.md).
+The [architecture decisions](docs/architecture/kernel-boundaries.md#5-decisions-shared-with-package-authors-and-application-owners)
+explain what Packman provides, what a product package owns, and what the host controls.
+
 Use `axiomasoft/packman` for shared PHP contracts. Add `axiomasoft/packman-plugins` for application-scoped contributions or `axiomasoft/packman-modules` for Composer discovery and a compiled module registry. Each extension opts into configuration, settings definitions, schema ownership, and diagnostics through the interfaces it implements.
 
 A Laravel service provider can register a plugin with one call:
@@ -26,6 +30,11 @@ A module that supplies code can return `ModuleManifest::make('acme/reports')->ti
 Generate a code-only extension in a Composer project with `vendor/bin/packman make packman-module acme/reports --minimal` or `vendor/bin/packman make packman-plugin acme/reports --minimal`.
 
 `make fixtures` runs a standalone PHP consumer, a standalone Laravel 13 plugin consumer, and a Laravel 12 modular platform consumer. Each installs its own dependencies.
+
+`./bin/php84 python3 scripts/verify-ecosystem.py` verifies archived snapshots of all nine
+real consumers with ordinary Laravel discovery, simultaneous hosts, a Corex Media/Vaulter
+operation and an existing application's upgrade. See the
+[verified scope and limits](docs/architecture/quality-gates.md#4-local-ecosystem-compatibility).
 
 
 ## Subpackages Overview (8 Packages Total under `packages/`)

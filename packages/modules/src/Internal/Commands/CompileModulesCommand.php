@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Commands;
 
 use Illuminate\Console\Command;
+use Packman\Attributes\Internal;
 use Packman\Modules\Contracts\Compiler\ModuleCompilation;
 use Packman\Modules\Contracts\Definition\ModuleDiscovery;
 use Packman\Modules\Data\Compiler\CompiledModule;
@@ -24,6 +25,7 @@ use Packman\Modules\ModulesServiceProvider;
  *
  * @internal spec: B-10 §5.2, §7.4 п.7, P1.15
  */
+#[Internal]
 final class CompileModulesCommand extends Command
 {
     protected $signature = 'modules:compile';

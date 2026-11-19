@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Compiler;
 
 use LogicException;
+use Packman\Attributes\Internal;
 use Packman\Modules\Contracts\Compiler\Extender;
 use Packman\Modules\Data\Compiler\NormalizedExtension;
 use Packman\Modules\Data\Entities\Entity;
@@ -19,6 +20,7 @@ use Packman\Modules\Exceptions\Compiler\CompilationException;
  *
  * @internal spec: B-10 §5.2/§7.4 п.4
  */
+#[Internal]
 final class CompilationValidator
 {
     /** @param list<ModuleManifest> $manifests */

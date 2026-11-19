@@ -100,12 +100,22 @@ final class DocInternalWithoutAttr {}
 
 PHP);
 
+        $ws->write('packages/sample/src/Internal/UnmarkedImplementation.php', <<<'PHP'
+<?php
+namespace Acme\Sample\Internal;
+final class UnmarkedImplementation {}
+PHP);
+
         $bad = $scanner->scanPackage('acme/sample', $ws->path('packages/sample/src'));
         expect($bad->ok())->toBeFalse()
             ->and(implode("\n", array_map(static fn ($d): string => $d->code, $bad->diagnostics)))
             ->toContain('surface.internal_conflict')
             ->toContain('surface.internal_leak')
             ->toContain('surface.missing_attribute');
+        expect(array_values(array_map(
+            static fn ($diagnostic): string => $diagnostic->symbol,
+            array_filter($bad->diagnostics, static fn ($diagnostic): bool => $diagnostic->code === 'surface.missing_attribute'),
+        )))->toContain('Acme\Sample\Internal\UnmarkedImplementation');
     } finally {
         $ws->cleanup();
     }

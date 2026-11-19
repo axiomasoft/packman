@@ -2,11 +2,17 @@
 
 All notable changes to `axiomasoft/packman-monorepo` will be documented in this file.
 
-## Unreleased
+## 0.1.2
 
 - Discover plugin manifests before inspecting active facets or registering contributions. Applications can supply a configured instance of the declared class while preserving its manifest.
 - Accept repeat registration of a known plugin or gate after compilation. A failed compilation leaves the catalog open to correction.
 - Register console commands on the owning application and require the active Laravel host to own a schema migration before writing its journal or running DDL.
+- Compile explicit entity capability declarations into module registries.
+- Enforce internal boundaries for attributed types outside internal namespaces and require an explicit surface attribute on internal declarations.
+- Allow an explicit internal owner for cooperating local product subpackages, while keeping external dependencies, layers and runtime/dev boundaries separate.
+- Document package/host ownership, lifecycle timing and preserved product constraints with real consumer examples.
+- Verify archived real Laravel consumers locally, including simultaneous hosts, Corex Media/Vaulter deduplication and old-data readback after an existing application's update.
+- Distribute all eight packages through the public versioned Composer repository, with verified autoload, executable and PHPStan paths inside the existing monorepository archive.
 
 ## 0.1.1
 

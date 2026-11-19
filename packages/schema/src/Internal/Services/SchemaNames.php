@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Packman\Schema\Internal\Services;
 
 use InvalidArgumentException;
+use Packman\Attributes\Internal;
 
 /**
  * Deterministic names: database identifiers, space slugs, step ids and migration names.
  */
+#[Internal]
 final class SchemaNames
 {
     public const int MAX_IDENTIFIER = 63;

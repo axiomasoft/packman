@@ -7,11 +7,13 @@ namespace Packman\Schema\Internal\Contracts;
 use Closure;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Schema\Blueprint;
+use Packman\Attributes\Internal;
 use Packman\Schema\Internal\Data\SchemaObject;
 
 /**
  * Where SpaceSchema sends a step's DDL: executed against the space connection.
  */
+#[Internal]
 interface SchemaWriter
 {
     public function connection(): Connection;

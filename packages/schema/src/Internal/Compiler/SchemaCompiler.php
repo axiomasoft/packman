@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Internal\Compiler;
 
+use Packman\Attributes\Internal;
 use Packman\Schema\Contracts\Compiler\RetiresSteps;
 use Packman\Schema\Contracts\Compiler\SchemaComponent;
 use Packman\Schema\Contracts\Compiler\SchemaStep;
@@ -18,6 +19,7 @@ use Packman\Schema\Internal\Services\StorageCollisionDetector;
  * Compiles schema components against schema spaces. Pure: the caller passes component instances, the spaces, and
  * the identity of every connection they use. Reports every problem at once.
  */
+#[Internal]
 final class SchemaCompiler
 {
     /**

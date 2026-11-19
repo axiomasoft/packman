@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Settings;
 
 use Override;
+use Packman\Attributes\Internal;
 use Packman\Modules\Contracts\Registry\ModuleRegistry;
 use Packman\Modules\Data\Compiler\CompiledSettingDefault;
 use Packman\Settings\Contracts\SettingDefaultsProviderInterface;
@@ -17,6 +18,7 @@ use Packman\Settings\Contracts\SettingDefaultsProviderInterface;
  *
  * @internal spec: D20/D22/D23, P1.15, P1.25
  */
+#[Internal]
 final class CompiledSettingDefaultsProvider implements SettingDefaultsProviderInterface
 {
     /** @var array<string, array<string, CompiledSettingDefault>>|null keyed by [namespace][key], built once per instance */

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Commands;
 
 use Illuminate\Console\Command;
+use Packman\Attributes\Internal;
 use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Context\Data\ScopeRef;
 use Packman\Modules\Contracts\Registry\RegistryIntrospection;
@@ -12,6 +13,7 @@ use Packman\Modules\Contracts\Registry\RegistryIntrospection;
 /**
  * Read-only local operator diagnostic for module activation status.
  */
+#[Internal]
 final class ExplainModuleCommand extends Command
 {
     protected $signature = 'modules:why

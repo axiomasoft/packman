@@ -6,6 +6,7 @@ namespace Packman\Plugins\Internal\Capabilities;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
+use Packman\Attributes\Internal;
 use Packman\Plugins\Contracts\Contributions\Capabilities;
 use Packman\Plugins\Enums\Contributions\Cardinality;
 use Packman\Plugins\Exceptions\Graph\MissingExtensionException;
@@ -14,6 +15,7 @@ use Packman\Plugins\Internal\Contributions\FrozenContributions;
 /**
  * Resolves capabilities of the compiled plugin graph from config overrides or static providers.
  */
+#[Internal]
 final readonly class CapabilitiesRegistry implements Capabilities
 {
     public function __construct(

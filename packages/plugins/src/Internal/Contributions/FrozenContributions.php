@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Plugins\Internal\Contributions;
 
+use Packman\Attributes\Internal;
 use Packman\Extensions\Data\ExtensionFacetProfile;
 use Packman\Plugins\Contracts\Contributions\Contributions;
 use Packman\Plugins\Contracts\Registry\PluginInspector;
@@ -16,6 +17,7 @@ use Packman\Plugins\Data\Plugin\PluginDescription;
 use Packman\Plugins\Exceptions\Registry\UnsupportedContribution;
 
 /** The compiled, frozen plugin and extension registry. Built once by PluginGraphCompiler. */
+#[Internal]
 final readonly class FrozenContributions implements Contributions, PluginInspector
 {
     /**

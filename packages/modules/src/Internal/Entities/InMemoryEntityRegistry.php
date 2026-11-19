@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Entities;
 
 use Closure;
+use Packman\Attributes\Internal;
 use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Modules\Contracts\Entities\EntityRegistry;
 use Packman\Modules\Data\Entities\EntityDefinition;
@@ -18,6 +19,7 @@ use Packman\Modules\Exceptions\Entities\RegistryFrozen;
  * boot; the compiled hot-path registry replaces this for production reads
  * once RegistryCompiler exists.
  */
+#[Internal]
 final class InMemoryEntityRegistry implements EntityRegistry
 {
     private bool $frozen = false;

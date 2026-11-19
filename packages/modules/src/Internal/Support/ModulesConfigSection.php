@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Support;
 
+use Packman\Attributes\Internal;
 use Packman\Config\Contracts\ConfigReportSectionInterface;
 
 /** @internal Configuration report composition. */
+#[Internal]
 final class ModulesConfigSection implements ConfigReportSectionInterface
 {
     public function order(): int

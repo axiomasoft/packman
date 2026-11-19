@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Discovery;
 
+use Packman\Attributes\Internal;
 use Packman\Extensions\ExtensionInspector;
 use Packman\Modules\Contracts\Definition\ModuleDefinition;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
@@ -18,6 +19,7 @@ use Packman\Modules\Exceptions\Compiler\InvalidManifestException;
  *
  * @internal spec: B-10 §3.2/§5.2
  */
+#[Internal]
 final readonly class ModuleDiscovery implements \Packman\Modules\Contracts\Definition\ModuleDiscovery
 {
     /**

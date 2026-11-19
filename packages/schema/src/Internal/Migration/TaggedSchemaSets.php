@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Internal\Migration;
 
+use Packman\Attributes\Internal;
 use Packman\Schema\Contracts\Migration\SchemaSetProvider;
 use Packman\Schema\Contracts\Migration\SchemaSets;
 use Packman\Schema\Data\Migration\SchemaSet;
@@ -12,6 +13,7 @@ use Packman\Schema\Enums\SchemaScope;
 use Packman\Schema\Exceptions\SchemaSetException;
 
 /** @internal */
+#[Internal]
 final readonly class TaggedSchemaSets implements SchemaSets
 {
     /** @var array<string, SchemaSet> */

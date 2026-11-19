@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Registry;
 
 use Closure;
+use Packman\Attributes\Internal;
 use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Modules\Contracts\Registry\ModuleRegistry;
 use Packman\Modules\Contracts\Registry\ModuleRegistryCache;
@@ -48,6 +49,7 @@ use RuntimeException;
  *
  * @internal spec: B-10 §5.2/§7.1, AC-3/AC-4, D39, D30/A1/A2, P1.15, A10
  */
+#[Internal]
 final class CompiledModuleRegistry implements ModuleRegistry
 {
     /** @var array<string, CompiledModule>|null */

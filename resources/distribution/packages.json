@@ -1,0 +1,477 @@
+{
+    "packages": {
+        "axiomasoft/packman": {
+            "0.1.2": {
+                "name": "axiomasoft/packman",
+                "description": "Packman unified ecosystem kernel — attributes, foundation registrars, context contracts, JsonDocument, configuration options/compiler/cache, RFC 9457 error registry, doctor diagnostics, domain events, features, and settings contracts.",
+                "type": "library",
+                "license": "MIT",
+                "keywords": [
+                    "packman",
+                    "php",
+                    "kernel",
+                    "attributes",
+                    "config",
+                    "errors",
+                    "doctor",
+                    "laravel"
+                ],
+                "authors": [
+                    {
+                        "name": "Dmitry Vostrikov",
+                        "email": "dv.vostrikov@gmail.com"
+                    }
+                ],
+                "require": {
+                    "php": "^8.4",
+                    "psr/clock": "^1.0"
+                },
+                "suggest": {
+                    "illuminate/console": "Optional Laravel Artisan console commands (`packman:doctor`, `packman:config:validate`).",
+                    "illuminate/contracts": "Optional Laravel container, event dispatcher, config, and validation bindings.",
+                    "illuminate/database": "Optional schema status checks in Laravel applications.",
+                    "illuminate/support": "Optional PackmanServiceProvider auto-discovery and Laravel adapters."
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Packman\\": "packages/core/src/"
+                    }
+                },
+                "autoload-dev": {
+                    "psr-4": {
+                        "Packman\\Core\\Tests\\": "packages/core/tests/"
+                    }
+                },
+                "extra": {
+                    "packman": {
+                        "schema-version": 1,
+                        "package-type": "kernel",
+                        "stability": "stable",
+                        "error-prefix": "packman",
+                        "owns": [
+                            "Attributes",
+                            "Config",
+                            "Context",
+                            "Data",
+                            "Doctor",
+                            "Errors",
+                            "Events",
+                            "Features",
+                            "Foundation",
+                            "Settings"
+                        ]
+                    },
+                    "laravel": {
+                        "providers": [
+                            "Packman\\PackmanServiceProvider"
+                        ]
+                    },
+                    "branch-alias": {
+                        "dev-main": "0.1.x-dev"
+                    }
+                },
+                "version": "0.1.2",
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/axiomasoft/packman.git",
+                    "reference": "v0.1.2"
+                },
+                "dist": {
+                    "type": "zip",
+                    "url": "https://api.github.com/repos/axiomasoft/packman/zipball/v0.1.2",
+                    "reference": "v0.1.2"
+                }
+            }
+        },
+        "axiomasoft/packman-devtools": {
+            "0.1.2": {
+                "name": "axiomasoft/packman-devtools",
+                "description": "Shared monorepo quality gates, API/error/config scanners, scaffolding stubs, Rector rules, AI pack sync, and subtree split tools for Packman.",
+                "type": "library",
+                "license": "MIT",
+                "bin": [
+                    "packages/devtools/bin/packman"
+                ],
+                "require": {
+                    "php": "^8.4",
+                    "axiomasoft/packman": "^0.1",
+                    "illuminate/support": "^12.0|^13.0",
+                    "nette/neon": "^3.4",
+                    "nikic/php-parser": "^5.4",
+                    "opis/json-schema": "^2.4",
+                    "phpstan/phpdoc-parser": "^2.1",
+                    "rector/rector": "^2.0",
+                    "symfony/console": "^7.2|^8.0",
+                    "symfony/finder": "^7.2|^8.0",
+                    "symfony/process": "^7.2|^8.0",
+                    "symfony/yaml": "^7.2|^8.0"
+                },
+                "suggest": {
+                    "driftingly/rector-laravel": "Optional Laravel Rector rule sets (^2.0) alongside PackmanRectorSet."
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Packman\\DevTools\\": "packages/devtools/src/"
+                    }
+                },
+                "autoload-dev": {
+                    "psr-4": {
+                        "Packman\\DevTools\\Tests\\": "packages/devtools/tests/"
+                    }
+                },
+                "extra": {
+                    "packman": {
+                        "profile": "laravel-package",
+                        "dev_only": true
+                    },
+                    "branch-alias": {
+                        "dev-main": "0.1.x-dev"
+                    }
+                },
+                "version": "0.1.2",
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/axiomasoft/packman.git",
+                    "reference": "v0.1.2"
+                },
+                "dist": {
+                    "type": "zip",
+                    "url": "https://api.github.com/repos/axiomasoft/packman/zipball/v0.1.2",
+                    "reference": "v0.1.2"
+                }
+            }
+        },
+        "axiomasoft/packman-filament": {
+            "0.1.2": {
+                "name": "axiomasoft/packman-filament",
+                "description": "Universal Packman Filament 5 plugin wiring, Livewire/Filament security hooks, and stateless encrypted BindingEditor helpers.",
+                "license": "MIT",
+                "type": "library",
+                "require": {
+                    "php": "^8.4",
+                    "axiomasoft/packman": "^0.1",
+                    "axiomasoft/packman-panels": "^0.1",
+                    "filament/filament": "^5.0",
+                    "illuminate/contracts": "^12.0|^13.0",
+                    "illuminate/database": "^12.0|^13.0",
+                    "illuminate/support": "^12.0|^13.0",
+                    "livewire/livewire": "^4.0"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Packman\\Filament\\": "packages/filament/src/"
+                    }
+                },
+                "autoload-dev": {
+                    "psr-4": {
+                        "Packman\\Filament\\Tests\\": "packages/filament/tests/"
+                    }
+                },
+                "extra": {
+                    "packman": {
+                        "error-prefix": "filament"
+                    },
+                    "laravel": {
+                        "providers": [
+                            "Packman\\Filament\\PackmanFilamentServiceProvider"
+                        ]
+                    },
+                    "branch-alias": {
+                        "dev-main": "0.1.x-dev"
+                    }
+                },
+                "version": "0.1.2",
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/axiomasoft/packman.git",
+                    "reference": "v0.1.2"
+                },
+                "dist": {
+                    "type": "zip",
+                    "url": "https://api.github.com/repos/axiomasoft/packman/zipball/v0.1.2",
+                    "reference": "v0.1.2"
+                }
+            }
+        },
+        "axiomasoft/packman-modules": {
+            "0.1.2": {
+                "name": "axiomasoft/packman-modules",
+                "description": "Universal Packman Composer-discovered DB-backed platform module and plugin compiler, lifecycle FSM, schema ownership claims, and PHPStan boundary rules.",
+                "license": "MIT",
+                "type": "library",
+                "require": {
+                    "php": "^8.4",
+                    "axiomasoft/packman": "^0.1",
+                    "axiomasoft/packman-schema": "^0.1",
+                    "illuminate/console": "^12.0|^13.0",
+                    "illuminate/container": "^12.0|^13.0",
+                    "illuminate/contracts": "^12.0|^13.0",
+                    "illuminate/database": "^12.0|^13.0",
+                    "illuminate/events": "^12.0|^13.0",
+                    "illuminate/queue": "^12.0|^13.0",
+                    "illuminate/support": "^12.0|^13.0",
+                    "psr/clock": "^1.0"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Packman\\Modules\\": "packages/modules/src/"
+                    }
+                },
+                "autoload-dev": {
+                    "psr-4": {
+                        "Packman\\Modules\\Tests\\": "packages/modules/tests/"
+                    }
+                },
+                "extra": {
+                    "packman": {
+                        "error-prefix": "modules"
+                    },
+                    "laravel": {
+                        "providers": [
+                            "Packman\\Modules\\ModulesServiceProvider"
+                        ]
+                    },
+                    "phpstan": {
+                        "includes": [
+                            "packages/modules/extension.neon"
+                        ]
+                    },
+                    "branch-alias": {
+                        "dev-main": "0.1.x-dev"
+                    }
+                },
+                "version": "0.1.2",
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/axiomasoft/packman.git",
+                    "reference": "v0.1.2"
+                },
+                "dist": {
+                    "type": "zip",
+                    "url": "https://api.github.com/repos/axiomasoft/packman/zipball/v0.1.2",
+                    "reference": "v0.1.2"
+                }
+            }
+        },
+        "axiomasoft/packman-panels": {
+            "0.1.2": {
+                "name": "axiomasoft/packman-panels",
+                "description": "Universal Packman headless panel descriptors, two-phase PanelRegistry/PanelRecipe builder, slot/form data projection, admission evaluation, and SQL saved views.",
+                "license": "MIT",
+                "type": "library",
+                "require": {
+                    "php": "^8.4",
+                    "axiomasoft/packman": "^0.1",
+                    "axiomasoft/packman-schema": "^0.1",
+                    "illuminate/contracts": "^12.0|^13.0",
+                    "illuminate/database": "^12.0|^13.0",
+                    "illuminate/support": "^12.0|^13.0",
+                    "psr/clock": "^1.0"
+                },
+                "suggest": {
+                    "axiomasoft/packman-modules": "Optional module and entity registry integration for ModulePanelCatalogue and EntityViewSchemaProvider.",
+                    "axiomasoft/packman-plugins": "Optional extension plugin integration for WithPanels providers."
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Packman\\Panels\\": "packages/panels/src/"
+                    }
+                },
+                "autoload-dev": {
+                    "psr-4": {
+                        "Packman\\Panels\\Tests\\": "packages/panels/tests/"
+                    }
+                },
+                "extra": {
+                    "packman": {
+                        "error-prefix": "panels"
+                    },
+                    "laravel": {
+                        "providers": [
+                            "Packman\\Panels\\Laravel\\PanelsServiceProvider"
+                        ]
+                    },
+                    "branch-alias": {
+                        "dev-main": "0.1.x-dev"
+                    }
+                },
+                "version": "0.1.2",
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/axiomasoft/packman.git",
+                    "reference": "v0.1.2"
+                },
+                "dist": {
+                    "type": "zip",
+                    "url": "https://api.github.com/repos/axiomasoft/packman/zipball/v0.1.2",
+                    "reference": "v0.1.2"
+                }
+            }
+        },
+        "axiomasoft/packman-plugins": {
+            "0.1.2": {
+                "name": "axiomasoft/packman-plugins",
+                "description": "Universal Packman intra-package plugin graph compiler, capabilities, typed slots, and immutable contribution registry.",
+                "license": "MIT",
+                "type": "library",
+                "require": {
+                    "php": "^8.4",
+                    "axiomasoft/packman": "^0.1.1",
+                    "illuminate/console": "^12.0|^13.0",
+                    "illuminate/container": "^12.0|^13.0",
+                    "illuminate/contracts": "^12.0|^13.0",
+                    "illuminate/support": "^12.0|^13.0"
+                },
+                "conflict": {
+                    "axiomasoft/packman-schema": "<0.1.1"
+                },
+                "suggest": {
+                    "axiomasoft/packman-schema": "Optional schema ownership integration for plugins declaring owned schema nouns."
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Packman\\Plugins\\": "packages/plugins/src/"
+                    }
+                },
+                "autoload-dev": {
+                    "psr-4": {
+                        "Packman\\Plugins\\Tests\\": "packages/plugins/tests/"
+                    }
+                },
+                "extra": {
+                    "packman": {
+                        "error-prefix": "plugins"
+                    },
+                    "laravel": {
+                        "providers": [
+                            "Packman\\Plugins\\Laravel\\PluginsServiceProvider"
+                        ]
+                    },
+                    "branch-alias": {
+                        "dev-main": "0.1.x-dev"
+                    }
+                },
+                "version": "0.1.2",
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/axiomasoft/packman.git",
+                    "reference": "v0.1.2"
+                },
+                "dist": {
+                    "type": "zip",
+                    "url": "https://api.github.com/repos/axiomasoft/packman/zipball/v0.1.2",
+                    "reference": "v0.1.2"
+                }
+            }
+        },
+        "axiomasoft/packman-schema": {
+            "0.1.2": {
+                "name": "axiomasoft/packman-schema",
+                "description": "Universal Packman schema governance, schema sets, table ownership, prefix fingerprinting, PostgreSQL constraint naming, and step compiler.",
+                "license": "MIT",
+                "type": "library",
+                "require": {
+                    "php": "^8.4",
+                    "axiomasoft/packman": "^0.1",
+                    "illuminate/console": "^12.0|^13.0",
+                    "illuminate/contracts": "^12.0|^13.0",
+                    "illuminate/database": "^12.0|^13.0",
+                    "illuminate/support": "^12.0|^13.0",
+                    "psr/clock": "^1.0"
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Packman\\Schema\\": "packages/schema/src/"
+                    }
+                },
+                "autoload-dev": {
+                    "psr-4": {
+                        "Packman\\Schema\\Tests\\": "packages/schema/tests/"
+                    }
+                },
+                "extra": {
+                    "packman": {
+                        "error-prefix": "schema"
+                    },
+                    "laravel": {
+                        "providers": [
+                            "Packman\\Schema\\Laravel\\SchemaServiceProvider"
+                        ]
+                    },
+                    "branch-alias": {
+                        "dev-main": "0.1.x-dev"
+                    }
+                },
+                "version": "0.1.2",
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/axiomasoft/packman.git",
+                    "reference": "v0.1.2"
+                },
+                "dist": {
+                    "type": "zip",
+                    "url": "https://api.github.com/repos/axiomasoft/packman/zipball/v0.1.2",
+                    "reference": "v0.1.2"
+                }
+            }
+        },
+        "axiomasoft/packman-testkit": {
+            "0.1.2": {
+                "name": "axiomasoft/packman-testkit",
+                "description": "Shared testing harnesses, PostgreSQL database isolation, concurrency barriers, contract assertions, and fake recorders for Packman packages.",
+                "type": "library",
+                "license": "MIT",
+                "require": {
+                    "php": "^8.4",
+                    "axiomasoft/packman": "^0.1",
+                    "axiomasoft/packman-schema": "^0.1",
+                    "illuminate/contracts": "^12.0|^13.0",
+                    "illuminate/database": "^12.0|^13.0",
+                    "illuminate/http": "^12.0|^13.0",
+                    "illuminate/routing": "^12.0|^13.0",
+                    "illuminate/support": "^12.0|^13.0",
+                    "illuminate/testing": "^12.0|^13.0",
+                    "opis/json-schema": "^2.4",
+                    "orchestra/testbench": "^10.0|^11.0",
+                    "phpunit/phpunit": "^11.5|^12.0|^13.0"
+                },
+                "suggest": {
+                    "axiomasoft/packman-modules": "Enables ModuleContractTests and module discovery harness assertions.",
+                    "axiomasoft/packman-plugins": "Enables PluginContractTests and PluginGraph deterministic compilation checks.",
+                    "pestphp/pest": "First-class Pest integration helpers.",
+                    "symfony/yaml": "Enables YAML OpenAPI specification loading in OpenApiResponse."
+                },
+                "autoload": {
+                    "psr-4": {
+                        "Packman\\Testkit\\": "packages/testkit/src/"
+                    }
+                },
+                "autoload-dev": {
+                    "psr-4": {
+                        "Packman\\Testkit\\Tests\\": "packages/testkit/tests/"
+                    }
+                },
+                "extra": {
+                    "packman": {
+                        "profile": "laravel-package",
+                        "dev_only": true
+                    },
+                    "branch-alias": {
+                        "dev-main": "0.1.x-dev"
+                    }
+                },
+                "version": "0.1.2",
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/axiomasoft/packman.git",
+                    "reference": "v0.1.2"
+                },
+                "dist": {
+                    "type": "zip",
+                    "url": "https://api.github.com/repos/axiomasoft/packman/zipball/v0.1.2",
+                    "reference": "v0.1.2"
+                }
+            }
+        }
+    }
+}

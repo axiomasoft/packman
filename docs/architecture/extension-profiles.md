@@ -89,3 +89,27 @@ Both `ExtensionPlugin` implementations and `ModuleDefinition` subclasses can com
 - **`packman-plugins` bridge:** `PluginGraphCompiler::applyFacets()` automatically translates `WithCapabilities` and `WithSlots` declarations into `PluginRegistrar` calls; `ExtensionRegistrar::wirePluginFacets()` merges `WithConfiguration` defaults/singletons, declares `WithSchema::tableNouns()` onto `SchemaOwnership`, and tags `WithDiagnostics` `DoctorCheck` / `HealthCheck` classes.
 - **`packman-modules` bridge:** `ModuleDiscovery::hydrateExtensionFacets()` hydrates `WithSchema::$tablePrefix`, `WithDatabaseSettings`, `WithFeatureFlags`, `WithLifecycleHooks`, and `WithPanels` directly onto `ModuleManifest`.
 - **`packman-panels` bridge:** `PanelsBindingsRegistrar` reads `panelProviders` from both `PluginInspector` and `ModuleDiscovery` via `PanelExtensionBridge::registerProviders()`.
+
+## 6. Host lifecycle and product differences
+
+| Moment | Package responsibility | Application responsibility | Resource boundary |
+|:--|:--|:--|:--|
+| Composer/Laravel discovery | Declare provider and manifest without resource access. | Install the desired function and use Laravel discovery. | No database connection or optional integration merely to discover metadata. |
+| Registration | Offer classes, defaults, lazy bindings and gates on the supplied application. | Supply configuration, typed options or implementations before resolution. | No query, network or filesystem scanning in `register()`. |
+| Activation | Apply disabled IDs and all applicable gates before active facets. Package gates permit unrelated extensions. | Select plugins or bind `PluginActivationGate`; choose module discovery/state contracts. | Disabled features cannot force resource configuration validation. |
+| Active boot/compilation | Compile immutable options and declarations; report invalid active configuration. | Provide required declarations and host policies. | Active products may validate early: Chatom compiles runtime definitions; AzGuard may scan the explicitly selected panel catalogue. This is separate from SQL use. |
+| Useful operation | Resolve resources required by the operation. | Supply its storage, connection, tenancy or optional integration. | Vaulter CAS writes need a transaction; Commerz allocation needs no SQL. |
+| Migration | Declare sets, prerequisites and supported drivers. | Select a connection and explicitly execute migrations. | Automatic path loading does not run migrations. |
+
+Keep registration state, options and compiled graphs on the owning application. Repeating
+a known plugin is idempotent; introducing a new plugin after compilation is an error.
+Product registries may be stricter: Tenant permits one runtime owner and rejects forced
+replacement; AzGuard requires explicit `replace()` for an existing panel ID.
+
+The global disabled-plugin list is not a package uninstaller. Tenant descriptors are not
+`ExtensionPlugin` objects. Sockit feature providers require explicit host opt-in. Vaulter
+retains schemas for installed inactive modules. Preserve these working distinctions.
+
+Corex access is installed as a finished module. Application code uses Corex
+`AccessChecker` and role/scope APIs; it does not select an engine package or construct
+AzGuard panel/subject adapters.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Plugins\Internal\Graph;
 
 use Illuminate\Contracts\Container\Container;
+use Packman\Attributes\Internal;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Extensions\Data\ExtensionFacetProfile;
 use Packman\Extensions\ExtensionInspector;
@@ -28,6 +29,7 @@ use Throwable;
  * Compiles plugin declarations (both imperative PluginRegistrar calls and declarative `With*` facets)
  * into a FrozenContributions graph using Kahn's topological sort and transitive ancestor ownership enforcement.
  */
+#[Internal]
 final readonly class PluginGraphCompiler
 {
     private const string KEY_PATTERN = '/\A[a-z][a-z0-9]*([._-][a-z0-9]+)*\z/';

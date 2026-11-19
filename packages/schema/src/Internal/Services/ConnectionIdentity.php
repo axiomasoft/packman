@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Packman\Schema\Internal\Services;
 
 use Illuminate\Database\ConfigurationUrlParser;
+use Packman\Attributes\Internal;
 
 /**
  * Which physical database (and PostgreSQL schema) a Laravel connection writes to.
  */
+#[Internal]
 final class ConnectionIdentity
 {
     /** @param  array<string, mixed>  $config */

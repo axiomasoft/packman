@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Registry;
 
+use Packman\Attributes\Internal;
 use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Modules\Contracts\Registry\ModuleStateReader;
 
@@ -14,6 +15,7 @@ use Packman\Modules\Contracts\Registry\ModuleStateReader;
  *
  * @internal spec: P1.5, P1.6
  */
+#[Internal]
 final readonly class ArrayModuleStateReader implements ModuleStateReader
 {
     /**

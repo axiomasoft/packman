@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Gate;
 
+use Packman\Attributes\Internal;
 use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Modules\Contracts\Lifecycle\ModuleActivationGate;
 use Packman\Modules\Data\Lifecycle\ModuleActivationDecision;
@@ -15,6 +16,7 @@ use Packman\Modules\Data\Lifecycle\ModuleActivationDecision;
  *
  * @internal spec: D10
  */
+#[Internal]
 final class AllowAllActivationGate implements ModuleActivationGate
 {
     public function check(ContextScopeInterface $ctx, string $module, string $edition): ModuleActivationDecision

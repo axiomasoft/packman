@@ -13,6 +13,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Support\Str;
 use LogicException;
+use Packman\Attributes\Internal;
 use Packman\Context\Contracts\ActorResolverInterface;
 use Packman\Context\Contracts\ContextResolverInterface;
 use Packman\Context\Contracts\ContextScopeInterface;
@@ -67,6 +68,7 @@ use Throwable;
  *
  * @internal spec: B-10 §3.3/§5.1/§5.3/§5.4, B-10 §7.3 п.3, AC-11, D40, AC-7, D41
  */
+#[Internal]
 final readonly class DatabaseModuleLifecycle implements ModuleLifecycle
 {
     private const string MODULES_TABLE = 'mod_modules';

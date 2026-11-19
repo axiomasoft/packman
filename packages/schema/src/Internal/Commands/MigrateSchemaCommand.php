@@ -6,10 +6,12 @@ namespace Packman\Schema\Internal\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
+use Packman\Attributes\Internal;
 use Packman\Schema\Contracts\Migration\SchemaMigrator;
 use Packman\Schema\Enums\SchemaScope;
 
 /** @internal */
+#[Internal]
 final class MigrateSchemaCommand extends Command
 {
     use ConfirmableTrait;

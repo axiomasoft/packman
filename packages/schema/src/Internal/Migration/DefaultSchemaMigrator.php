@@ -10,6 +10,7 @@ use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Migrations\Migrator;
 use InvalidArgumentException;
 use LogicException;
+use Packman\Attributes\Internal;
 use Packman\Schema\Contracts\Migration\SchemaMigrator;
 use Packman\Schema\Contracts\Migration\SchemaSets;
 use Packman\Schema\Data\Migration\SchemaMigrationStatus;
@@ -19,6 +20,7 @@ use Packman\Schema\Enums\SchemaScope;
 use Packman\Schema\Exceptions\SchemaSetException;
 
 /** @internal */
+#[Internal]
 final readonly class DefaultSchemaMigrator implements SchemaMigrator
 {
     /**

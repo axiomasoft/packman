@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Internal\Migration;
 
+use Packman\Attributes\Internal;
 use Packman\Schema\Contracts\Migration\SchemaSets;
 use Packman\Schema\Data\Migration\SchemaSet;
 use Packman\Schema\Enums\SchemaLifecycle;
 use Packman\Schema\Exceptions\SchemaSetException;
 
 /** @internal */
+#[Internal]
 final class SchemaMigrationPlan
 {
     /** @var array<string, int> */

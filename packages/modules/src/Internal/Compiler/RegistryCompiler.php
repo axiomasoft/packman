@@ -6,6 +6,7 @@ namespace Packman\Modules\Internal\Compiler;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Packman\Attributes\Internal;
 use Packman\Data\Laravel\JsonDocuments;
 use Packman\Features\Data\FeatureFlagDefinition;
 use Packman\Modules\Contracts\Compiler\FieldCastRegistry;
@@ -39,6 +40,7 @@ use Packman\Modules\Exceptions\Compiler\CompilationException;
  *
  * @internal spec: B-10 §4.2/§5.2, P1.5
  */
+#[Internal]
 final readonly class RegistryCompiler implements ModuleCompilation
 {
     /** @var list<ManifestSectionCompiler> */

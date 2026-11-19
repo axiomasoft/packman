@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Internal\Data;
 
+use Packman\Attributes\Internal;
+
 /**
  * A database object Blueprint cannot express: a named CHECK constraint, or a driver-specific function/trigger.
  */
+#[Internal]
 final readonly class SchemaObject
 {
     public const string CHECK = 'check';

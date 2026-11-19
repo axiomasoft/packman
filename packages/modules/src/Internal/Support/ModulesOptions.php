@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Support;
 
 use Override;
+use Packman\Attributes\Internal;
 use Packman\Config\Contracts\OptionsFactory;
 use Packman\Config\Laravel\ConfigurationValidator;
 use Packman\Modules\Contracts\Definition\ModuleDiscovery;
 
 /** @internal Package composition type. */
+#[Internal]
 final readonly class ModulesOptions implements OptionsFactory
 {
     /**

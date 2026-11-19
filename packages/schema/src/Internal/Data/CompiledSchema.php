@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Internal\Data;
 
+use Packman\Attributes\Internal;
 use Packman\Schema\Contracts\Compiler\SchemaStep;
 use Packman\Schema\Data\Compiler\SchemaSpace;
 use Packman\Schema\Internal\Services\SchemaNames;
@@ -11,6 +12,7 @@ use Packman\Schema\Internal\Services\SchemaNames;
 /**
  * Result of SchemaCompiler: plain data so it lives cleanly in cached definitions.
  */
+#[Internal]
 final readonly class CompiledSchema
 {
     /**

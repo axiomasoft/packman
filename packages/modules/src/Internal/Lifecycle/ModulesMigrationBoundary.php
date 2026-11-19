@@ -9,6 +9,7 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\Migrations\Migration;
 use LogicException;
+use Packman\Attributes\Internal;
 use Packman\Modules\Internal\Support\ModulesOptions;
 use Packman\Schema\Contracts\Migration\ModuleMigrationBoundary;
 use Psr\Clock\ClockInterface;
@@ -19,6 +20,7 @@ use ReflectionClass;
  *
  * @internal
  */
+#[Internal]
 final readonly class ModulesMigrationBoundary implements ModuleMigrationBoundary
 {
     public function __construct(

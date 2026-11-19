@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Plugins\Internal\Graph;
 
 use Closure;
+use Packman\Attributes\Internal;
 use Packman\Plugins\Contracts\Contributions\DeclaredContributions;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Data\Capabilities\CapabilityDefinition;
@@ -15,6 +16,7 @@ use Packman\Plugins\Data\Contributions\SlotDefinition;
 use Packman\Plugins\Laravel\PluginRegistrar;
 
 /** What one plugin declared inside `register()`; sealed immediately afterwards. */
+#[Internal]
 final class PluginDeclarations implements DeclaredContributions
 {
     /** @var list<ContributionKind> */

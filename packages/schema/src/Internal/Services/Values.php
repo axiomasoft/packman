@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Internal\Services;
 
+use Packman\Attributes\Internal;
 use Stringable;
 use UnexpectedValueException;
 
 /** Validates untyped framework values before they enter typed schema data. */
+#[Internal]
 final class Values
 {
     public static function string(mixed $value): string

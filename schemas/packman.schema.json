@@ -42,6 +42,14 @@
                 "strict_ownership": { "type": "boolean" },
                 "provider_size_limit": { "type": "integer", "minimum": 1 },
                 "disallow_internal_cross_imports": { "type": "boolean" },
+                "internal_ownership_groups": {
+                    "type": "object",
+                    "propertyNames": { "type": "string", "minLength": 1 },
+                    "additionalProperties": {
+                        "type": "array", "minItems": 2, "uniqueItems": true,
+                        "items": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" }
+                    }
+                },
                 "require_api_manifest": { "type": "boolean" },
                 "error_urn_prefix": { "type": "string" }
             }

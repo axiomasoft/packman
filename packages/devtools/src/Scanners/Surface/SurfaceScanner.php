@@ -75,7 +75,6 @@ final class SurfaceScanner
             $hasApi = $this->findAttribute($type, Api::class);
             $hasSpi = $this->findAttribute($type, Spi::class);
             $hasInternal = $this->hasAttribute($type, Internal::class);
-            $inInternalNs = $this->isInternalNamespace($type->name);
 
             if ($hasInternal && ($hasApi !== null || $hasSpi !== null)) {
                 $diagnostics[] = new SurfaceDiagnostic(
@@ -89,7 +88,7 @@ final class SurfaceScanner
                 continue;
             }
 
-            if ($hasInternal || ($inInternalNs && $hasApi === null && $hasSpi === null)) {
+            if ($hasInternal) {
                 continue;
             }
 
@@ -99,7 +98,7 @@ final class SurfaceScanner
                     symbol: $type->name,
                     file: $type->file,
                     line: $type->line,
-                    message: 'Exported type outside Internal\\ must carry #[Api], #[Spi], or #[Internal].',
+                    message: 'Every type must carry #[Api], #[Spi], or #[Internal], including types in an Internal namespace.',
                 );
 
                 continue;

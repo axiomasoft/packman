@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Compiler;
 
+use Packman\Attributes\Internal;
 use Packman\Modules\Data\Entities\Entity;
 use Packman\Modules\Data\Entities\EntityField;
 use Packman\Modules\Data\Extenders\Api;
@@ -25,6 +26,7 @@ use Packman\Modules\Data\Extenders\Workflow;
  *
  * @internal spec: B-10 §4.2/§5.2, AC-18/AC-19, A85
  */
+#[Internal]
 final class PipelineStages
 {
     /** @var list<class-string> */

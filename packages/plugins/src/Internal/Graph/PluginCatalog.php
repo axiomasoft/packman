@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Plugins\Internal\Graph;
 
 use Illuminate\Contracts\Container\Container;
+use Packman\Attributes\Internal;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Contracts\Registry\PluginActivationGate;
@@ -12,6 +13,7 @@ use Packman\Plugins\Exceptions\Registry\RegistryFrozenException;
 use Packman\Plugins\Internal\Contributions\FrozenContributions;
 
 /** Collects built-in plugin classes until compilation, then freezes. */
+#[Internal]
 final class PluginCatalog
 {
     /** @var array<class-string<ExtensionPlugin>, true> */

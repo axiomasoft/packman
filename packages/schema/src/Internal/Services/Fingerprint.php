@@ -7,11 +7,13 @@ namespace Packman\Schema\Internal\Services;
 use BackedEnum;
 use InvalidArgumentException;
 use JsonSerializable;
+use Packman\Attributes\Internal;
 use Stringable;
 
 /**
  * sha256 (64 hex) of canonical JSON of a payload.
  */
+#[Internal]
 final class Fingerprint
 {
     public static function of(mixed $payload): string

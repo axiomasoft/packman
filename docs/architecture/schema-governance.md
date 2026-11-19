@@ -91,4 +91,43 @@ Provides pure compile-time validation of `SchemaComponent` / `SchemaStep` / `Ret
 - **`TableOwnershipGate`:** Scans `database/migrations` across all packages in `packman.json` to ensure every `Schema::create('table', ...)` targets a valid identifier owned by at most one package.
 - **`TableWriteOwnershipGate`:** Blocks direct `DB::table(...)->insert/update/upsert/delete/truncate` writes against `migrations`, `sys_*`, and `mod_*` outside `axiomasoft/packman-schema` and `axiomasoft/packman-modules`.
 - **`SchemaGate`:** Enforces `YYYY_MM_DD_NNNNNN_name.php` naming and unique monotonic timestamp prefixes per package.
+
 - **Module PHPStan Boundary Rules (`packages/modules/extension.neon`):** `NoForeignPrefixSqlRule`, `NoDirectSystemTableWriteRule`, and pooling safety rules (`NoSetWithoutLocalRule`, `NoSessionAdvisoryLockRule`, `NoListenNotifyRule`, `NoTempTableRule`, `NoSqlPrepareRule`, `NoEvalRule`).
+
+## 5. Application authority and upgrades
+
+The package owns the schema declaration, physical constraints, supported drivers and
+prerequisites. The application owns the target connection, migration scheduling and
+execution. Discovery and activation must not migrate implicitly. Set
+`packman.schema.auto_load_migrations=false` to keep package paths out of Laravel's
+default migrator and invoke the public `SchemaMigrator` explicitly. A retained migrator
+from another application cannot claim the current host's migration ownership.
+
+For example, with Corex Media and its dependencies installed, the application selects
+the connection by name:
+
+```php
+use Packman\Schema\Contracts\Migration\SchemaMigrator;
+
+$app->make(SchemaMigrator::class)->migrateSets(
+    ['axiomasoft/corex-media:tenant'],
+    'tenant-data',
+);
+```
+
+Required Vaulter sets must be migrated separately according to their package ownership.
+The host supplies `tenant-data`; Packman does not choose a product's tenancy strategy.
+Dedicated sets keep their declared connection and reject overrides.
+
+Tenant's portable core, Laravel facilities and panel adapter have no migrations.
+`tenant-postgres` owns its central schema and physical template lifecycle. PostgreSQL
+is required there for database cloning, advisory locks and catalog integrity. Commerz
+and Proxyma also retain their PostgreSQL persistence requirements. A successful
+database-free boot or SQLite value/model operation does not certify those protocols.
+
+When registration, configuration or migration wiring changes, test the same installed
+application before and after a Composer update. Keep its database, migration journal
+and stored bytes, rerun its explicit migrations, and read records written before the
+update. The local ecosystem runner performs this with archived `v0.1.1` Packman and
+the candidate release through Corex Media and Vaulter; it also checks idempotent replay
+and content deduplication after the update.

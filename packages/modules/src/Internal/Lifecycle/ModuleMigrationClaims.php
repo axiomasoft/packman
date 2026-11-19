@@ -14,11 +14,13 @@ use Illuminate\Events\Dispatcher;
 use Illuminate\Events\QueuedClosure;
 use Illuminate\Support\Testing\Fakes\EventFake;
 use LogicException;
+use Packman\Attributes\Internal;
 use Packman\Modules\Contracts\Lifecycle\RecordsRegistrar;
 use stdClass;
 use Throwable;
 
 /** Shared ownership boundary for lifecycle and template module migrations. */
+#[Internal]
 final readonly class ModuleMigrationClaims
 {
     private Dispatcher $events;

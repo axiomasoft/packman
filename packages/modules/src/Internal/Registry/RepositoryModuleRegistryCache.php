@@ -6,6 +6,7 @@ namespace Packman\Modules\Internal\Registry;
 
 use Closure;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
+use Packman\Attributes\Internal;
 use Packman\Modules\Contracts\Registry\ModuleRegistryCache;
 use Packman\Modules\Internal\Support\ModulesOptions;
 
@@ -16,6 +17,7 @@ use Packman\Modules\Internal\Support\ModulesOptions;
  *
  * @internal spec: D30/A1/A2, A45/A46
  */
+#[Internal]
 final readonly class RepositoryModuleRegistryCache implements ModuleRegistryCache
 {
     /** @param CacheRepository|(Closure(): CacheRepository) $store */

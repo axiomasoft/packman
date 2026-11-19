@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Packman\Plugins\Internal\Graph;
 
+use Packman\Attributes\Internal;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Enums\Plugin\PluginSource;
 
 /** A plugin class waiting to be compiled, with its origin for error messages. */
+#[Internal]
 final readonly class PluginEntry
 {
     /**

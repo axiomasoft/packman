@@ -6,9 +6,13 @@ namespace Packman\DevTools\Internal\Gates;
 
 use Packman\Attributes\Internal;
 use PhpParser\Node;
+use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\GroupUse;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
+use PhpParser\NodeFinder;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use RecursiveDirectoryIterator;
@@ -84,6 +88,37 @@ final class GateFileWalker
         $this->collectUseNodes($ast, $imports);
 
         return array_values(array_unique($imports));
+    }
+
+    /** @return list<string> */
+    public function internalSymbols(string $phpFile): array
+    {
+        $ast = $this->parseAst($phpFile);
+
+        if ($ast === null) {
+            return [];
+        }
+
+        $traverser = new NodeTraverser(new NameResolver);
+        $resolved = $traverser->traverse($ast);
+        $types = (new NodeFinder)->findInstanceOf($resolved, ClassLike::class);
+        $internal = [];
+
+        foreach ($types as $type) {
+            if ($type->namespacedName === null) {
+                continue;
+            }
+
+            foreach ($type->attrGroups as $group) {
+                foreach ($group->attrs as $attribute) {
+                    if ($attribute->name->toString() === Internal::class) {
+                        $internal[] = $type->namespacedName->toString();
+                    }
+                }
+            }
+        }
+
+        return $internal;
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Lifecycle;
 
 use Illuminate\Database\ConnectionResolverInterface;
+use Packman\Attributes\Internal;
 use Packman\Modules\Contracts\Lifecycle\RecordsRegistrar;
 use Psr\Clock\ClockInterface;
 
@@ -15,6 +16,7 @@ use Psr\Clock\ClockInterface;
  *
  * @internal spec: D12
  */
+#[Internal]
 final readonly class DatabaseRecordsRegistrar implements RecordsRegistrar
 {
     public function __construct(

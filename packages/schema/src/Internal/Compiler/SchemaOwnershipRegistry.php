@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Packman\Schema\Internal\Compiler;
 
 use Illuminate\Support\Str;
+use Packman\Attributes\Internal;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Schema\Contracts\Compiler\SchemaOwnership;
 
+#[Internal]
 final class SchemaOwnershipRegistry implements SchemaOwnership
 {
     /** @var array<string, string> noun => owner */

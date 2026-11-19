@@ -6,6 +6,7 @@ namespace Packman\Modules\Internal\Lifecycle;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionResolverInterface;
+use Packman\Attributes\Internal;
 use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Modules\Contracts\Registry\VersionedModuleStateReader;
 use Packman\Modules\Enums\Lifecycle\ModuleState;
@@ -18,6 +19,7 @@ use stdClass;
  *
  * @internal spec: P1.5, D13
  */
+#[Internal]
 final readonly class DatabaseModuleStateReader implements VersionedModuleStateReader
 {
     public function __construct(

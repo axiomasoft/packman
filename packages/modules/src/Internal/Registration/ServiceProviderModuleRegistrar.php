@@ -6,6 +6,7 @@ namespace Packman\Modules\Internal\Registration;
 
 use Closure;
 use Illuminate\Contracts\Foundation\Application;
+use Packman\Attributes\Internal;
 use Packman\Modules\Contracts\Definition\ModuleRegistrar;
 
 /**
@@ -13,6 +14,7 @@ use Packman\Modules\Contracts\Definition\ModuleRegistrar;
  * child providers, which are registered through the application container.
  * Top-level providers are still discovered by Laravel package auto-discovery.
  */
+#[Internal]
 final class ServiceProviderModuleRegistrar implements ModuleRegistrar
 {
     /** @var list<class-string> */

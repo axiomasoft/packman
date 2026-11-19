@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Registry;
 
 use Override;
+use Packman\Attributes\Internal;
 use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Modules\Contracts\Lifecycle\ModuleActivationGate;
 use Packman\Modules\Contracts\Registry\ModuleRegistry;
@@ -37,6 +38,7 @@ use Packman\Modules\Internal\Compiler\PipelineStages;
  *
  * @internal
  */
+#[Internal]
 final readonly class ReadRegistryIntrospection implements RegistryIntrospection
 {
     public const string MAP_SCHEMA = 'registry-map/1';

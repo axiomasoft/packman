@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Plugins\Internal\Contributions;
 
+use Packman\Attributes\Internal;
 use Packman\Attributes\Spi;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Data\Plugin\PluginManifest;
@@ -12,6 +13,7 @@ use ReflectionClass;
 /**
  * Reusable all-at-once duplicate, class, and namespace ownership validator for plugin contributions.
  */
+#[Internal]
 final class ContributionChecks
 {
     /** @var array<string, array<string, string>> */

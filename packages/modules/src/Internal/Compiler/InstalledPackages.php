@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Compiler;
 
+use Packman\Attributes\Internal;
 use Packman\Modules\Data\Compiler\InstalledPackageVersion;
 
 /**
@@ -18,6 +19,7 @@ use Packman\Modules\Data\Compiler\InstalledPackageVersion;
  *
  * @internal spec: AC-2, B-10 §7.4 п.4
  */
+#[Internal]
 final class InstalledPackages
 {
     /** @return list<string> */

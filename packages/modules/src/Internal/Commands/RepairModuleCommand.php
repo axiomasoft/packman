@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Internal\Commands;
 
 use Illuminate\Console\Command;
+use Packman\Attributes\Internal;
 use Packman\Modules\Contracts\Lifecycle\ModuleLifecycle;
 
 /**
@@ -13,6 +14,7 @@ use Packman\Modules\Contracts\Lifecycle\ModuleLifecycle;
  *
  * @internal
  */
+#[Internal]
 final class RepairModuleCommand extends Command
 {
     protected $signature = 'modules:repair {module : Composer name of the module to repair}';

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Packman\Schema\Internal\Services;
 
+use Packman\Attributes\Internal;
+
 /**
  * Every physical table is owned by exactly one (space, component).
  */
+#[Internal]
 final class StorageCollisionDetector
 {
     /**
