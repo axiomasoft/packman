@@ -115,20 +115,18 @@ final readonly class DefaultSchemaMigrator implements SchemaMigrator
     private function run(array $sets, ?string $connection): array
     {
         $groups = $this->groups(sets: $sets, connection: $connection);
-        $ran = [];
+        $plans = [];
         foreach ($groups as $name => $group) {
-            $ran = [...$ran, ...$this->migrator->usingConnection($name, function () use ($group, $name): array {
-                $db = $this->db->connection($name);
-                $hasModules = array_any($group, static fn (SchemaSet $set): bool => $set->lifecycle === SchemaLifecycle::Module);
+            $db = $this->db->connection($name);
+            $bootstrap = $this->legacyPrerequisite($group, $db);
+            $plan = new SchemaMigrationPlan($this->sets, $db->getDriverName(), $bootstrap);
+            $plans[$name] = $plan->batches($group);
+        }
 
-                $prerequisite = $hasModules
-                    && $db->getDriverName() === 'pgsql'
-                    && $this->prerequisiteSetId !== null
-                    && $this->prerequisiteSetId !== ''
-                    && ! $db->getSchemaBuilder()->hasTable('mod_records')
-                    && array_any($this->sets->all(), fn (SchemaSet $set): bool => $set->id() === $this->prerequisiteSetId)
-                    ? $this->sets->get($this->prerequisiteSetId)
-                    : null;
+        $ran = [];
+        foreach ($plans as $name => $batches) {
+            $ran = [...$ran, ...$this->migrator->usingConnection($name, function () use ($batches, $name): array {
+                $db = $this->db->connection($name);
                 $repository = $this->migrator->getRepository();
 
                 if (! $repository->repositoryExists()) {
@@ -136,7 +134,7 @@ final readonly class DefaultSchemaMigrator implements SchemaMigrator
                 }
                 $before = $repository->getRan();
                 $owners = [];
-                foreach ($group as $set) {
+                foreach (array_merge(...$batches) as $set) {
                     if ($set->lifecycle === SchemaLifecycle::Module) {
                         foreach ($this->migrator->getMigrationFiles([$set->path]) as $file) {
                             $canonical = realpath($file);
@@ -144,11 +142,10 @@ final readonly class DefaultSchemaMigrator implements SchemaMigrator
                         }
                     }
                 }
-                $run = function () use ($group, $prerequisite): void {
-                    if ($prerequisite !== null) {
-                        $this->migrator->run([$prerequisite->path]);
+                $run = function () use ($batches): void {
+                    foreach ($batches as $batch) {
+                        $this->migrator->run(array_map(static fn (SchemaSet $set): string => $set->path, $batch));
                     }
-                    $this->migrator->run(array_map(static fn (SchemaSet $set): string => $set->path, $group));
                 };
 
                 if ($owners === [] || $db->getDriverName() === 'sqlite') {
@@ -169,5 +166,24 @@ final readonly class DefaultSchemaMigrator implements SchemaMigrator
         }
 
         return $ran;
+    }
+
+    /** @param list<SchemaSet> $group */
+    private function legacyPrerequisite(array $group, Connection $db): ?SchemaSet
+    {
+        if ($this->prerequisiteSetId === null || $this->prerequisiteSetId === ''
+            || $db->getDriverName() !== 'pgsql'
+            || ! array_any($group, static fn (SchemaSet $set): bool => $set->lifecycle === SchemaLifecycle::Module)
+            || $db->getSchemaBuilder()->hasTable('mod_records')) {
+            return null;
+        }
+
+        foreach ($this->sets->all() as $set) {
+            if ($set->id() === $this->prerequisiteSetId) {
+                return $set;
+            }
+        }
+
+        return null;
     }
 }

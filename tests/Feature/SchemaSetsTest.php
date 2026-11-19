@@ -36,8 +36,9 @@ final class StatefulZeroArgSchemaSetProvider implements SchemaSetProvider
 /**
  * @param  list<string>  $drivers
  * @param  list<string>  $requires
+ * @param  list<string>  $prerequisiteSets
  */
-function schemaFixture(string $name = 'platform', SchemaScope $scope = SchemaScope::Tenant, array $drivers = ['pgsql', 'sqlite'], array $requires = [], ?string $connection = null): SchemaSet
+function schemaFixture(string $name = 'platform', SchemaScope $scope = SchemaScope::Tenant, array $drivers = ['pgsql', 'sqlite'], array $requires = [], ?string $connection = null, array $prerequisiteSets = []): SchemaSet
 {
     $path = realpath(__DIR__.'/../Fixtures/migrations/'.$name);
     assert(is_string($path));
@@ -52,6 +53,7 @@ function schemaFixture(string $name = 'platform', SchemaScope $scope = SchemaSco
         lifecycle: $name === 'module' ? SchemaLifecycle::Module : SchemaLifecycle::Platform,
         requires: $requires,
         connection: $connection,
+        prerequisiteSets: $prerequisiteSets,
     );
 }
 
@@ -240,3 +242,47 @@ it('preserves distinct zero-constructor SchemaSetProvider instances carrying dif
 
     expect($ids)->toContain('fixture/platform:tenant', 'fixture/module:tenant');
 });
+
+it('expands and deduplicates transitive prerequisites before dependents regardless of migration timestamps', function (): void {
+    $platform = schemaFixture();
+    $middle = schemaFixture('dedicated', prerequisiteSets: [$platform->id()]);
+    $module = schemaFixture('module', prerequisiteSets: [$middle->id(), $platform->id()]);
+    schemaRegistry($module, $middle, $platform);
+
+    $migrator = resolve(SchemaMigrator::class);
+    expect($migrator->migrateSets([$module->id(), $middle->id()]))->toBe([
+        '2026_10_01_980010_create_schema_platform',
+        '2026_10_01_970010_create_schema_dedicated',
+        '2026_10_01_980030_create_schema_module',
+    ])->and($migrator->migrateSets([$module->id()]))->toBe([]);
+});
+
+it('rejects invalid prerequisite graphs before writing a migration journal', function (string $case, string $message): void {
+    $platform = schemaFixture();
+    $middle = match ($case) {
+        'cycle' => schemaFixture('dedicated', prerequisiteSets: [$platform->id()]),
+        'scope' => schemaFixture('dedicated', SchemaScope::Central),
+        'connection' => schemaFixture('dedicated', SchemaScope::Dedicated, connection: 'schema_second'),
+        'lifecycle' => schemaFixture('module'),
+        'driver' => schemaFixture('dedicated', drivers: ['pgsql']),
+        default => schemaFixture('dedicated'),
+    };
+    $scope = $case === 'connection' ? SchemaScope::Dedicated : SchemaScope::Tenant;
+    $platform = schemaFixture(scope: $scope, connection: $case === 'connection' ? 'testing' : null, prerequisiteSets: [
+        $case === 'missing' ? 'fixture/missing:tenant' : $middle->id(),
+    ]);
+    schemaRegistry($platform, $middle);
+
+    $before = Schema::hasTable('migrations');
+    expect(fn () => resolve(SchemaMigrator::class)->migrateSets([$platform->id()]))->toThrow(SchemaSetException::class, $message)
+        ->and(Schema::hasTable('migrations'))->toBe($before)
+        ->and(Schema::hasTable('schema_platform'))->toBeFalse()
+        ->and(Schema::hasTable('schema_dedicated'))->toBeFalse();
+})->with([
+    ['cycle', 'cycle'],
+    ['scope', 'another scope or connection'],
+    ['connection', 'another scope or connection'],
+    ['lifecycle', 'platform migration would activate module'],
+    ['missing', 'fixture/missing:tenant'],
+    ['driver', 'unsupported_driver'],
+]);

@@ -24,6 +24,11 @@ final class SchemaSetException extends CodedException
         return new self(message: "invalid_set: Invalid schema set [$id].", errorCode: CoreErrorCode::SchemaInvalidSet);
     }
 
+    public static function invalidPrerequisite(string $set, string $reason): self
+    {
+        return new self(message: "invalid_set: Schema set [$set] has an invalid prerequisite: $reason.", errorCode: CoreErrorCode::SchemaInvalidSet);
+    }
+
     public static function duplicateSet(string $id): self
     {
         return new self(message: "duplicate_set: Schema set [$id] is declared twice.", errorCode: CoreErrorCode::SchemaDuplicateSet);
