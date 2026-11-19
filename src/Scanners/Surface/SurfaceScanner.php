@@ -446,7 +446,7 @@ final class SurfaceScanner
         return $parsed;
     }
 
-    /** @param list<AttributeGroup> $groups */
+    /** @param array<AttributeGroup> $groups */
     private function isInternalMember(array $groups): bool
     {
         foreach ($groups as $group) {
