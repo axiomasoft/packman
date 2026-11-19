@@ -47,6 +47,7 @@
     ],
     "require": {
         "php": "^8.4",
+        "laravel/framework": "^13.0",
         "axiomasoft/packman": "^0.1",
         "axiomasoft/packman-plugins": "^0.1",
         "axiomasoft/packman-schema": "^0.1"

@@ -13,7 +13,7 @@ use Packman\Attributes\Internal;
 use Packman\Testkit\Data\Database\TestDatabaseIdentity;
 use Packman\Testkit\Exceptions\Database\UnsafeTestDatabaseException;
 use Packman\Testkit\Support\Database\TestDatabaseGuard;
-use ReflectionProperty;
+use ReflectionObject;
 
 /**
  * Inspects the actual resolved Laravel database connection before destructive test operations.
@@ -66,14 +66,18 @@ final class ResolvedDatabaseConnection
 
         self::assertSubConnectionsSafe($resolvedConfig, $baseDefaults, $driver, $connection, $requiredDriver);
 
-        $directConfig = $resolved->getDirectPdoConfig();
+        // Laravel exposes direct connection metadata only on versions with a direct PDO route.
+        $metadata = new ReflectionObject($resolved);
+        $directConfig = $metadata->hasMethod('getDirectPdoConfig') ? $resolved->getDirectPdoConfig() : [];
 
         if ($directConfig !== []) {
             /** @var array<string, mixed> $directConfig */
             self::assertMergedConfigSafe($directConfig, $driver, $connection, $requiredDriver);
         }
 
-        $readConfig = new ReflectionProperty(Connection::class, 'readPdoConfig')->getValue($resolved);
+        $readConfig = $metadata->hasProperty('readPdoConfig')
+            ? $metadata->getProperty('readPdoConfig')->getValue($resolved)
+            : null;
 
         if (is_array($readConfig) && $readConfig !== []) {
             /** @var array<string, mixed> $readConfig */

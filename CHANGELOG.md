@@ -13,6 +13,8 @@ All notable changes to `axiomasoft/packman-monorepo` will be documented in this 
 - Scope schema ownership and install fingerprints by package, and declare prerequisite schema sets for ordered migrations.
 - Resolve dependency graphs using the kernel’s stable topological order.
 - Generate valid API manifests for packages with an empty public surface.
+- Apply host and package activation policies before registering plugin options and diagnostics.
+- Check the database targets exposed by each supported Laravel version in Testkit.
 
 ## 0.1.0
 

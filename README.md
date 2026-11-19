@@ -1,6 +1,6 @@
 # Packman — Axioma Ecosystem Foundation Monorepo
 
-`packman` (`axiomasoft/packman-monorepo`) is the universal foundation monorepo for building, configuring, extending, testing, and governing PHP 8.4+ / Laravel 13 packages and modular platforms (`FlexCMS`, `FlexCRM`, and standalone domain packages) across the Axioma ecosystem.
+`packman` (`axiomasoft/packman-monorepo`) is the universal foundation monorepo for building, configuring, extending, testing, and governing PHP 8.4+ / Laravel 12 and 13 packages and modular platforms (`FlexCMS`, `FlexCRM`, and standalone domain packages) across the Axioma ecosystem.
 
 **Core Principle:** `packman` has a **unified whole kernel** in `packages/core` (`axiomasoft/packman`, root namespace `Packman\`) paired with focused add-on packages (`modules`, `plugins`, `schema`, `panels`, `filament`, `testkit`, `devtools`), and **zero coupling to any downstream product** inside its code. All sibling ecosystem packages (`modular-platform` host, `commerz`, `chatom`, `vaulter`, `azguard`, `proxyma`, `tenant`, `billium`, `sockit`) are downstream consumers of `packman`.
 
@@ -24,6 +24,9 @@ public function register(): void
 A module that supplies code can return `ModuleManifest::make('acme/reports')->title('Reports')`. A module that owns entity tables also declares its table prefix. Hosts can supply their own discovery and activation implementations. See the [plugin example](packages/plugins/README.md), [module configuration](packages/modules/README.md), and [tested consumer applications](fixtures).
 
 Generate a code-only extension in a Composer project with `vendor/bin/packman make packman-module acme/reports --minimal` or `vendor/bin/packman make packman-plugin acme/reports --minimal`.
+
+`make fixtures` runs a standalone PHP consumer, a standalone Laravel 13 plugin consumer, and a Laravel 12 modular platform consumer. Each installs its own dependencies.
+
 
 ## Subpackages Overview (8 Packages Total under `packages/`)
 
