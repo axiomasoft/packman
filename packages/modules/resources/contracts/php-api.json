@@ -2319,6 +2319,26 @@
                     "return": "self",
                     "doc": []
                 },
+                "capabilities": {
+                    "visibility": "public",
+                    "static": false,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "capabilities",
+                            "type": "Packman\\Modules\\Enums\\Entities\\Capability",
+                            "by_reference": false,
+                            "variadic": true,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                },
                 "commentable": {
                     "visibility": "public",
                     "static": false,
@@ -2500,6 +2520,16 @@
                 }
             },
             "properties": {
+                "declaredCapabilities": {
+                    "flags": 513,
+                    "type": "array",
+                    "readonly": false,
+                    "visibility": "public",
+                    "static": false,
+                    "default": "[]",
+                    "doc": [],
+                    "hooks": []
+                },
                 "fieldDefinitions": {
                     "flags": 1,
                     "type": "?array",

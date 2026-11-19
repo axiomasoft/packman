@@ -18,6 +18,7 @@ use Packman\Modules\Data\Extenders\Menu;
 use Packman\Modules\Data\Extenders\Permissions;
 use Packman\Modules\Data\Lifecycle\ModuleActivationDecision;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Enums\Entities\Capability;
 use Packman\Modules\Exceptions\Compiler\CompilationException;
 use Packman\Modules\Exceptions\Registry\ModuleNotFound;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
@@ -48,7 +49,9 @@ final class P15CompiledStubModule extends ModuleDefinition
                     ->handle('pft.thing')
                     ->table('pft_things')
                     ->label('Thing', 'Things')
+                    ->capabilities(Capability::WorkspaceScoped, Capability::Auditable)
                     ->auditable()
+                    ->capabilities(Capability::Ownable, Capability::WorkspaceScoped)
                     ->fields([new FieldDefinition('name', 'string')]),
                 Permissions::group('thing', ['view', 'create'], 'app'),
                 Menu::item('app', 'pft.things')->label('Things')->icon('cube'),
@@ -308,6 +311,7 @@ it('reads the persisted registry back through compiled()', function (): void {
 
     expect($read->entities)->toHaveKey('pft.thing')
         ->and($read->entities['pft.thing']->model)->toBe(Widget::class)
+        ->and($read->entities['pft.thing']->capabilities)->toBe([Capability::Auditable, Capability::WorkspaceScoped, Capability::Ownable])
         ->and($read->permissions)->toHaveCount(1);
 
     unlink($path);

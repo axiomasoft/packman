@@ -215,6 +215,8 @@ $registryCompilerFullManifest = (fn (): ModuleManifest => ModuleManifest::make('
             ->handle('sfl.thing')
             ->table('sfl_things')
             ->label('Thing', 'Things')
+            ->capabilities(Capability::Ownable, Capability::Searchable)
+            ->capabilities(Capability::WorkspaceScoped, Capability::Ownable)
             ->auditable()
             ->searchable()
             ->fields([new FieldDefinition('name', 'string', required: true, searchable: true, meta: JsonDocuments::nullable(['max' => 255]))]),
@@ -243,7 +245,7 @@ it('round-trips the whole CompiledRegistry (all 10 slices) through toArray/fromA
     expect(array_keys($array))->toBe(['entities', 'entityFields', 'permissions', 'api', 'filament', 'menu', 'routes', 'workflow', 'settings', 'featureFlags', 'listeners', 'schema', 'fingerprint', 'compiler', 'modules', 'extensions', 'replacements'])
         ->and($array['schema'])->toBe(CompiledRegistry::SCHEMA)
         ->and($array['fingerprint'])->toBe($compiled->fingerprint)
-        ->and($array['entities'])->toHaveKey('sfl.thing')
+        ->and($array['entities']['sfl.thing']['capabilities'])->toBe(['searchable', 'auditable', 'ownable', 'workspace_scoped'])
         ->and($array['entityFields'])->toHaveCount(1)
         ->and($array['permissions'])->toHaveCount(1)
         ->and($array['api'])->toHaveCount(1)

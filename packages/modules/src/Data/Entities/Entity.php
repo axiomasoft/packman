@@ -7,6 +7,7 @@ namespace Packman\Modules\Data\Entities;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Modules\Contracts\Compiler\Extender;
+use Packman\Modules\Enums\Entities\Capability;
 
 /**
  * 1. Declares an owned entity into EntityRegistry. `handle` defaults to
@@ -38,6 +39,9 @@ final class Entity implements Extender
     public bool $isCommentable = false;
 
     public bool $isDocumentable = false;
+
+    /** @var list<Capability> */
+    public private(set) array $declaredCapabilities = [];
 
     /** @var list<FieldDefinition>|null null = introspect model */
     public ?array $fieldDefinitions = null;
@@ -76,6 +80,15 @@ final class Entity implements Extender
     public function titleAttribute(string $attr): self
     {
         $this->titleAttribute = $attr;
+
+        return $this;
+    }
+
+    public function capabilities(Capability ...$capabilities): self
+    {
+        foreach ($capabilities as $capability) {
+            $this->declaredCapabilities[] = $capability;
+        }
 
         return $this;
     }

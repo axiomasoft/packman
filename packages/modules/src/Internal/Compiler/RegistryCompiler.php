@@ -297,6 +297,12 @@ final readonly class RegistryCompiler implements ModuleCompilation
             $capabilities[] = Capability::Documentable;
         }
 
+        foreach ($extender->declaredCapabilities as $capability) {
+            if (! in_array($capability, $capabilities, true)) {
+                $capabilities[] = $capability;
+            }
+        }
+
         return $capabilities;
     }
 
@@ -569,7 +575,11 @@ final readonly class RegistryCompiler implements ModuleCompilation
                     id: $handle,
                     owner: $manifest->composerName,
                     ownerVersion: $ownerVersion,
-                    payload: ['model' => $extender->model, 'table' => $extender->table],
+                    payload: [
+                        'model' => $extender->model,
+                        'table' => $extender->table,
+                        'capabilities' => array_column($this->capabilitiesFor($extender), 'value'),
+                    ],
                 ),
             ];
 

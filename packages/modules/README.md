@@ -26,3 +26,13 @@ The default discovery implementation reads Composer metadata. To compile modules
 ## Declare contributions
 
 The public builders in `Packman\Modules\Data\Extenders` include `Menu`, `Filament`, `Routes`, and `Workflow`. Use `Data\Lifecycle\ModuleDependency` to declare dependencies and `Data\Settings\DefaultSettingDefinition` for scoped defaults. The compiler and the registry use these same types. Compiled registries continue to use the `packman-registry/1` wire format.
+
+An entity may declare any `Packman\Modules\Enums\Entities\Capability`. For example, a model with
+`owner_id` and `workspace_id` can opt into both filters:
+
+```php
+Entity::make(Company::class)->capabilities(Capability::Ownable, Capability::WorkspaceScoped);
+```
+
+The compiled entity includes each capability once, including those added through convenience
+methods such as `searchable()`.
