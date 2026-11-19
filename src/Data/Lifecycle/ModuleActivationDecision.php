@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Packman\Modules\Internal\Gate;
+namespace Packman\Modules\Data\Lifecycle;
 
+use Packman\Attributes\Api;
 use Packman\Modules\Contracts\Lifecycle\ModuleActivationGate;
 
 /**
  * Result of {@see ModuleActivationGate::check()}: allow, or deny with a
  * reason and an optional upgrade hint (e.g. a billing plan slug) for the
  * caller to surface to the user.
- *
- * @internal spec: B-10 §3.3
  */
+#[Api(since: '0.1.1')]
 final readonly class ModuleActivationDecision
 {
     private function __construct(
