@@ -11,6 +11,7 @@ use Packman\Plugins\Internal\Graph\PluginCatalog;
 use Packman\Plugins\Internal\Graph\PluginDeclarations;
 use Packman\Plugins\Internal\Graph\PluginEntry;
 use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
+use Packman\Plugins\Laravel\ExtensionRegistrar;
 use Packman\Plugins\Laravel\PluginRegistrar;
 use Packman\Plugins\Tests\Fixtures\Greeter;
 use Packman\Plugins\Tests\Fixtures\HelloGreeter;
@@ -35,6 +36,21 @@ it('seals PluginCatalog once and keeps deduplicated registration order', functio
 
     expect($catalog->entries())->toHaveCount(1)
         ->and(static fn () => $catalog->builtIn(PgOnlyPlugin::class))->toThrow(RegistryFrozenException::class, 'frozen');
+});
+
+it('keeps built-in plugins local to the supplied container', function (): void {
+    $first = new Container;
+    $second = new Container;
+    ExtensionRegistrar::builtInFor($first, PgOnlyPlugin::class);
+
+    expect($first->make(PluginCatalog::class)->builtInClasses())->toBe([PgOnlyPlugin::class])
+        ->and($second->bound(PluginCatalog::class))->toBeFalse();
+
+    $first->make(PluginCatalog::class)->seal();
+    expect(static fn () => ExtensionRegistrar::builtInFor($first, PgOnlyPlugin::class))->toThrow(RegistryFrozenException::class);
+
+    ExtensionRegistrar::builtInFor($second, PgOnlyPlugin::class);
+    expect($second->make(PluginCatalog::class)->builtInClasses())->toBe([PgOnlyPlugin::class]);
 });
 
 it('rejects PluginRegistrar mutations after PluginDeclarations are sealed', function (): void {
