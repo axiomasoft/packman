@@ -1444,26 +1444,6 @@
             "uses": [],
             "doc": [],
             "methods": {
-                "__construct": {
-                    "visibility": "public",
-                    "static": false,
-                    "final": false,
-                    "abstract": false,
-                    "by_reference": false,
-                    "parameters": [
-                        {
-                            "name": "options",
-                            "type": "Packman\\Filament\\Internal\\Configuration\\FilamentOptions",
-                            "by_reference": false,
-                            "variadic": false,
-                            "optional": false,
-                            "default": null,
-                            "flags": 68
-                        }
-                    ],
-                    "return": null,
-                    "doc": []
-                },
                 "abilities": {
                     "visibility": "public",
                     "static": false,
