@@ -40,6 +40,46 @@ function runGateIds(TempWorkspace $ws, string ...$gateIds): array
     return $indexed;
 }
 
+it('shares the target Composer loader across gates and releases it when a gate fails', function (): void {
+    $ws = new TempWorkspace;
+    $initialLoaders = spl_autoload_functions();
+
+    try {
+        $pkg = $ws->seedCleanMonorepoPackage('acme/external', 'packages/external', 'Acme\\GateWorkspace\\');
+        $ws->writePackmanJson([$pkg]);
+        $ws->writeJson('composer.json', ['config' => ['vendor-dir' => 'deps']]);
+        $ws->write('deps/autoload.php', '<?php throw new LogicException("Loading a second Composer runtime");');
+        $ws->write('deps/composer/autoload_psr4.php', '<?php file_put_contents(__DIR__."/loads", "x", FILE_APPEND); return '.var_export([
+            'Acme\\GateWorkspace\\' => [$ws->path('packages/external/src')],
+        ], true).';');
+        $ws->write('packages/external/src/DeclaredModule.php', '<?php namespace Acme\\GateWorkspace; final class DeclaredModule {}');
+        $composerPath = 'packages/external/composer.json';
+        $composer = ['name' => $pkg['name'], 'extra' => ['packman' => ['module' => 'Acme\\GateWorkspace\\DeclaredModule']]];
+        $ws->writeJson($composerPath, $composer);
+
+        $results = runGateIds($ws, 'error-registry', 'extension-contract');
+
+        expect($results['error-registry']->passed)->toBeTrue()
+            ->and($results['extension-contract']->passed)->toBeTrue()
+            ->and(file_get_contents($ws->path('deps/composer/loads')))->toBe('x')
+            ->and(spl_autoload_functions())->toBe($initialLoaders);
+
+        $composer['extra']['packman']['module'] = 'Acme\\GateWorkspace\\MissingModule';
+        $ws->writeJson($composerPath, $composer);
+        $missing = runGateIds($ws, 'extension-contract')['extension-contract'];
+        expect($missing->passed)->toBeFalse()
+            ->and(implode("\n", $missing->violations))->toContain('MissingModule');
+
+        $composer['extra']['packman']['module'] = 'Acme\\GateWorkspace\\BrokenModule';
+        $ws->writeJson($composerPath, $composer);
+        $ws->write('packages/external/src/BrokenModule.php', '<?php throw new RuntimeException("Module load failed");');
+        expect(fn () => runGateIds($ws, 'extension-contract'))->toThrow(RuntimeException::class, 'Module load failed')
+            ->and(spl_autoload_functions())->toBe($initialLoaders);
+    } finally {
+        $ws->cleanup();
+    }
+});
+
 it('passes all 16 gates on a valid fixture monorepo when contracts match', function (): void {
     $ws = new TempWorkspace;
 

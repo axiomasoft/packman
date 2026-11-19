@@ -24,6 +24,7 @@ use Packman\DevTools\Gates\Contracts\SchemaGate;
 use Packman\DevTools\Gates\Quality\NamingGate;
 use Packman\DevTools\Gates\Quality\PackageDocsGate;
 use Packman\DevTools\Gates\Quality\QualityCeilingGuard;
+use Packman\DevTools\Internal\ProjectAutoload;
 
 /**
  * Executes the 16 registered Packman quality gates against a monorepo workspace.
@@ -70,6 +71,15 @@ final readonly class GateRunner
      * @return list<GateResult>
      */
     public function run(string $rootPath, array $onlyIds = []): array
+    {
+        return ProjectAutoload::run($rootPath, fn (): array => $this->inspect($rootPath, $onlyIds));
+    }
+
+    /**
+     * @param  list<string>  $onlyIds
+     * @return list<GateResult>
+     */
+    private function inspect(string $rootPath, array $onlyIds): array
     {
         $config = $this->manifestReader->read($rootPath);
         $context = new GateContext($rootPath, $config, new OwnersCatalogue($config));
