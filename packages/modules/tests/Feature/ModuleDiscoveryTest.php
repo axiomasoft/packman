@@ -126,6 +126,7 @@ it('compiles and activates a code-only module using host bindings without SQL', 
     $path = 'bootstrap/cache/module-'.bin2hex(random_bytes(6)).'.php';
     config()->set('modules.cache_path', $path);
     config()->set('modules.connection', 'unconfigured-connection');
+    config()->set('modules.cache.store', 'unconfigured-store');
     $this->app->forgetInstance(ModulesOptions::class);
     $this->app->forgetInstance(ModuleRegistry::class);
     $discovery = new class implements DiscoveryContract
@@ -153,7 +154,9 @@ it('compiles and activates a code-only module using host bindings without SQL', 
         $scope = new ScopeRef('example');
         expect($registry->get('acme/code')->tablePrefix)->toBeNull()
             ->and($registry->isActive('acme/code', $scope))->toBeTrue();
-        $reader->enabled = false;
+        $nextReader = clone $reader;
+        $nextReader->enabled = false;
+        $this->app->instance(ModuleStateReader::class, $nextReader);
         expect($registry->active($scope))->toBe([]);
     } finally {
         $file = $this->app->basePath($path);

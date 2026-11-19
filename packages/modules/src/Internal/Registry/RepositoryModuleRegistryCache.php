@@ -18,8 +18,9 @@ use Packman\Modules\Internal\Support\ModulesOptions;
  */
 final readonly class RepositoryModuleRegistryCache implements ModuleRegistryCache
 {
+    /** @param CacheRepository|(Closure(): CacheRepository) $store */
     public function __construct(
-        private CacheRepository $store,
+        private CacheRepository|Closure $store,
         private ModulesOptions $options,
     ) {}
 
@@ -31,6 +32,8 @@ final readonly class RepositoryModuleRegistryCache implements ModuleRegistryCach
         // tags(): the account id already namespaces the key.
         $key = sprintf('%s:account:%s:v%d:enabled', $this->options->cachePrefix, $accountId, $version);
 
-        return $this->store->remember($key, $this->options->cacheTtl, $resolver);
+        $store = $this->store instanceof Closure ? ($this->store)() : $this->store;
+
+        return $store->remember($key, $this->options->cacheTtl, $resolver);
     }
 }

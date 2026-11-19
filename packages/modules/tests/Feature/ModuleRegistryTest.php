@@ -468,3 +468,19 @@ it('builds the registry cache from configured Options — store, ttl and prefix 
     expect(Cache::store('array')->get('cfg-driven:account:acc-9:v7:enabled'))
         ->toBe(['packman/alpha' => ['state' => 'enabled', 'edition' => 'standard']]);
 });
+
+it('resolves the enabled-set cache inside the current host scope', function (): void {
+    $app = $this->app;
+    $app->instance(ModulesOptions::class, ModulesOptions::fromArray(['cache' => ['store' => 'scoped']]));
+    $app->forgetInstance(ModuleRegistryCache::class);
+    $cache = $app->make(ModuleRegistryCache::class);
+    config()->set('cache.stores.scoped', ['driver' => 'array']);
+
+    $read = static fn (string $edition): array => $cache->rememberEnabled('account', 1,
+        static fn (): array => ['acme/module' => ['state' => 'enabled', 'edition' => $edition]]);
+
+    expect($read('first')['acme/module']['edition'])->toBe('first')
+        ->and($read('cached')['acme/module']['edition'])->toBe('first');
+    Cache::forgetDriver('scoped');
+    expect($read('second')['acme/module']['edition'])->toBe('second');
+});

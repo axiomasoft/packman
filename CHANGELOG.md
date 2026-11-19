@@ -5,7 +5,7 @@ All notable changes to `axiomasoft/packman-monorepo` will be documented in this 
 ## 0.1.1
 
 - Register built-in plugins on an explicit container with `ExtensionRegistrar::builtInFor()`.
-- Compile code-only modules without a table prefix. Module discovery and activation can use application-provided implementations. Versioned state readers support caching.
+- Compile code-only modules without a table prefix. Module discovery and activation can use application-provided implementations. Versioned state readers support caching. State readers and cache stores resolve within the current application scope when activation is read.
 - Extend the standard Composer discovery rules using public constants. Scoped configuration replaces discovery lists in full.
 - Expose builders for menu groups, Filament pages, widgets and tabs, web routes, workflow steps and scoped settings in the public module API.
 - Scaffold code-only plugins and modules with `make --minimal` in the consuming Composer project.

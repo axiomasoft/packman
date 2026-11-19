@@ -9,6 +9,7 @@ use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Modules\Contracts\Registry\ModuleRegistry;
 use Packman\Modules\Contracts\Registry\ModuleRegistryCache;
 use Packman\Modules\Contracts\Registry\ModuleStateReader;
+use Packman\Modules\Contracts\Registry\VersionedModuleStateReader;
 use Packman\Modules\Data\Compiler\CompiledModule;
 use Packman\Modules\Data\Compiler\CompiledRegistry;
 use Packman\Modules\Exceptions\Registry\ModuleNotFound;
@@ -55,14 +56,16 @@ final class CompiledModuleRegistry implements ModuleRegistry
     private ?CompiledRegistry $registry = null;
 
     /**
+     * @param  ModuleStateReader|(Closure(): ModuleStateReader)  $stateReader
+     * @param  ModuleRegistryCache|(Closure(): ModuleRegistryCache)  $cache
      * @param  (Closure(ContextScopeInterface):int)|null  $versionResolver  Monotonic per-account registry epoch.
      *
      * @internal spec: D39
      */
     public function __construct(
         private readonly string $cachePath,
-        private readonly ModuleStateReader $stateReader,
-        private readonly ModuleRegistryCache $cache,
+        private readonly ModuleStateReader|Closure $stateReader,
+        private readonly ModuleRegistryCache|Closure $cache,
         private readonly ?Closure $versionResolver = null,
         private readonly bool $failIfMissing = false,
         private readonly string $compileCommand = 'modules:compile',
@@ -140,16 +143,21 @@ final class CompiledModuleRegistry implements ModuleRegistry
     /** @return array<string, array{state: string, edition: string}> */
     private function enabledFor(ContextScopeInterface $ctx): array
     {
-        if ($this->versionResolver === null) {
-            return $this->stateReader->enabledFor($ctx);
+        $reader = $this->stateReader instanceof Closure ? ($this->stateReader)() : $this->stateReader;
+        $version = $this->versionResolver !== null
+            ? ($this->versionResolver)($ctx)
+            : ($reader instanceof VersionedModuleStateReader ? $reader->versionFor($ctx) : null);
+
+        if ($version === null) {
+            return $reader->enabledFor($ctx);
         }
 
-        $version = ($this->versionResolver)($ctx);
+        $cache = $this->cache instanceof Closure ? ($this->cache)() : $this->cache;
 
-        return $this->cache->rememberEnabled(
+        return $cache->rememberEnabled(
             accountId: $ctx->id(),
             version: $version,
-            resolver: fn (): array => $this->stateReader->enabledFor($ctx),
+            resolver: static fn (): array => $reader->enabledFor($ctx),
         );
     }
 
