@@ -593,6 +593,14 @@ final readonly class ComposedPluginOptions implements OptionsFactory
     }
 }
 
+final readonly class HostPolicyOptions implements OptionsFactory
+{
+    public static function fromArray(array $config, string $path): self
+    {
+        return new self;
+    }
+}
+
 final class ComposedDoctorCheck implements DoctorCheck
 {
     public function key(): string
@@ -740,6 +748,71 @@ it('resolves configured plugin WithConfiguration optionsClass before FrozenContr
 
     expect($contributions)->toBeInstanceOf(FrozenContributions::class)
         ->and(app(ComposedPluginOptions::class))->toBe($options);
+});
+
+it('honours host and package activation policies when registering options and diagnostics at boot', function (bool $host, bool $package, bool $disabled): void {
+    $app = app();
+    config([
+        'packman.plugins' => [ComposedFacetPlugin::class],
+        'packman.disabled_plugins' => $disabled ? ['acme.composed'] : [],
+    ]);
+
+    $policy = static fn (bool $enabled): PluginActivationGate => new readonly class($enabled) implements PluginActivationGate
+    {
+        public function __construct(private bool $enabled) {}
+
+        public function isEnabled(string $pluginId): bool
+        {
+            return $this->enabled;
+        }
+    };
+    $app->instance(PluginActivationGate::class, $policy($host));
+    $packageGate = $policy($package);
+    $app->instance($packageGate::class, $packageGate);
+    ExtensionRegistrar::addActivationGate($app, $packageGate::class);
+
+    (new ExtensionRegistrar)->boot($app);
+
+    $active = $host && $package && ! $disabled;
+    expect($app->bound(ComposedPluginOptions::class))->toBe($active)
+        ->and($app->make(DoctorRegistryContract::class)->matching(['composed']))->toHaveCount($active ? 1 : 0)
+        ->and($app->resolved(FrozenContributions::class))->toBeFalse()
+        ->and($app->make(PluginInspector::class)->disabledIds())->toBe($active ? [] : ['acme.composed']);
+})->with([
+    'allowed' => [true, true, false],
+    'host denied' => [false, true, false],
+    'package denied' => [true, false, false],
+    'explicitly disabled' => [true, true, true],
+]);
+
+it('can resolve a gate with its own host options during early options lookup', function (): void {
+    $app = app();
+    $app->bind(PluginActivationGate::class, static function () use ($app): PluginActivationGate {
+        $app->make(HostPolicyOptions::class);
+
+        return new class implements PluginActivationGate
+        {
+            public function isEnabled(string $pluginId): bool
+            {
+                return true;
+            }
+        };
+    });
+    config(['packman.plugins' => [ComposedFacetPlugin::class], 'acme_composed' => ['mode' => 'policy']]);
+
+    expect($app->make(ComposedPluginOptions::class)->mode)->toBe('policy')
+        ->and($app->resolved(FrozenContributions::class))->toBeFalse();
+});
+
+it('defers activation policies for code-only plugins until the graph is requested', function (): void {
+    $app = app();
+    $app->bind(PluginActivationGate::class, static fn (): never => throw new LogicException('graph requested'));
+    ExtensionRegistrar::builtInFor($app, PlgCore::class);
+
+    (new ExtensionRegistrar)->boot($app);
+
+    expect($app->resolved(FrozenContributions::class))->toBeFalse()
+        ->and(fn () => $app->make(PluginInspector::class))->toThrow(LogicException::class, 'graph requested');
 });
 
 final readonly class EarlyPluginSchemaSetProvider implements SchemaSetProvider
