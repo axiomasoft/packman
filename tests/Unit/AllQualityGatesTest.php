@@ -65,6 +65,40 @@ it('passes all 16 gates on a valid fixture monorepo when contracts match', funct
     }
 });
 
+it('accepts a Composer replacement only when its imported class is bundled and autoloaded', function (): void {
+    $ws = new TempWorkspace;
+
+    try {
+        $ws->seedSchemasFromRepo(packmanRepoRoot());
+        $core = $ws->seedCleanMonorepoPackage('acme/core', 'packages/core', 'Acme\\Core\\', 'laravel-package', 'L2');
+        $part = $ws->seedCleanMonorepoPackage('acme/part', 'packages/core/modules/part', 'Acme\\Part\\', 'laravel-package', 'L2');
+        $outside = $ws->seedCleanMonorepoPackage('acme/outside', 'packages/outside', 'Acme\\Outside\\', 'laravel-package', 'L2');
+        $ws->writePackmanJson([$core, $part, $outside]);
+        $ws->write('packages/core/src/Bundle.php', "<?php\nnamespace Acme\\Core;\nuse Acme\\Part\\Contracts\\SampleService;\n");
+        $manifest = [
+            'name' => 'acme/core',
+            'replace' => ['acme/part' => 'self.version', 'acme/outside' => 'self.version'],
+            'autoload' => ['psr-4' => ['Acme\\Part\\' => ['modules/part/src/'], 'Acme\\Outside\\' => '../outside/src/']],
+        ];
+        $check = fn (): GateResult => runGateIds($ws, 'package-graph')['package-graph'];
+
+        $ws->writeJson('packages/core/composer.json', $manifest);
+        $result = $check();
+        expect($result->passed)->toBeTrue(implode("\n", $result->violations));
+
+        $ws->write('packages/core/src/Bundle.php', "<?php\nnamespace Acme\\Core;\nuse Acme\\Outside\\Contracts\\SampleService;\n");
+        expect($check()->passed)->toBeFalse();
+        $ws->write('packages/core/src/Bundle.php', "<?php\nnamespace Acme\\Core;\nuse Acme\\Part\\Contracts\\Missing;\n");
+        expect($check()->passed)->toBeFalse();
+        $ws->write('packages/core/src/Bundle.php', "<?php\nnamespace Acme\\Core;\nuse Acme\\Part\\Contracts\\SampleService;\n");
+        $manifest['autoload']['psr-4']['Acme\\Part\\'] = 'wrong/src/';
+        $ws->writeJson('packages/core/composer.json', $manifest);
+        expect($check()->passed)->toBeFalse();
+    } finally {
+        $ws->cleanup();
+    }
+});
+
 it('catches positive and negative scenarios for architecture gates (package-graph, module-layout, ownership, attributes)', function (): void {
     $ws = new TempWorkspace;
 
