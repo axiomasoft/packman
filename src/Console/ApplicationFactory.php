@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\DevTools\Console;
 
+use Composer\InstalledVersions;
 use Packman\Attributes\Api;
 use Packman\DevTools\Commands\Contracts\ConfigSchemaCommand;
 use Packman\DevTools\Commands\Contracts\ErrorCodesCommand;
@@ -21,7 +22,10 @@ final class ApplicationFactory
     public static function create(?string $rootPath = null): Application
     {
         $resolvedRoot = $rootPath ?? self::detectRootPath();
-        $application = new Application('Packman DevTools', '1.0.0');
+        $version = InstalledVersions::isInstalled('axiomasoft/packman-devtools')
+            ? InstalledVersions::getPrettyVersion('axiomasoft/packman-devtools')
+            : null;
+        $application = new Application('Packman DevTools', $version ?? 'UNKNOWN');
 
         $application->addCommands([
             new GateRunnerCommand($resolvedRoot),
