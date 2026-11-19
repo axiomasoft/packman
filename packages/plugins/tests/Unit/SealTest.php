@@ -28,14 +28,25 @@ final class PgOnlyPlugin implements ExtensionPlugin
     public function register(PluginRegistrar $registrar): void {}
 }
 
+final class OtherPlugin implements ExtensionPlugin
+{
+    public function manifest(): PluginManifest
+    {
+        return new PluginManifest('acme.other');
+    }
+
+    public function register(PluginRegistrar $registrar): void {}
+}
+
 it('seals PluginCatalog once and keeps deduplicated registration order', function (): void {
     $catalog = new PluginCatalog;
     $catalog->builtIn(PgOnlyPlugin::class);
     $catalog->builtIn(PgOnlyPlugin::class);
-    $catalog->seal();
+    $catalog->compile(new Container, [], []);
+    $catalog->builtIn(PgOnlyPlugin::class);
 
     expect($catalog->entries())->toHaveCount(1)
-        ->and(static fn () => $catalog->builtIn(PgOnlyPlugin::class))->toThrow(RegistryFrozenException::class, 'frozen');
+        ->and(static fn () => $catalog->builtIn(OtherPlugin::class))->toThrow(RegistryFrozenException::class, 'frozen');
 });
 
 it('keeps built-in plugins local to the supplied container', function (): void {
@@ -46,8 +57,9 @@ it('keeps built-in plugins local to the supplied container', function (): void {
     expect($first->make(PluginCatalog::class)->builtInClasses())->toBe([PgOnlyPlugin::class])
         ->and($second->bound(PluginCatalog::class))->toBeFalse();
 
-    $first->make(PluginCatalog::class)->seal();
-    expect(static fn () => ExtensionRegistrar::builtInFor($first, PgOnlyPlugin::class))->toThrow(RegistryFrozenException::class);
+    $first->make(PluginCatalog::class)->compile($first, [], []);
+    ExtensionRegistrar::builtInFor($first, PgOnlyPlugin::class);
+    expect(static fn () => ExtensionRegistrar::builtInFor($first, OtherPlugin::class))->toThrow(RegistryFrozenException::class);
 
     ExtensionRegistrar::builtInFor($second, PgOnlyPlugin::class);
     expect($second->make(PluginCatalog::class)->builtInClasses())->toBe([PgOnlyPlugin::class]);
@@ -72,6 +84,8 @@ it('validates optional resourceRoot and database matrix in PluginManifest', func
 it('rejects plugins incompatible with target database engine during compilation', function (): void {
     $compiler = new PluginGraphCompiler(new Container, database: 'sqlite');
 
-    expect(static fn () => $compiler->compile([PluginEntry::config(PgOnlyPlugin::class, 0)]))
+    $entries = [PluginEntry::config(PgOnlyPlugin::class, 0)];
+    expect($compiler->compile($entries, ['acme.pgonly'])->disabledIds())->toBe(['acme.pgonly'])
+        ->and(static fn () => $compiler->compile($entries))
         ->toThrow(InvalidConfiguration::class, "does not support database driver 'sqlite'");
 });

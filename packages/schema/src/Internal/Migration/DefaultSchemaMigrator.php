@@ -21,13 +21,17 @@ use Packman\Schema\Exceptions\SchemaSetException;
 /** @internal */
 final readonly class DefaultSchemaMigrator implements SchemaMigrator
 {
-    /** @param ?Closure(Connection, string, array<string, string>, Closure):void $moduleMigrations */
+    /**
+     * @param  ?Closure(Connection, string, array<string, string>, Closure):void  $moduleMigrations
+     * @param  ?Closure():bool  $isActiveHost
+     */
     public function __construct(
         private SchemaSets $sets,
         private Migrator $migrator,
         private DatabaseManager $db,
         private ?Closure $moduleMigrations = null,
         private ?string $prerequisiteSetId = 'axiomasoft/packman-modules:tenant',
+        private ?Closure $isActiveHost = null,
     ) {}
 
     public function migrate(SchemaScope $scope, ?string $connection = null, bool $includeModules = false): array
@@ -114,6 +118,10 @@ final readonly class DefaultSchemaMigrator implements SchemaMigrator
      */
     private function run(array $sets, ?string $connection): array
     {
+        if ($this->isActiveHost !== null && ! ($this->isActiveHost)()) {
+            throw new LogicException('Run schema migrations in the Laravel application that owns the migrator.');
+        }
+
         $groups = $this->groups(sets: $sets, connection: $connection);
         $plans = [];
         foreach ($groups as $name => $group) {

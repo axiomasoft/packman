@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Config\Repository;
+use Illuminate\Container\Container;
+use Illuminate\Database\DatabaseServiceProvider;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Schema;
 use Packman\Schema\Contracts\Migration\SchemaMigrator;
 use Packman\Schema\Contracts\Migration\SchemaSetProvider;
@@ -116,6 +121,39 @@ it('preflights all selected drivers before creating the migration journal', func
             ->and(Schema::hasTable('schema_platform'))->toBeFalse()
             ->and(Schema::hasTable('migrations'))->toBe($before);
     }
+});
+
+it('refuses to split the migration journal and DDL across two applications', function (): void {
+    schemaRegistry(schemaFixture());
+    $owner = $this->app;
+    $migrator = $owner->make(SchemaMigrator::class);
+    $ownerSchema = $owner['db']->connection()->getSchemaBuilder();
+
+    $other = new Application($owner->basePath());
+    $other->instance('config', new Repository(['database' => [
+        'default' => 'sqlite', 'connections' => ['sqlite' => ['driver' => 'sqlite', 'database' => ':memory:']],
+    ]]));
+    $other->register(DatabaseServiceProvider::class);
+    $otherSchema = $other['db']->connection()->getSchemaBuilder();
+
+    try {
+        Facade::setFacadeApplication($other);
+        expect(fn () => $migrator->migrateSets(['fixture/platform:tenant']))->toThrow(LogicException::class, 'owns the migrator');
+        Container::setInstance($owner);
+        expect(fn () => $migrator->migrate(SchemaScope::Tenant))->toThrow(LogicException::class, 'owns the migrator');
+        foreach ([$ownerSchema, $otherSchema] as $schema) {
+            expect($schema->hasTable('migrations'))->toBeFalse()
+                ->and($schema->hasTable('schema_platform'))->toBeFalse();
+        }
+    } finally {
+        Container::setInstance($owner);
+        Facade::clearResolvedInstances();
+        Facade::setFacadeApplication($owner);
+    }
+
+    expect($migrator->migrateSets(['fixture/platform:tenant']))->toHaveCount(1)
+        ->and($ownerSchema->hasTable('schema_platform'))->toBeTrue()
+        ->and($otherSchema->hasTable('schema_platform'))->toBeFalse();
 });
 
 it('migrates and reports pending applied and unknown journal entries', function (): void {

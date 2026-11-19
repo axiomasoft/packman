@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Laravel;
 
-use Illuminate\Console\Application as Console;
+use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Model;
@@ -34,7 +34,7 @@ final class ModulesBootRegistrar implements PackageRegistrar
     public function boot(Application $app): void
     {
         if ($app->runningInConsole()) {
-            Console::starting(self::registerCommands(...));
+            $app->make(Dispatcher::class)->listen(ArtisanStarting::class, self::registerCommands(...));
         }
 
         // Epoch memo reset: a long-running queue worker drops its
@@ -45,9 +45,9 @@ final class ModulesBootRegistrar implements PackageRegistrar
         $app->booted(fn () => $this->projectEntities($app));
     }
 
-    private static function registerCommands(Console $artisan): void
+    private static function registerCommands(ArtisanStarting $event): void
     {
-        $artisan->resolveCommands([
+        $event->artisan->resolveCommands([
             CompileModulesCommand::class,
             ExplainModuleCommand::class,
             RepairModuleCommand::class,

@@ -420,6 +420,16 @@ it('fails the registry with the configuration error on every use', function (): 
         ->and(static fn () => app(Contributions::class))->toThrow(InvalidConfiguration::class, 'dependency cycle');
 });
 
+it('allows a failed graph to be repaired by registering its missing dependency', function (): void {
+    ExtensionRegistrar::builtInFor(app(), PlgExtension::class);
+
+    expect(static fn () => app(Contributions::class))->toThrow(InvalidConfiguration::class, "requires 'test.owner'");
+
+    ExtensionRegistrar::builtInFor(app(), PlgOwner::class);
+
+    expect(app(Contributions::class)->keys('greeter'))->toBe(['test.hello', 'test.hola']);
+});
+
 it('lists plugins with packman:plugins and prints json', function (): void {
     ExtensionRegistrar::builtIn(PlgOwner::class);
     config(['packman.plugins' => [PlgExtension::class]]);
@@ -571,8 +581,10 @@ it('intersects package and host activation policies and freezes their catalog wi
     ExtensionRegistrar::builtInFor($app, PlgOwner::class, PlgOptional::class);
     expect(ExtensionRegistrar::activationGateFor($app, except: $ownerGate::class)?->isEnabled('test.optional'))->toBeFalse()
         ->and($app->make(Contributions::class)->disabledIds())->toBe(['test.optional', 'test.owner'])
-        ->and(fn () => ExtensionRegistrar::addActivationGate($app, $ownerGate::class))
+        ->and(fn () => ExtensionRegistrar::addActivationGate($app, PluginActivationGate::class))
         ->toThrow(RegistryFrozenException::class);
+
+    ExtensionRegistrar::addActivationGate($app, $ownerGate::class);
 });
 
 it('exposes imperative declarations without requiring a host plugin graph', function (): void {

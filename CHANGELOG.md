@@ -2,6 +2,12 @@
 
 All notable changes to `axiomasoft/packman-monorepo` will be documented in this file.
 
+## Unreleased
+
+- Discover plugin manifests before inspecting active facets or registering contributions. Applications can supply a configured instance of the declared class while preserving its manifest.
+- Accept repeat registration of a known plugin or gate after compilation. A failed compilation leaves the catalog open to correction.
+- Register console commands on the owning application and require the active Laravel host to own a schema migration before writing its journal or running DDL.
+
 ## 0.1.1
 
 - Register built-in plugins on an explicit container with `ExtensionRegistrar::builtInFor()`.

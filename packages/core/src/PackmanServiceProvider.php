@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Packman;
 
+use Illuminate\Console\Events\ArtisanStarting;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ServiceProvider;
 use Override;
 use Packman\Attributes\Spi;
@@ -55,10 +57,9 @@ final class PackmanServiceProvider extends ServiceProvider
         $this->bootPackageRegistrars();
 
         if ($this->app->runningInConsole()) {
-            $this->commands([
-                ValidateConfigCommand::class,
-                DoctorCommand::class,
-            ]);
+            $this->app->make(Dispatcher::class)->listen(ArtisanStarting::class, static function (ArtisanStarting $event): void {
+                $event->artisan->resolveCommands([ValidateConfigCommand::class, DoctorCommand::class]);
+            });
 
             $this->publishes([
                 __DIR__.'/../config/packman.php' => config_path('packman.php'),

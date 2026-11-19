@@ -37,7 +37,8 @@ Scaffolding (`./bin/php84 bin/packman make <profile> <name>`) additionally expos
 ## 3. Stateless Plugins in Depth (`Packman\Plugins\`)
 
 1. **`ExtensionPlugin` & `PluginManifest`:**
-   - `ExtensionPlugin` constructors take zero arguments and execute zero I/O or container reads during registration.
+   - `ExtensionPlugin` constructors take zero required arguments and execute zero I/O or container reads during registration.
+   - Packman discovers the manifest before evaluating activation policies. A container binding can provide the active instance of the same class with host-specific facet values and the same manifest.
    - `PluginManifest` validates `id` (`vendor.name` kebab-case pattern), strict SemVer `version`, `requires`, `optional`, `resourceRoot`, and supported `databases` (`pgsql`, `mysql`, `sqlite`).
 2. **Capabilities & Typed Slots (`PluginRegistrar`):**
    - `defineCapability(string $contract, Cardinality $cardinality)` (`RequiredSingle`, `OptionalSingle`, `Many`)
@@ -46,7 +47,7 @@ Scaffolding (`./bin/php84 bin/packman make <profile> <name>`) additionally expos
    - `contributeSlot(string $slot, string $id, string $implementation, int $priority = 0, ?string $key = null)`
    - Legacy contribution kinds via `declareKind(ContributionKind)` and `contribute(string $kind, object|string $contribution)`
 3. **Compilation & Immutability:**
-   - `PluginGraphCompiler` seals `PluginDeclarations` immediately after `register()`, validates `$disabled` and `PluginActivationGate`, enforces transitive ancestor ownership (a plugin can only provide/contribute to a capability, slot, or kind owned by itself or a required ancestor — never via `optional` alone), and produces `FrozenContributions`.
+   - `PluginGraphCompiler` checks `$disabled` and `PluginActivationGate`, seals active `PluginDeclarations` immediately after `register()`, enforces transitive ancestor ownership (a plugin can only provide/contribute to a capability, slot, or kind owned by itself or a required ancestor — never via `optional` alone), and produces `FrozenContributions`.
    - Consumer services resolve `Contributions`, `PluginInspector`, `Capabilities` (`CapabilitiesRegistry`), and `ExtensionRegistry`.
 
 ---

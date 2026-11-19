@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Packman\Schema\Laravel;
 
 use Closure;
-use Illuminate\Console\Application as Artisan;
+use Illuminate\Console\Events\ArtisanStarting;
+use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Connection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Facade;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Foundation\Contracts\PackageRegistrar;
@@ -76,12 +80,17 @@ final class DatabaseRegistrar implements PackageRegistrar
                 $prerequisiteSetId = is_string($configured) && $configured !== '' ? $configured : null;
             }
 
+            $db = $app->make('db');
+
             return new DefaultSchemaMigrator(
                 sets: $app->make(SchemaSets::class),
                 migrator: $app->make('migrator'),
-                db: $app->make('db'),
+                db: $db,
                 moduleMigrations: $moduleMigrations,
                 prerequisiteSetId: $prerequisiteSetId,
+                isActiveHost: static fn (): bool => Container::getInstance() === $app
+                    && Facade::getFacadeApplication() === $app
+                    && DB::getFacadeRoot() === $db,
             );
         });
     }
@@ -89,13 +98,13 @@ final class DatabaseRegistrar implements PackageRegistrar
     public function boot(Application $app): void
     {
         if ($app->runningInConsole()) {
-            Artisan::starting(self::registerCommands(...));
+            $app->make(Dispatcher::class)->listen(ArtisanStarting::class, self::registerCommands(...));
         }
     }
 
-    private static function registerCommands(Artisan $artisan): void
+    private static function registerCommands(ArtisanStarting $event): void
     {
-        $artisan->resolveCommands([MigrateSchemaCommand::class, SchemaStatusCommand::class]);
+        $event->artisan->resolveCommands([MigrateSchemaCommand::class, SchemaStatusCommand::class]);
     }
 
     private static function schemaSets(Application $app): SchemaSets

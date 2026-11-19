@@ -9,6 +9,7 @@ use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Plugins\Contracts\Registry\ExtensionPlugin;
 use Packman\Plugins\Contracts\Registry\PluginActivationGate;
 use Packman\Plugins\Exceptions\Registry\RegistryFrozenException;
+use Packman\Plugins\Internal\Contributions\FrozenContributions;
 
 /** Collects built-in plugin classes until compilation, then freezes. */
 final class PluginCatalog
@@ -21,11 +22,17 @@ final class PluginCatalog
 
     private bool $sealed = false;
 
+    private bool $compiling = false;
+
     public function __construct(private readonly string $configPath = 'packman.plugins') {}
 
     /** @param class-string<ExtensionPlugin> $class */
     public function builtIn(string $class): void
     {
+        if (isset($this->builtIn[$class])) {
+            return;
+        }
+
         $this->guard();
         $this->builtIn[$class] = true;
     }
@@ -33,6 +40,10 @@ final class PluginCatalog
     /** @param class-string<PluginActivationGate> $gate */
     public function addActivationGate(string $gate): void
     {
+        if (isset($this->gates[$gate])) {
+            return;
+        }
+
         $this->guard();
         $this->gates[$gate] = true;
     }
@@ -72,7 +83,7 @@ final class PluginCatalog
 
     private function guard(): void
     {
-        if ($this->sealed) {
+        if ($this->sealed || $this->compiling) {
             throw RegistryFrozenException::forRegistry('plugin');
         }
     }
@@ -88,11 +99,28 @@ final class PluginCatalog
         return array_keys($this->builtIn);
     }
 
-    public function seal(): self
+    /**
+     * @param  list<mixed>  $configured
+     * @param  list<string>  $disabled
+     */
+    public function compile(Container $container, array $configured, array $disabled): FrozenContributions
     {
-        $this->sealed = true;
+        if ($this->compiling) {
+            throw new InvalidConfiguration(['packman.plugins: recursive plugin graph compilation']);
+        }
 
-        return $this;
+        $this->compiling = true;
+
+        try {
+            $compiler = new PluginGraphCompiler($container, activationGate: $this->activationGate($container));
+
+            $registry = $compiler->compile($this->entries($configured), $disabled);
+            $this->sealed = true;
+
+            return $registry;
+        } finally {
+            $this->compiling = false;
+        }
     }
 
     /**

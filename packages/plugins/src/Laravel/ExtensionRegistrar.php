@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Packman\Plugins\Laravel;
 
-use Illuminate\Console\Application as Artisan;
+use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container as ContainerContract;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Application as FoundationApplication;
 use Packman\Attributes\Spi;
@@ -26,8 +27,9 @@ use Packman\Plugins\Contracts\Registry\PluginInspector;
 use Packman\Plugins\Internal\Capabilities\CapabilitiesRegistry;
 use Packman\Plugins\Internal\Contributions\ExtensionRegistry;
 use Packman\Plugins\Internal\Contributions\FrozenContributions;
+use Packman\Plugins\Internal\Graph\DiscoveredPlugin;
 use Packman\Plugins\Internal\Graph\PluginCatalog;
-use Packman\Plugins\Internal\Graph\PluginGraphCompiler;
+use Packman\Plugins\Internal\Graph\PluginEntry;
 use Packman\Plugins\Laravel\Console\ExtensionsCommand;
 use Packman\Schema\Contracts\Compiler\SchemaOwnership;
 use Packman\Schema\Contracts\Migration\SchemaMigrator;
@@ -111,10 +113,8 @@ final class ExtensionRegistrar implements PackageRegistrar
         $app->singleton(FrozenContributions::class, static function (Application $app): FrozenContributions {
             [$configured, $disabled] = self::pluginConfiguration($app);
             $catalog = $app->make(PluginCatalog::class);
-            $catalog->seal();
-            $gate = $catalog->activationGate($app);
 
-            return new PluginGraphCompiler($app, activationGate: $gate)->compile($catalog->entries($configured), $disabled);
+            return $catalog->compile($app, $configured, $disabled);
         });
 
         $app->alias(FrozenContributions::class, Contributions::class);
@@ -151,7 +151,7 @@ final class ExtensionRegistrar implements PackageRegistrar
         self::registerPluginOptions($app);
 
         if ($app->runningInConsole()) {
-            Artisan::starting(self::registerCommands(...));
+            $app->make(Dispatcher::class)->listen(ArtisanStarting::class, self::registerCommands(...));
         }
     }
 
@@ -195,8 +195,8 @@ final class ExtensionRegistrar implements PackageRegistrar
             }
 
             try {
-                $plugin = $reflection->newInstance();
-                $id = $plugin->manifest()->id;
+                $candidate = new DiscoveredPlugin(PluginEntry::builtIn($pluginClass), $reflection->newInstance());
+                $id = $candidate->manifest->id;
             } catch (Throwable) {
                 continue;
             }
@@ -210,6 +210,8 @@ final class ExtensionRegistrar implements PackageRegistrar
             if ($gate !== null && ! $gate->isEnabled($id)) {
                 continue;
             }
+
+            $plugin = $candidate->activeInstance($app);
 
             if ($plugin instanceof WithConfiguration) {
                 ExtensionFacetRegistrar::registerConfiguration(
@@ -369,8 +371,8 @@ final class ExtensionRegistrar implements PackageRegistrar
         }
     }
 
-    private static function registerCommands(Artisan $artisan): void
+    private static function registerCommands(ArtisanStarting $event): void
     {
-        $artisan->resolveCommands([ExtensionsCommand::class]);
+        $event->artisan->resolveCommands([ExtensionsCommand::class]);
     }
 }

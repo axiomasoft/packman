@@ -49,7 +49,7 @@ final readonly class PluginGraphCompiler
      */
     public function compile(array $entries, array $disabled = []): FrozenContributions
     {
-        $allNodes = $this->nodes($entries);
+        $allNodes = $this->discover($entries);
         [$activeNodes, $disabledIds] = $this->partitionActiveNodes($allNodes, $disabled);
         $dependencies = $this->dependencies($activeNodes, $allNodes);
         $order = $this->order($activeNodes, $dependencies);
@@ -92,7 +92,7 @@ final readonly class PluginGraphCompiler
     }
 
     /**
-     * @param  array<string, PluginNode>  $allNodes
+     * @param  array<string, DiscoveredPlugin>  $allNodes
      * @param  list<string>  $disabled
      * @return array{0: array<string, PluginNode>, 1: list<string>}
      */
@@ -118,7 +118,7 @@ final readonly class PluginGraphCompiler
                 continue;
             }
 
-            $activeNodes[$id] = $node;
+            $activeNodes[$id] = $this->activate($node);
         }
 
         sort($disabledIds, SORT_STRING);
@@ -128,9 +128,9 @@ final readonly class PluginGraphCompiler
 
     /**
      * @param  list<PluginEntry>  $entries
-     * @return array<string, PluginNode>
+     * @return array<string, DiscoveredPlugin>
      */
-    private function nodes(array $entries): array
+    private function discover(array $entries): array
     {
         $nodes = [];
 
@@ -140,28 +140,44 @@ final readonly class PluginGraphCompiler
             }
 
             try {
-                $plugin = new ($entry->class)();
-                $manifest = $plugin->manifest();
-                $facets = ExtensionInspector::inspect($plugin);
-                $declarations = PluginDeclarations::record($plugin, $manifest->id, function (PluginRegistrar $registrar) use ($facets): void {
-                    $this->applyFacets($registrar, $facets);
-                });
+                $candidate = new DiscoveredPlugin($entry, new ($entry->class)());
             } catch (InvalidConfiguration $e) {
                 throw new InvalidConfiguration(["{$entry->origin}: {$entry->class}: ".$e->getMessage()]);
             }
 
-            if ($this->database !== null && $manifest->databases !== [] && ! in_array($this->database, $manifest->databases, true)) {
-                throw new InvalidConfiguration(["{$entry->origin}: plugin '{$manifest->id}' does not support database driver '{$this->database}'"]);
+            $id = $candidate->manifest->id;
+
+            if (isset($nodes[$id])) {
+                throw new InvalidConfiguration(["{$entry->origin}: plugin id '{$id}' is already registered by {$nodes[$id]->entry->origin}"]);
             }
 
-            if (isset($nodes[$manifest->id])) {
-                throw new InvalidConfiguration(["{$entry->origin}: plugin id '{$manifest->id}' is already registered by {$nodes[$manifest->id]->entry->origin}"]);
-            }
-
-            $nodes[$manifest->id] = new PluginNode($entry, $plugin, $manifest, $declarations, $facets);
+            $nodes[$id] = $candidate;
         }
 
         return $nodes;
+    }
+
+    private function activate(DiscoveredPlugin $candidate): PluginNode
+    {
+        $manifest = $candidate->manifest;
+        $entry = $candidate->entry;
+
+        if ($this->database !== null && $manifest->databases !== [] && ! in_array($this->database, $manifest->databases, true)) {
+            throw new InvalidConfiguration(["{$entry->origin}: plugin '{$manifest->id}' does not support database driver '{$this->database}'"]);
+        }
+
+        $plugin = $candidate->activeInstance($this->container);
+
+        try {
+            $facets = ExtensionInspector::inspect($plugin);
+            $declarations = PluginDeclarations::record($plugin, $manifest->id, function (PluginRegistrar $registrar) use ($facets): void {
+                $this->applyFacets($registrar, $facets);
+            });
+        } catch (InvalidConfiguration $e) {
+            throw new InvalidConfiguration(["{$entry->origin}: {$entry->class}: ".$e->getMessage()]);
+        }
+
+        return new PluginNode($entry, $plugin, $manifest, $declarations, $facets);
     }
 
     private function applyFacets(PluginRegistrar $registrar, ExtensionFacetProfile $facets): void
@@ -216,7 +232,7 @@ final readonly class PluginGraphCompiler
 
     /**
      * @param  array<string, PluginNode>  $activeNodes
-     * @param  array<string, PluginNode>  $allNodes
+     * @param  array<string, DiscoveredPlugin>  $allNodes
      * @return array<string, list<string>>
      */
     private function dependencies(array $activeNodes, array $allNodes, bool $includeOptional = true): array

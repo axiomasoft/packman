@@ -11,3 +11,5 @@ Use `requires` for optional integration with a package that contributes schema s
 ## Sharing a database
 
 Declare the extension’s schema prefix with its owned table nouns. Two packages can each own `channels` under different prefixes. Resolve a specific family through `SchemaExtensions::ownershipFor($ownership, $prefix)`. Unqualified lookup succeeds when the owner is unambiguous. Packages with their own installations can pass their Composer name as `owner` to `TableNames` and `SchemaFingerprint::document()`. The optional `ownsLegacy` callback identifies that package’s older unlabelled installations before a prefix change.
+
+Invoke `SchemaMigrator::migrate()` and `migrateSets()` in their owning Laravel application. Migration files can use Laravel facades, so the application container, facade application and database manager must agree before execution.

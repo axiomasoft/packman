@@ -9,7 +9,7 @@ description: Build and compose Packman plugins (ExtensionPlugin), platform modul
 
 - **Stateless intra-package plugin (`axiomasoft/packman-plugins`):**
   - Implement `Packman\Plugins\Contracts\Registry\ExtensionPlugin` (`manifest(): PluginManifest`, `register(PluginRegistrar $registrar): void`).
-  - Zero constructor parameters, zero I/O, zero DB dependency; `PluginGraphCompiler` enforces Kahn topological order, ancestor ownership, and seals `FrozenContributions`.
+  - Zero required constructor parameters, zero I/O, zero DB dependency; `PluginGraphCompiler` enforces Kahn topological order, ancestor ownership, and seals `FrozenContributions`.
   - Use `packman.disabled_plugins` for disabled IDs. Host and package implementations of `PluginActivationGate` can add policy.
 - **Compiled platform module (`axiomasoft/packman-modules`):**
   - Implement `Packman\Modules\Contracts\Definition\ModuleDefinition` (`manifest(): ModuleManifest`).
