@@ -1,6 +1,6 @@
 # axiomasoft/packman-modules
 
-Composer-discovered DB-backed platform module and plugin compiler, lifecycle state machine (`available -> enabled <-> disabled -> archived -> purged`), automatic PostgreSQL DDL ownership claims (`mod_records`), epoch-invalidated registry caching, and PHPStan static isolation rules.
+Compile Composer-discovered module declarations into a registry for Laravel. Applications can supply their own discovery and activation policies. The package also provides a PostgreSQL lifecycle for persistent activation, record ownership and recovery, and PHPStan rules for module isolation.
 
 ## Discovery & Configuration
 
