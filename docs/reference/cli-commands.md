@@ -14,7 +14,7 @@ Entrypoint: [`bin/packman`](../../bin/packman) (also shipped by `axiomasoft/pack
 | `php-api` | `--check` (default), `--write`, `--root=<path>` | `PhpApiCommand` | Verify or regenerate `resources/contracts/php-api.json` (`php-api/1`) per package via `ApiManifestGenerator`. |
 | `error-codes` | `--check` (default), `--write`, `--root=<path>` | `ErrorCodesCommand` | Verify or regenerate `resources/contracts/error-codes.json` (`packman-error-codes/1`) via `ErrorCodeSchemaGenerator`. |
 | `config-schema` | `--check` (default), `--write`, `--root=<path>` | `ConfigSchemaCommand` | Verify or regenerate Draft 2020-12 `resources/schemas/config.schema.json` manifests via `ConfigSchemaGenerator`. |
-| `make` | `<profile>` (`php-library`, `laravel-package`, `packman-plugin`, `packman-module`), `<name>`, `--vendor=`, `--dir=packages`, `--force`, `--dry-run`, `--root=<path>` | `MakeCommand` | Scaffold a new package from `packages/devtools/stubs/` via `Layout` and `StubStore`. |
+| `make` | `<profile>` (`php-library`, `laravel-package`, `packman-plugin`, `packman-module`), `<name>`, `--vendor=`, `--dir=packages`, `--minimal`, `--force`, `--dry-run`, `--root=<path>` | `MakeCommand` | Scaffold a new package from `packages/devtools/stubs/` via `Layout` and `StubStore`. |
 | `split` | `--dry-run`, `--only=*`, `--branch=`, `--root=<path>` | `SplitCommand` | Validate release preflight (`MonorepoSplitter`) and plan/execute `git subtree split` targets declared in `split.json`. |
 | `ai:sync` | `--dry-run`, `--root=<path>` | `AiSyncCommand` | Sync `ai/manifest.json`, `ai/rules/*.md`, and `ai/agents/*.md` into `.claude/`, `.codex/agents/*.toml`, `.gemini/`, and `AGENTS.md` via `EcosystemAiSynchronizer`. |
 

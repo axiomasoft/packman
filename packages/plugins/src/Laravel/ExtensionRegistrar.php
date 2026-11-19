@@ -109,20 +109,7 @@ final class ExtensionRegistrar implements PackageRegistrar
         $app->singletonIf(PluginCatalog::class, static fn (): PluginCatalog => new PluginCatalog);
 
         $app->singleton(FrozenContributions::class, static function (Application $app): FrozenContributions {
-            $configured = [];
-            $disabled = [];
-
-            if ($app->bound(Repository::class)) {
-                $config = $app->make(Repository::class);
-                $raw = $config->get('packman.plugins', []);
-                $configured = is_array($raw) ? array_values($raw) : [];
-
-                $rawDisabled = $config->get('packman.disabled_plugins', []);
-                $disabled = is_array($rawDisabled)
-                    ? array_values(array_filter($rawDisabled, static fn (mixed $v): bool => is_string($v) && $v !== ''))
-                    : [];
-            }
-
+            [$configured, $disabled] = self::pluginConfiguration($app);
             $catalog = $app->make(PluginCatalog::class);
             $catalog->seal();
             $gate = $catalog->activationGate($app);
@@ -170,41 +157,33 @@ final class ExtensionRegistrar implements PackageRegistrar
 
     private static function registerPluginOptions(Application $app): void
     {
-        $classes = [];
+        /** @var WeakMap<Application, true>|null $registering */
+        static $registering = null;
+        $registering ??= new WeakMap;
 
-        if ($app->bound(PluginCatalog::class)) {
-            foreach ($app->make(PluginCatalog::class)->builtInClasses() as $pluginClass) {
-                $classes[] = $pluginClass;
-            }
+        // A gate can resolve its own options through this same container hook.
+        if (isset($registering[$app])) {
+            return;
         }
 
-        $disabled = [];
+        $registering[$app] = true;
 
-        if ($app->bound(Repository::class)) {
-            $config = $app->make(Repository::class);
-            $configured = $config->get('packman.plugins', []);
-
-            if (is_array($configured)) {
-                foreach ($configured as $pluginClass) {
-                    if (is_string($pluginClass) && $pluginClass !== '') {
-                        $classes[] = $pluginClass;
-                    }
-                }
-            }
-
-            $rawDisabled = $config->get('packman.disabled_plugins', []);
-
-            if (is_array($rawDisabled)) {
-                foreach ($rawDisabled as $id) {
-                    if (is_string($id) && $id !== '') {
-                        $disabled[$id] = true;
-                    }
-                }
-            }
+        try {
+            self::registerEarlyFacets($app);
+        } finally {
+            unset($registering[$app]);
         }
+    }
 
-        foreach (array_values(array_unique($classes)) as $pluginClass) {
-            if (! class_exists($pluginClass) || (! is_subclass_of($pluginClass, WithConfiguration::class) && ! is_subclass_of($pluginClass, WithDiagnostics::class))) {
+    private static function registerEarlyFacets(Application $app): void
+    {
+        [$configured, $disabledIds] = self::pluginConfiguration($app);
+        $disabled = array_fill_keys($disabledIds, true);
+        $classes = [...self::catalog($app)->builtInClasses(), ...array_filter($configured, is_string(...))];
+        $gate = null;
+
+        foreach (array_unique($classes) as $pluginClass) {
+            if (! is_subclass_of($pluginClass, ExtensionPlugin::class) || (! is_subclass_of($pluginClass, WithConfiguration::class) && ! is_subclass_of($pluginClass, WithDiagnostics::class))) {
                 continue;
             }
 
@@ -217,18 +196,19 @@ final class ExtensionRegistrar implements PackageRegistrar
 
             try {
                 $plugin = $reflection->newInstance();
+                $id = $plugin->manifest()->id;
             } catch (Throwable) {
                 continue;
             }
 
-            if ($plugin instanceof ExtensionPlugin && $disabled !== []) {
-                try {
-                    if (isset($disabled[$plugin->manifest()->id])) {
-                        continue;
-                    }
-                } catch (Throwable) {
-                    continue;
-                }
+            if (isset($disabled[$id])) {
+                continue;
+            }
+
+            $gate ??= self::activationGateFor($app);
+
+            if ($gate !== null && ! $gate->isEnabled($id)) {
+                continue;
             }
 
             if ($plugin instanceof WithConfiguration) {
@@ -250,6 +230,23 @@ final class ExtensionRegistrar implements PackageRegistrar
                 );
             }
         }
+    }
+
+    /** @return array{list<mixed>, list<string>} */
+    private static function pluginConfiguration(Application $app): array
+    {
+        if (! $app->bound(Repository::class)) {
+            return [[], []];
+        }
+
+        $config = $app->make(Repository::class);
+        $plugins = $config->get('packman.plugins', []);
+        $disabled = $config->get('packman.disabled_plugins', []);
+
+        return [
+            is_array($plugins) ? array_values($plugins) : [],
+            is_array($disabled) ? array_values(array_filter($disabled, static fn (mixed $id): bool => is_string($id) && $id !== '')) : [],
+        ];
     }
 
     private static function registerSchemaResolutionHooks(Application $app): void
