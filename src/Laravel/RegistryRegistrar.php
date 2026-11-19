@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Packman\Modules\Laravel;
 
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
 use Override;
@@ -22,7 +23,6 @@ use Packman\Modules\Contracts\Registry\ModuleRegistry;
 use Packman\Modules\Contracts\Registry\ModuleRegistryCache;
 use Packman\Modules\Contracts\Registry\ModuleStateReader;
 use Packman\Modules\Contracts\Registry\RegistryIntrospection;
-use Packman\Modules\Contracts\Registry\VersionedModuleStateReader;
 use Packman\Modules\Internal\Compiler\FieldCastMap;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
 use Packman\Modules\Internal\Discovery\ModuleDiscovery;
@@ -90,24 +90,21 @@ final class RegistryRegistrar implements PackageRegistrar
         }
 
         // Boxed default: billing/entitlement gate is an application concern.
-        $app->singleton(ModuleActivationGate::class, AllowAllActivationGate::class);
+        $app->singletonIf(ModuleActivationGate::class, AllowAllActivationGate::class);
 
         // Registry cache WITHOUT tags: store/ttl/prefix from Options.
-        $app->singleton(ModuleRegistryCache::class, static fn (Application $app): RepositoryModuleRegistryCache => new RepositoryModuleRegistryCache(
-            store: $app->make(CacheFactory::class)->store($app->make(ModulesOptions::class)->cacheStore),
+        $app->singletonIf(ModuleRegistryCache::class, static fn (Application $app): RepositoryModuleRegistryCache => new RepositoryModuleRegistryCache(
+            store: static fn (): CacheRepository => $app->make(CacheFactory::class)->store($app->make(ModulesOptions::class)->cacheStore),
             options: $app->make(ModulesOptions::class),
         ));
 
         $app->singleton(ModuleRegistry::class, static function (Application $app): CompiledModuleRegistry {
             $options = $app->make(ModulesOptions::class);
 
-            $stateReader = $app->make(ModuleStateReader::class);
-
             return new CompiledModuleRegistry(
                 cachePath: $app->basePath($options->cachePath),
-                stateReader: $stateReader,
-                cache: $app->make(ModuleRegistryCache::class),
-                versionResolver: $stateReader instanceof VersionedModuleStateReader ? $stateReader->versionFor(...) : null,
+                stateReader: static fn (): ModuleStateReader => $app->make(ModuleStateReader::class),
+                cache: static fn (): ModuleRegistryCache => $app->make(ModuleRegistryCache::class),
                 failIfMissing: $app->environment('production'),
                 compileCommand: $options->compileCommand,
             );
