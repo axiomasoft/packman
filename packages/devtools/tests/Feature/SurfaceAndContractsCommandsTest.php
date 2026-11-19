@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Packman\DevTools\Console\ApplicationFactory;
+use Packman\DevTools\Data\Surface\SurfaceReport;
+use Packman\DevTools\Scanners\Surface\PhpApiDocument;
 use Packman\DevTools\Scanners\Surface\SurfaceScanner;
 use Packman\DevTools\Tests\Support\TempWorkspace;
 use Symfony\Component\Console\Tester\CommandTester;
@@ -107,6 +109,13 @@ PHP);
     } finally {
         $ws->cleanup();
     }
+});
+
+it('encodes an empty public surface as a schema-valid symbol map', function (): void {
+    $report = new SurfaceReport('acme/sample', [], []);
+    $json = PhpApiDocument::encode($report);
+
+    expect(PhpApiDocument::validateJsonAgainstSchema($json, dirname(__DIR__, 4).'/schemas/php-api.schema.json'))->toBe([]);
 });
 
 it('runs php-api --write and --check detecting drift cleanly via CLI', function (): void {

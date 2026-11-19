@@ -7,26 +7,11 @@ namespace Packman\Modules\Internal\Support;
 use Override;
 use Packman\Config\Contracts\OptionsFactory;
 use Packman\Config\Laravel\ConfigurationValidator;
+use Packman\Modules\Contracts\Definition\ModuleDiscovery;
 
 /** @internal Package composition type. */
 final readonly class ModulesOptions implements OptionsFactory
 {
-    /** @var list<string> */
-    public const array DEFAULT_PACKAGE_TYPES = [
-        'packman-module',
-        'packman-plugin',
-        'module',
-        'plugin',
-    ];
-
-    /** @var list<list<string>> */
-    public const array DEFAULT_EXTRA_KEYS = [
-        ['packman', 'module'],
-        ['packman', 'plugin'],
-        ['module'],
-        ['plugin'],
-    ];
-
     /**
      * @param  list<string>  $packageTypes
      * @param  list<list<string>>  $extraKeys
@@ -36,8 +21,8 @@ final readonly class ModulesOptions implements OptionsFactory
         public ?string $cacheStore = null,
         public int $cacheTtl = 3600,
         public string $cachePrefix = 'modules',
-        public array $packageTypes = self::DEFAULT_PACKAGE_TYPES,
-        public array $extraKeys = self::DEFAULT_EXTRA_KEYS,
+        public array $packageTypes = ModuleDiscovery::DEFAULT_PACKAGE_TYPES,
+        public array $extraKeys = ModuleDiscovery::DEFAULT_EXTRA_KEYS,
         public string $configRoot = 'modules',
         public string $cachePath = 'bootstrap/cache/modules.php',
         public string $lockKey = 'modules:lifecycle-graph',
@@ -65,12 +50,12 @@ final readonly class ModulesOptions implements OptionsFactory
         $packageTypes = self::nonEmptyStringList(
             violations: $violations,
             path: 'package_types',
-            value: $config['package_types'] ?? self::DEFAULT_PACKAGE_TYPES,
+            value: $config['package_types'] ?? ModuleDiscovery::DEFAULT_PACKAGE_TYPES,
         );
         $extraKeys = self::extraKeyPaths(
             violations: $violations,
             path: 'extra_keys',
-            value: $config['extra_keys'] ?? self::DEFAULT_EXTRA_KEYS,
+            value: $config['extra_keys'] ?? ModuleDiscovery::DEFAULT_EXTRA_KEYS,
         );
 
         $cachePath = self::nonEmpty(violations: $violations, path: 'cache_path', value: $config['cache_path'] ?? 'bootstrap/cache/modules.php');
@@ -139,7 +124,7 @@ final readonly class ModulesOptions implements OptionsFactory
         if (! is_array($value) || $value === []) {
             $violations->add(path: $path, message: 'must be a non-empty list of non-empty strings');
 
-            return self::DEFAULT_PACKAGE_TYPES;
+            return ModuleDiscovery::DEFAULT_PACKAGE_TYPES;
         }
 
         $result = [];
@@ -148,7 +133,7 @@ final readonly class ModulesOptions implements OptionsFactory
             if (! is_string($item) || $item === '') {
                 $violations->add(path: $path, message: 'must contain only non-empty strings');
 
-                return self::DEFAULT_PACKAGE_TYPES;
+                return ModuleDiscovery::DEFAULT_PACKAGE_TYPES;
             }
 
             $result[] = $item;
@@ -163,7 +148,7 @@ final readonly class ModulesOptions implements OptionsFactory
         if (! is_array($value) || $value === []) {
             $violations->add(path: $path, message: 'must be a non-empty list of key paths');
 
-            return self::DEFAULT_EXTRA_KEYS;
+            return ModuleDiscovery::DEFAULT_EXTRA_KEYS;
         }
 
         $paths = [];
@@ -178,7 +163,7 @@ final readonly class ModulesOptions implements OptionsFactory
             if (! is_array($segmentList) || $segmentList === []) {
                 $violations->add(path: $path, message: 'must contain non-empty key path lists');
 
-                return self::DEFAULT_EXTRA_KEYS;
+                return ModuleDiscovery::DEFAULT_EXTRA_KEYS;
             }
 
             $normalized = [];
@@ -187,7 +172,7 @@ final readonly class ModulesOptions implements OptionsFactory
                 if (! is_string($segment) || $segment === '') {
                     $violations->add(path: $path, message: 'key path segments must be non-empty strings');
 
-                    return self::DEFAULT_EXTRA_KEYS;
+                    return ModuleDiscovery::DEFAULT_EXTRA_KEYS;
                 }
 
                 $normalized[] = $segment;

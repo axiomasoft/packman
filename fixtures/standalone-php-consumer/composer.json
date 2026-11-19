@@ -10,7 +10,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman": "0.1.0"
+                    "axiomasoft/packman": "0.1.1"
                 }
             }
         }

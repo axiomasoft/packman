@@ -22,7 +22,7 @@ final class SettingsRegistrar implements PackageRegistrar
     #[Override]
     public function register(Application $app): void
     {
-        $app->singleton(
+        $app->singletonIf(
             SettingDefaultsProviderInterface::class,
             static fn (Application $app): CompiledSettingDefaultsProvider => new CompiledSettingDefaultsProvider(
                 $app->make(ModuleRegistry::class),

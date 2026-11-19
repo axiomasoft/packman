@@ -10,7 +10,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman": "0.1.0"
+                    "axiomasoft/packman": "0.1.1"
                 }
             }
         },
@@ -20,7 +20,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman-schema": "0.1.0"
+                    "axiomasoft/packman-schema": "0.1.1"
                 }
             }
         },
@@ -30,7 +30,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman-modules": "0.1.0"
+                    "axiomasoft/packman-modules": "0.1.1"
                 }
             }
         },
@@ -40,7 +40,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman-panels": "0.1.0"
+                    "axiomasoft/packman-panels": "0.1.1"
                 }
             }
         },
@@ -50,7 +50,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman-filament": "0.1.0"
+                    "axiomasoft/packman-filament": "0.1.1"
                 }
             }
         },
@@ -60,7 +60,7 @@
             "options": {
                 "symlink": true,
                 "versions": {
-                    "axiomasoft/packman-testkit": "0.1.0"
+                    "axiomasoft/packman-testkit": "0.1.1"
                 }
             }
         },

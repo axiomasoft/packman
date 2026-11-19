@@ -20,6 +20,7 @@ Packman splits configuration into **workspace governance manifests** (`packman.j
 ### `split.json` & `compatibility.json`
 
 - [`split.json`](../../split.json): maps each monorepo package directory (`packages/core`, `packages/modules`, etc.) to `{ "repo": ..., "name": ... }` for `MonorepoSplitter`.
+- The kernel split targets the separate `axiomasoft/packman-core` repository and publishes the Composer name `axiomasoft/packman`. The `axiomasoft/packman` Git repository holds the complete monorepo. `bin/packman split` creates local branches for the eight split histories. Publish their tags from their respective histories.
 - [`compatibility.json`](../../compatibility.json): declares `"schema": "urn:packman:compatibility:1"`, `"major": 1`, and the list of `php-api.json` manifests verified by `CompatibilityMatrixChecker`.
 
 ---

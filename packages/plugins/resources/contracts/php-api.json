@@ -1724,6 +1724,35 @@
                     "return": "void",
                     "doc": []
                 },
+                "builtInFor": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "container",
+                            "type": "Illuminate\\Contracts\\Container\\Container",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        },
+                        {
+                            "name": "plugins",
+                            "type": "string",
+                            "by_reference": false,
+                            "variadic": true,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "void",
+                    "doc": []
+                },
                 "hasPendingPlugins": {
                     "visibility": "public",
                     "static": true,

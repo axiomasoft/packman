@@ -8,6 +8,7 @@ use Illuminate\Container\Container;
 use InvalidArgumentException;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
+use Packman\Modules\Contracts\Compiler\ModuleCompilation;
 use Packman\Modules\Data\Compiler\CompiledRegistry;
 use Packman\Modules\Data\Compiler\ExtensionStamp;
 use Packman\Modules\Data\Compiler\InstalledPackageVersion;
@@ -41,7 +42,10 @@ final readonly class ExtensionContract
         try {
             [$names, $versions] = self::installedInput($installedPackages);
             // A static test entry point has no constructor to carry the compiler: it is taken from the running application.
-            $compiler = Container::getInstance()->make(RegistryCompiler::class);
+            $container = Container::getInstance();
+            $compiler = $container->bound(ModuleCompilation::class)
+                ? $container->make(ModuleCompilation::class)
+                : $container->make(RegistryCompiler::class);
             $first = $compiler->compile(
                 manifests: $manifests,
                 installedPackages: $names,

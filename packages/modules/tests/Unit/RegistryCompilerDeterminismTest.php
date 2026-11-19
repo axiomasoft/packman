@@ -8,11 +8,11 @@ use Packman\Features\Data\FeatureFlagDefinition;
 use Packman\Modules\Data\Compiler\CompiledRegistry;
 use Packman\Modules\Data\Entities\Entity;
 use Packman\Modules\Data\Entities\FieldDefinition;
+use Packman\Modules\Data\Extenders\Menu;
 use Packman\Modules\Data\Extenders\Permissions;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
 use Packman\Modules\Exceptions\Compiler\CompilationException;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
-use Packman\Modules\Internal\Extend\Menu;
 
 function determinismEntity(string $name, string $prefix, string $handle): Entity
 {

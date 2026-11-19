@@ -6,6 +6,23 @@
 
 ---
 
+## Write a module or plugin
+
+Use `axiomasoft/packman` for shared PHP contracts. Add `axiomasoft/packman-plugins` for application-scoped contributions or `axiomasoft/packman-modules` for Composer discovery and a compiled module registry. Each extension opts into configuration, settings definitions, schema ownership, and diagnostics through the interfaces it implements.
+
+A Laravel service provider can register a plugin with one call:
+
+```php
+use Packman\Plugins\Laravel\ExtensionRegistrar;
+
+public function register(): void
+{
+    ExtensionRegistrar::builtInFor($this->app, ReportsPlugin::class);
+}
+```
+
+A module that supplies code can return `ModuleManifest::make('acme/reports')->title('Reports')`. A module that owns entity tables also declares its table prefix. Hosts can supply their own discovery and activation implementations. See the [plugin example](packages/plugins/README.md), [module configuration](packages/modules/README.md), and [tested consumer applications](fixtures).
+
 ## Subpackages Overview (8 Packages Total under `packages/`)
 
 | Layer | Subpackage | Composer Name | PSR-4 Root | Responsibility |

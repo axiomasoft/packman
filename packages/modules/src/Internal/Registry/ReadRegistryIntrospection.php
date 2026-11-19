@@ -16,7 +16,11 @@ use Packman\Modules\Data\Entities\Entity;
 use Packman\Modules\Data\Entities\EntityDefinition;
 use Packman\Modules\Data\Entities\EntityField;
 use Packman\Modules\Data\Extenders\Api;
+use Packman\Modules\Data\Extenders\Filament;
+use Packman\Modules\Data\Extenders\Menu;
 use Packman\Modules\Data\Extenders\Permissions;
+use Packman\Modules\Data\Extenders\Routes;
+use Packman\Modules\Data\Extenders\Workflow;
 use Packman\Modules\Data\Registry\ModuleExplanation;
 use Packman\Modules\Data\Registry\RegistryMap;
 use Packman\Modules\Enums\Entities\Capability;
@@ -26,10 +30,6 @@ use Packman\Modules\Exceptions\Registry\RegistryInputUnavailable;
 use Packman\Modules\Exceptions\Registry\StaleRegistryRevision;
 use Packman\Modules\Internal\Compiler\InstalledPackages;
 use Packman\Modules\Internal\Compiler\PipelineStages;
-use Packman\Modules\Internal\Extend\Filament;
-use Packman\Modules\Internal\Extend\Menu;
-use Packman\Modules\Internal\Extend\Routes;
-use Packman\Modules\Internal\Extend\Workflow;
 
 /**
  * Read-only registry diagnostics over compiled module bytes and optional

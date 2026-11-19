@@ -3,18 +3,40 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Artisan;
+use Packman\Context\Contracts\ContextScopeInterface;
+use Packman\Context\Data\ScopeRef;
+use Packman\Modules\Contracts\Definition\ModuleDiscovery as DiscoveryContract;
+use Packman\Modules\Contracts\Registry\ModuleRegistry;
+use Packman\Modules\Contracts\Registry\ModuleStateReader;
+use Packman\Modules\Data\Lifecycle\ModuleDependency;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
+use Packman\Modules\Data\Settings\DefaultSettingDefinition;
 use Packman\Modules\Exceptions\Compiler\InvalidManifestException;
 use Packman\Modules\Internal\Commands\CompileModulesCommand;
-use Packman\Modules\Internal\Definition\ModuleDependency;
 use Packman\Modules\Internal\Discovery\ModuleDiscovery;
-use Packman\Modules\Internal\Settings\DefaultSettingDefinition;
 use Packman\Modules\Internal\Support\ModulesOptions;
 use Packman\Modules\ModulesServiceProvider;
 use Packman\Modules\Tests\Stubs\StubModuleDefinition;
 
 beforeEach(function (): void {
     $this->app->register(ModulesServiceProvider::class);
+});
+
+it('replaces scoped discovery lists and merges named cache options', function (): void {
+    config()->set('modules.cache.prefix', 'host');
+    config()->set('packman.modules', [
+        'package_types' => ['host-module'],
+        'extra_keys' => [['definition']],
+        'cache' => ['ttl' => 15],
+    ]);
+    $this->app->forgetInstance(ModulesOptions::class);
+
+    $options = $this->app->make(ModulesOptions::class);
+
+    expect($options->packageTypes)->toBe(['host-module'])
+        ->and($options->extraKeys)->toBe([['definition']])
+        ->and($options->cachePrefix)->toBe('host')
+        ->and($options->cacheTtl)->toBe(15);
 });
 
 it('builds a fluent manifest with readable fields', function (): void {
@@ -99,6 +121,48 @@ it('skips packman-module packages without a module class but rejects an invalid 
     'empty string' => ['', 'Discovered module class []'],
     'non-string' => [['Packman\\Nope'], 'Discovered module class [array]'],
 ]);
+
+it('compiles and activates a code-only module using host bindings without SQL', function (): void {
+    $path = 'bootstrap/cache/module-'.bin2hex(random_bytes(6)).'.php';
+    config()->set('modules.cache_path', $path);
+    config()->set('modules.connection', 'unconfigured-connection');
+    $this->app->forgetInstance(ModulesOptions::class);
+    $this->app->forgetInstance(ModuleRegistry::class);
+    $discovery = new class implements DiscoveryContract
+    {
+        public function discover(): array
+        {
+            return [ModuleManifest::make('acme/code')->title('Code')];
+        }
+    };
+    $reader = new class implements ModuleStateReader
+    {
+        public bool $enabled = true;
+
+        public function enabledFor(ContextScopeInterface $ctx): array
+        {
+            return $this->enabled ? ['acme/code' => ['state' => 'enabled', 'edition' => 'standard']] : [];
+        }
+    };
+    $this->app->instance(DiscoveryContract::class, $discovery);
+    $this->app->instance(ModuleStateReader::class, $reader);
+
+    try {
+        expect(Artisan::call('modules:compile'))->toBe(0);
+        $registry = $this->app->make(ModuleRegistry::class);
+        $scope = new ScopeRef('example');
+        expect($registry->get('acme/code')->tablePrefix)->toBeNull()
+            ->and($registry->isActive('acme/code', $scope))->toBeTrue();
+        $reader->enabled = false;
+        expect($registry->active($scope))->toBe([]);
+    } finally {
+        $file = $this->app->basePath($path);
+
+        if (is_file($file)) {
+            unlink($file);
+        }
+    }
+});
 
 it('modules:compile does not fail when discovery reports no module packages', function (): void {
     $installedJson = tempnam(sys_get_temp_dir(), 'packman-modules-');

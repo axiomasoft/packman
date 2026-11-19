@@ -7,11 +7,11 @@ namespace Packman\Modules\Internal\Compiler;
 use Packman\Modules\Data\Entities\Entity;
 use Packman\Modules\Data\Entities\EntityField;
 use Packman\Modules\Data\Extenders\Api;
+use Packman\Modules\Data\Extenders\Filament;
+use Packman\Modules\Data\Extenders\Menu;
 use Packman\Modules\Data\Extenders\Permissions;
-use Packman\Modules\Internal\Extend\Filament;
-use Packman\Modules\Internal\Extend\Menu;
-use Packman\Modules\Internal\Extend\Routes;
-use Packman\Modules\Internal\Extend\Workflow;
+use Packman\Modules\Data\Extenders\Routes;
+use Packman\Modules\Data\Extenders\Workflow;
 
 /**
  * The single place the closed 8-extender pipeline order is declared —

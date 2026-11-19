@@ -7,6 +7,7 @@ namespace Packman\Plugins\Laravel;
 use Illuminate\Console\Application as Artisan;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Container\Container as ContainerContract;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Application as FoundationApplication;
 use Packman\Attributes\Spi;
@@ -42,7 +43,12 @@ final class ExtensionRegistrar implements PackageRegistrar
     /** @param class-string<ExtensionPlugin> ...$plugins */
     public static function builtIn(string ...$plugins): void
     {
-        $container = Container::getInstance();
+        self::builtInFor(Container::getInstance(), ...$plugins);
+    }
+
+    /** @param class-string<ExtensionPlugin> ...$plugins */
+    public static function builtInFor(ContainerContract $container, string ...$plugins): void
+    {
         $container->singletonIf(PluginCatalog::class, static fn (): PluginCatalog => new PluginCatalog);
         $catalog = $container->make(PluginCatalog::class);
 

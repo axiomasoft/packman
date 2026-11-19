@@ -4,26 +4,39 @@ declare(strict_types=1);
 
 namespace Packman\Modules\Internal\Lifecycle;
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionResolverInterface;
 use Packman\Context\Contracts\ContextScopeInterface;
-use Packman\Modules\Contracts\Registry\ModuleStateReader;
+use Packman\Modules\Contracts\Registry\VersionedModuleStateReader;
 use Packman\Modules\Enums\Lifecycle\ModuleState;
 use stdClass;
 
 /**
- * DB-backed {@see ModuleStateReader}: reads the enabled set straight from
+ * DB-backed {@see VersionedModuleStateReader}: reads the enabled set straight from
  * `mod_modules`. `$ctx` allows per-tenant/account connection or scoping.
  * `$connection` is null (app default) unless a caller pins an explicit name.
  *
  * @internal spec: P1.5, D13
  */
-final readonly class DatabaseModuleStateReader implements ModuleStateReader
+final readonly class DatabaseModuleStateReader implements VersionedModuleStateReader
 {
     public function __construct(
         private ConnectionResolverInterface $connections,
         private ?string $connection = null,
         private string $modulesTable = 'mod_modules',
+        private string $lifecycleLogTable = 'mod_lifecycle_log',
     ) {}
+
+    public function versionFor(ContextScopeInterface $ctx): int
+    {
+        $connection = $this->connections->connection($this->connection);
+
+        if ($connection instanceof Connection && ! $connection->getSchemaBuilder()->hasTable($this->lifecycleLogTable)) {
+            return 0;
+        }
+
+        return $connection->table($this->lifecycleLogTable)->count();
+    }
 
     /** @return array<string, array{state: string, edition: string}> */
     public function enabledFor(ContextScopeInterface $ctx): array

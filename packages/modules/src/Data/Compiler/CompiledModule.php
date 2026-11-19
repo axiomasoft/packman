@@ -7,8 +7,8 @@ namespace Packman\Modules\Data\Compiler;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Modules\Contracts\Lifecycle\ModuleLifecycle;
+use Packman\Modules\Data\Lifecycle\ModuleDependency;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
-use Packman\Modules\Internal\Definition\ModuleDependency;
 
 /**
  * One module's compiled-registry entry (`ModuleRegistry::get()`): manifest

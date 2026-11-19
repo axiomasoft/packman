@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Packman\Modules\Internal\Settings;
+namespace Packman\Modules\Data\Settings;
+
+use Packman\Attributes\Api;
 
 /**
  * ModuleManifest-declared setting default: namespace is the owning module id,
  * applied automatically by the settings cascade as the lowest-priority
  * level below user/workspace/account overrides.
- *
- * @internal spec: B-10 §3.2, P1.7
  */
+#[Api(since: '0.1.1')]
 final readonly class DefaultSettingDefinition
 {
-    private function __construct(
+    public function __construct(
         public string $key,
         public mixed $default,
         public bool $workspaceScoped = false,
@@ -34,6 +35,28 @@ final readonly class DefaultSettingDefinition
             workspaceScoped: $this->workspaceScoped,
             userScoped: $this->userScoped,
             sensitive: true,
+        );
+    }
+
+    public function workspaceScoped(): self
+    {
+        return new self(
+            key: $this->key,
+            default: $this->default,
+            workspaceScoped: true,
+            userScoped: $this->userScoped,
+            sensitive: $this->sensitive,
+        );
+    }
+
+    public function userScoped(): self
+    {
+        return new self(
+            key: $this->key,
+            default: $this->default,
+            workspaceScoped: $this->workspaceScoped,
+            userScoped: true,
+            sensitive: $this->sensitive,
         );
     }
 }

@@ -7,9 +7,10 @@ namespace Packman\Modules\Internal\Compiler;
 use LogicException;
 use Packman\Modules\Contracts\Compiler\Extender;
 use Packman\Modules\Data\Compiler\NormalizedExtension;
+use Packman\Modules\Data\Entities\Entity;
+use Packman\Modules\Data\Lifecycle\ModuleDependency;
 use Packman\Modules\Data\Lifecycle\ModuleManifest;
 use Packman\Modules\Exceptions\Compiler\CompilationException;
-use Packman\Modules\Internal\Definition\ModuleDependency;
 
 /**
  * Compile-time checks — every failure here is a deploy failure, never a
@@ -67,7 +68,10 @@ final class CompilationValidator
                 throw CompilationException::missingTitle($manifest->composerName);
             }
 
-            if ($manifest->tablePrefix === null) {
+            if ($manifest->tablePrefix === null
+                && (($manifest->settings !== [] && $manifest->settingsNamespace === null)
+                    || array_any($manifest->extenders, static fn (Extender $extender): bool => $extender instanceof Entity))
+            ) {
                 throw CompilationException::missingTablePrefix($manifest->composerName);
             }
         }

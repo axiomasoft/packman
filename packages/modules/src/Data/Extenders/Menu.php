@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Packman\Modules\Internal\Extend;
+namespace Packman\Modules\Data\Extenders;
 
+use Packman\Attributes\Api;
 use Packman\Modules\Contracts\Compiler\Extender;
 
 /**
  * 5. Panel navigation entry or group. Order between siblings is
  * deterministic via `after()` — never a numeric priority.
- *
- * @internal spec: B-10 §4.2
  */
+#[Api(since: '0.1.1')]
 final class Menu implements Extender
 {
     public bool $isGroup = false;
@@ -60,6 +60,30 @@ final class Menu implements Extender
     public function permission(string $permission): self
     {
         $this->permission = $permission;
+
+        return $this;
+    }
+
+    public static function group(string $panel, string $handle, string $label): self
+    {
+        $menu = new self($panel, $handle);
+        $menu->isGroup = true;
+        $menu->label = $label;
+
+        return $menu;
+    }
+
+    public function route(string $routeName): self
+    {
+        $this->routeName = $routeName;
+
+        return $this;
+    }
+
+    /** @param  class-string  $badgeResolverClass */
+    public function badge(string $badgeResolverClass): self
+    {
+        $this->badgeResolverClass = $badgeResolverClass;
 
         return $this;
     }

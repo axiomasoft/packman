@@ -1,6 +1,6 @@
 {
     "packages/core": {
-        "repo": "axiomasoft/packman",
+        "repo": "axiomasoft/packman-core",
         "name": "axiomasoft/packman"
     },
     "packages/modules": {
