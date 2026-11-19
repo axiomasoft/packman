@@ -4874,7 +4874,7 @@
                             "flags": 0
                         }
                     ],
-                    "return": "Packman\\Errors\\Internal\\CompiledProblemRegistry",
+                    "return": "Packman\\Errors\\Contracts\\ProblemRegistry",
                     "doc": []
                 }
             },
@@ -6776,6 +6776,65 @@
             "enum_backing": null,
             "enum_cases": [],
             "spi_kind": "implement"
+        },
+        "Packman\\Foundation\\DependencyOrder": {
+            "kind": "class",
+            "layer": "api",
+            "since": "0.1.1",
+            "final": true,
+            "readonly": true,
+            "abstract": false,
+            "extends": [],
+            "implements": [],
+            "uses": [],
+            "doc": [],
+            "methods": {
+                "resolve": {
+                    "visibility": "public",
+                    "static": true,
+                    "final": false,
+                    "abstract": false,
+                    "by_reference": false,
+                    "parameters": [
+                        {
+                            "name": "dependencies",
+                            "type": "array",
+                            "by_reference": false,
+                            "variadic": false,
+                            "optional": false,
+                            "default": null,
+                            "flags": 0
+                        }
+                    ],
+                    "return": "self",
+                    "doc": []
+                }
+            },
+            "properties": {
+                "blocked": {
+                    "flags": 1,
+                    "type": "array",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                },
+                "ordered": {
+                    "flags": 1,
+                    "type": "array",
+                    "readonly": true,
+                    "visibility": "public",
+                    "static": false,
+                    "default": null,
+                    "doc": [],
+                    "hooks": []
+                }
+            },
+            "constants": [],
+            "enum_backing": null,
+            "enum_cases": []
         },
         "Packman\\PackmanServiceProvider": {
             "kind": "class",

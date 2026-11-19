@@ -9,6 +9,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Packman\Attributes\Spi;
 use Packman\Attributes\SpiKind;
 use Packman\Errors\Contracts\ProblemDefinitionProvider;
+use Packman\Errors\Contracts\ProblemRegistry;
 use Packman\Errors\Enums\CoreErrorCode;
 use Packman\Errors\Exceptions\ProblemRegistryException;
 use Packman\Errors\Internal\CompiledProblemRegistry;
@@ -18,7 +19,7 @@ use Packman\Errors\Internal\ProblemContribution;
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class ProblemRegistryFactory
 {
-    public function make(Application $app): CompiledProblemRegistry
+    public function make(Application $app): ProblemRegistry
     {
         $contributions = [];
 

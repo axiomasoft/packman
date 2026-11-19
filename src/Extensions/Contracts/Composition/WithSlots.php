@@ -10,7 +10,7 @@ use Packman\Attributes\SpiKind;
 #[Spi(kind: SpiKind::Implement, since: '1.0')]
 interface WithSlots
 {
-    /** @return array<class-string, array{kind: string, cardinality?: string}> */
+    /** @return array<class-string, array{kind: string, cardinality?: string, shared?: bool}> */
     public function definedSlots(): array;
 
     /** @return list<array{slot: class-string, id: string, implementation: class-string, priority?: int, key?: string|null}> */

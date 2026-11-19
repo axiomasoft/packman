@@ -25,7 +25,7 @@ final readonly class ExtensionFacetProfile
      * @param  list<class-string>  $schemaComponents
      * @param  array<class-string, string>  $definedCapabilities
      * @param  array<class-string, class-string|array{config: string, default?: class-string|null}>  $providedCapabilities
-     * @param  array<class-string, array{kind: string, cardinality?: string}>  $definedSlots
+     * @param  array<class-string, array{kind: string, cardinality?: string, shared?: bool}>  $definedSlots
      * @param  list<array{slot: class-string, id: string, implementation: class-string, priority?: int, key?: string|null}>  $slotContributions
      * @param  class-string|null  $onEnableHook
      * @param  class-string|null  $onDisableHook
