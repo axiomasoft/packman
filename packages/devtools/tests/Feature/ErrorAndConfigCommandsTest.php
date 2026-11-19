@@ -60,30 +60,17 @@ PHP);
 
 it('scans ErrorCode enums, validates uniqueness and URNs, and syncs error-codes manifests', function (): void {
     $ws = new TempWorkspace('packman-errors-test-');
-    $autoloader = static function (string $class) use ($ws): void {
-        $prefixes = [
-            'Acme\\Alpha\\' => $ws->path('packages/alpha/src/'),
-            'Acme\\Beta\\' => $ws->path('packages/beta/src/'),
-        ];
-
-        foreach ($prefixes as $prefix => $dir) {
-            if (str_starts_with($class, $prefix)) {
-                $rel = str_replace('\\', '/', substr($class, strlen($prefix))).'.php';
-                $file = $dir.$rel;
-
-                if (is_file($file)) {
-                    require_once $file;
-                }
-            }
-        }
-    };
-    spl_autoload_register($autoloader);
 
     try {
         $ws->seedSchemasFromRepo(dirname(__DIR__, 4));
         $pkgA = $ws->seedCleanMonorepoPackage('acme/alpha', 'packages/alpha', 'Acme\\Alpha\\');
         $pkgB = $ws->seedCleanMonorepoPackage('acme/beta', 'packages/beta', 'Acme\\Beta\\');
         $ws->writePackmanJson([$pkgA, $pkgB]);
+        $ws->writeJson('composer.json', ['config' => ['vendor-dir' => 'dependencies']]);
+        $ws->write('dependencies/composer/autoload_psr4.php', '<?php return '.var_export([
+            'Acme\\Alpha\\' => [$ws->path('packages/alpha/src')],
+            'Acme\\Beta\\' => [$ws->path('packages/beta/src')],
+        ], true).';');
 
         $ws->write('packages/alpha/src/Enums/AlphaErrorCode.php', <<<'PHP'
 <?php
@@ -179,7 +166,6 @@ PHP);
         expect($report->ok())->toBeFalse()
             ->and(implode("\n", $report->diagnostics))->toContain('Duplicate error wire code');
     } finally {
-        spl_autoload_unregister($autoloader);
         $ws->cleanup();
     }
 });

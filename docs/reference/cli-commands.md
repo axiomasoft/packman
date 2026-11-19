@@ -18,6 +18,9 @@ Entrypoint: [`bin/packman`](../../bin/packman) (also shipped by `axiomasoft/pack
 | `split` | `--dry-run`, `--only=*`, `--branch=`, `--root=<path>` | `SplitCommand` | Validate release preflight (`MonorepoSplitter`) and plan/execute `git subtree split` targets declared in `split.json`. |
 | `ai:sync` | `--dry-run`, `--root=<path>` | `AiSyncCommand` | Sync `ai/manifest.json`, `ai/rules/*.md`, and `ai/agents/*.md` into `.claude/`, `.codex/agents/*.toml`, `.gemini/`, and `AGENTS.md` via `EcosystemAiSynchronizer`. |
 
+When inspecting another checkout with `--root`, install its Composer dependencies first. The error registry evaluates that checkout's problem definition providers using its Composer mappings, including a configured `vendor-dir`.
+
+
 ---
 
 ## 2. Laravel Artisan Runtime Commands
