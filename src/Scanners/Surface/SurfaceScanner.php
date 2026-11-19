@@ -290,6 +290,32 @@ final class SurfaceScanner
                 continue;
             }
 
+            if ($member instanceof ClassMethod || $member instanceof Property || $member instanceof ClassConst) {
+                $internal = $this->isInternalMember($member->attrGroups);
+
+                if ($member instanceof ClassMethod && strtolower($member->name->toString()) === '__construct' && ($member->isPrivate() || $internal)) {
+                    foreach ($member->params as $param) {
+                        if (! $param->isPromoted() || $param->isPrivate() || $this->isInternalMember($param->attrGroups)) {
+                            continue;
+                        }
+                        $properties[$this->paramName($param)] = [
+                            'flags' => $param->flags,
+                            'type' => $this->typeToString($param->type, $referencedTypes),
+                            'readonly' => $param->isReadonly() || ($stmt instanceof Class_ && $stmt->isReadonly()),
+                            'visibility' => $param->isProtected() ? 'protected' : 'public',
+                            'static' => false,
+                            'default' => null,
+                            'doc' => [],
+                            'hooks' => [],
+                        ];
+                    }
+                }
+
+                if ($internal) {
+                    continue;
+                }
+            }
+
             if ($member instanceof ClassMethod && ! $member->isPrivate()) {
                 $isConstructor = strtolower($member->name->toString()) === '__construct';
                 $isDocInternal = $this->hasInternalDocTag($member);
@@ -418,6 +444,20 @@ final class SurfaceScanner
         }
 
         return $parsed;
+    }
+
+    /** @param list<AttributeGroup> $groups */
+    private function isInternalMember(array $groups): bool
+    {
+        foreach ($groups as $group) {
+            foreach ($group->attrs as $attribute) {
+                if ($attribute->name->toString() === Internal::class) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /** @return ?array{name: string, args: array<int|string, mixed>} */
