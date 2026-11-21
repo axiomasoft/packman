@@ -54,7 +54,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-php
       - run: composer update --prefer-dist
-      - run: composer test:parallel
+      - run: composer test:parallel -- --fail-on-empty-test-suite
 
   postgresql:
     name: PostgreSQL tests
@@ -78,7 +78,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-php
       - run: composer update --prefer-dist
-      - run: composer test:pg
+      - run: composer test:pg -- --fail-on-skipped --fail-on-empty-test-suite
 
   fixtures:
     name: Consumer fixtures
@@ -111,6 +111,6 @@ jobs:
               else
                 composer update --working-dir="$dir" --no-interaction --prefer-dist --no-progress --ansi
               fi
-              composer test --working-dir="$dir" --no-interaction --ansi
+              composer test --working-dir="$dir" --no-interaction --ansi -- --fail-on-skipped --fail-on-empty-test-suite
             fi
           done

@@ -13,6 +13,7 @@ use Packman\Modules\Contracts\Registry\ModuleStateReader;
 use Packman\Modules\Contracts\Registry\VersionedModuleStateReader;
 use Packman\Modules\Data\Compiler\CompiledModule;
 use Packman\Modules\Data\Compiler\CompiledRegistry;
+use Packman\Modules\Exceptions\Compiler\CompilationException;
 use Packman\Modules\Exceptions\Registry\ModuleNotFound;
 use Packman\Modules\ModulesServiceProvider;
 use RuntimeException;
@@ -46,11 +47,11 @@ use RuntimeException;
  * Octane and long-lived workers do not hot-reload mid-request: deploy must
  * run `octane:reload` and restart queue workers. Tenant activation epochs
  * never rewrite this fingerprint. `flush()` drops that projection only.
- * The decoded file stays memoized with its `stat` stamp (inode, mtime,
- * size) and is not `require`d again while the stamp is unchanged. A changed
+ * The decoded file stays memoized with its identity and content digest
+ * and is not `require`d again while those are unchanged. A changed
  * stamp invalidates OPcache when `opcache_invalidate` exists, so a redeploy
  * is visible even when `opcache.validate_timestamps=0`. A missing file is
- * not cached. A non-array payload is corrupt and fails closed.
+ * not cached. An invalid payload is rejected.
  *
  * @internal spec: B-10 §5.2/§7.1, AC-3/AC-4, D39, D30/A1/A2, P1.15, A10
  */
@@ -62,10 +63,12 @@ final class CompiledModuleRegistry implements ModuleRegistry
 
     private ?CompiledRegistry $registry = null;
 
-    /** @var array<array-key, mixed>|null */
+    /** @var array{modules: list<array<string, mixed>>, registry: array<array-key, mixed>}|null */
     private ?array $compiledPayload = null;
 
     private ?string $compiledStamp = null;
+
+    private bool $snapshotPinned = false;
 
     /**
      * @param  ModuleStateReader|(Closure(): ModuleStateReader)  $stateReader
@@ -132,14 +135,11 @@ final class CompiledModuleRegistry implements ModuleRegistry
 
         $data = $this->readCache();
 
-        if ($data === [] && ! $this->failIfMissing && ! is_file($this->cachePath)) {
+        if ($data === null) {
             return $this->registry = CompiledRegistry::empty();
         }
 
-        /** @var array<string, mixed> $registry */
-        $registry = is_array($data['registry'] ?? null) ? $data['registry'] : [];
-
-        return $this->registry = CompiledRegistry::fromArray($registry);
+        return $this->registry = CompiledRegistry::fromArray($data['registry']);
     }
 
     /**
@@ -159,6 +159,7 @@ final class CompiledModuleRegistry implements ModuleRegistry
     {
         $this->modules = null;
         $this->registry = null;
+        $this->snapshotPinned = false;
     }
 
     /** @return array<string, array{state: string, edition: string}> */
@@ -193,10 +194,7 @@ final class CompiledModuleRegistry implements ModuleRegistry
 
         $modules = [];
 
-        /** @var list<array<string, mixed>> $rows */
-        $rows = is_array($data['modules'] ?? null) ? $data['modules'] : [];
-
-        foreach ($rows as $row) {
+        foreach ($data['modules'] ?? [] as $row) {
             $module = CompiledModule::fromArray($row);
             $modules[$module->composerName] = $module;
         }
@@ -216,10 +214,14 @@ final class CompiledModuleRegistry implements ModuleRegistry
      * read. A non-array payload is corrupt and fails closed without being
      * cached.
      *
-     * @return array<array-key, mixed>
+     * @return array{modules: list<array<string, mixed>>, registry: array<array-key, mixed>}|null
      */
-    private function readCache(): array
+    private function readCache(): ?array
     {
+        if ($this->snapshotPinned) {
+            return $this->compiledPayload;
+        }
+
         $stamp = $this->fileStamp();
 
         if ($stamp === null) {
@@ -231,10 +233,16 @@ final class CompiledModuleRegistry implements ModuleRegistry
                 ));
             }
 
-            return [];
+            $this->compiledPayload = null;
+            $this->compiledStamp = null;
+            $this->snapshotPinned = true;
+
+            return null;
         }
 
         if ($this->compiledPayload !== null && $this->compiledStamp === $stamp) {
+            $this->snapshotPinned = true;
+
             return $this->compiledPayload;
         }
 
@@ -245,15 +253,16 @@ final class CompiledModuleRegistry implements ModuleRegistry
 
         $data = require $this->cachePath;
 
-        if (! is_array($data)) {
-            throw new RuntimeException(sprintf(
-                'Compiled module registry at [%s] is corrupt.',
-                $this->cachePath,
-            ));
+        if (! is_array($data) || ! is_array($data['registry'] ?? null) || ! is_array($data['modules'] ?? null)
+            || ! array_is_list($data['modules']) || ! array_all($data['modules'], static fn (mixed $row): bool => is_array($row)
+                && is_string($row['composerName'] ?? null))) {
+            throw CompilationException::corruptArtifact($this->cachePath.' has an invalid payload');
         }
 
+        /** @var array{modules: list<array<string, mixed>>, registry: array<array-key, mixed>} $data */
         $this->compiledPayload = $data;
         $this->compiledStamp = $stamp;
+        $this->snapshotPinned = true;
 
         return $data;
     }
@@ -267,23 +276,22 @@ final class CompiledModuleRegistry implements ModuleRegistry
     {
         clearstatcache(true, $this->cachePath);
 
-        if (! is_file($this->cachePath)) {
+        if (! file_exists($this->cachePath) && ! is_link($this->cachePath)) {
             return null;
+        }
+
+        if (! is_file($this->cachePath)) {
+            throw CompilationException::corruptArtifact($this->cachePath.' is not a regular file');
         }
 
         $stat = @stat($this->cachePath);
+        $digest = @hash_file('sha256', $this->cachePath);
 
-        if ($stat === false) {
-            return null;
+        if ($stat === false || $digest === false) {
+            throw CompilationException::corruptArtifact($this->cachePath.' cannot be read');
         }
 
-        $contents = @file_get_contents($this->cachePath);
-
-        if (! is_string($contents)) {
-            return null;
-        }
-
-        return $stat['ino'].':'.$stat['mtime'].':'.$stat['size'].':'.hash('sha256', $contents);
+        return $stat['dev'].':'.$stat['ino'].':'.$stat['mtime'].':'.$stat['size'].':'.$digest;
     }
 
     /**
@@ -321,7 +329,9 @@ final class CompiledModuleRegistry implements ModuleRegistry
         // live one, so both return values are verified. The fs calls are
         // @-silenced so a warning is not converted to a foreign exception
         // (ErrorException) ahead of these explicit, typed failures.
-        if (@file_put_contents($tmpPath, "<?php\n\nreturn ".var_export($payload, true).";\n", LOCK_EX) === false) {
+        $contents = "<?php\n\nreturn ".var_export($payload, true).";\n";
+
+        if (@file_put_contents($tmpPath, $contents, LOCK_EX) !== strlen($contents)) {
             @unlink($tmpPath);
 
             throw new RuntimeException(sprintf('Unable to write temporary compiled registry [%s].', $tmpPath));

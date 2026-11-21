@@ -97,7 +97,7 @@ Sockit/Proxyma/Commerz PostgreSQL protocols are not certified by the joint SQLit
 | Static analysis and gates | Pint, PHPStan, Rector, `bin/packman gate`, API / error-code / config-schema checks, `ai:sync`, and `composer audit` |
 | SQLite tests | `composer test:parallel` (every test outside the `pg` group) |
 | PostgreSQL tests | `composer test:pg` against PostgreSQL 16 published on `127.0.0.1:54329` as database `packman_test` |
-| Consumer fixtures | The three applications under `fixtures/`, including the modular platform's PostgreSQL lifecycle test when the service is reachable |
+| Consumer fixtures | The three applications under `fixtures/`, including the modular platform's PostgreSQL lifecycle test |
 
 The workflow does not install Dependabot. Abandoned packages are reported and do not fail the job by themselves; a security advisory does. The monorepo does not commit `composer.lock`, so CI resolves dependencies with `composer update`. `make ci` is the same sequence locally, and it also runs the fixtures.
 

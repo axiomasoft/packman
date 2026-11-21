@@ -129,7 +129,12 @@ abstract class TestCase extends OrchestraTestCase
 
             $this->isolatedDatabasePaths = [];
 
-            $filesystem->delete($this->isolatedModuleCaches);
+            foreach ($this->isolatedModuleCaches as $path) {
+                if (is_file($path)) {
+                    $filesystem->delete($path);
+                }
+            }
+
             $this->isolatedModuleCaches = [];
         }
     }

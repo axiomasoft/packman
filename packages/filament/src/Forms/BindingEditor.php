@@ -451,16 +451,20 @@ final readonly class BindingEditor
         $value = $state['value'] ?? null;
         $nullable = ($rule['nullable'] ?? false) === true;
 
-        if ($value === null && ! $nullable) {
-            throw InvalidBindingStateException::invalidPatch('Field "'.$key.'" does not allow null.');
+        if ($value === null) {
+            if (! $nullable) {
+                throw InvalidBindingStateException::invalidPatch('Field "'.$key.'" does not allow null.');
+            }
+
+            return ['operation' => 'set', 'value' => null];
         }
 
         $minimum = $rule['minimum'] ?? null;
         $maximum = $rule['maximum'] ?? null;
 
         if ($minimum !== null || $maximum !== null) {
-            if (! is_int($value) && ! is_float($value)) {
-                throw InvalidBindingStateException::invalidPatch('Field "'.$key.'" must be a number.');
+            if (! is_int($value) && (! is_float($value) || ! is_finite($value))) {
+                throw InvalidBindingStateException::invalidPatch('Field "'.$key.'" must be a finite number.');
             }
 
             if ($minimum !== null && $value < $minimum) {

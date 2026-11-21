@@ -137,7 +137,7 @@ final readonly class SchemaStatusCheck implements DoctorCheck
                 continue;
             }
 
-            $matched = glob(rtrim($directory, '/').'/*.php');
+            $matched = glob(rtrim($directory, '/').'/*_*.php');
 
             if (is_array($matched)) {
                 array_push($files, ...$matched);
@@ -148,11 +148,12 @@ final readonly class SchemaStatusCheck implements DoctorCheck
         foreach ($files as $file) {
             $name = basename($file, '.php');
 
-            if (! isset($applied[$name])) {
+            if (! isset($applied[$name]) && is_file($file)) {
                 $pending[] = $name;
             }
         }
 
+        $pending = array_unique($pending, SORT_STRING);
         sort($pending, SORT_STRING);
 
         return $pending;

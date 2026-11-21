@@ -31,13 +31,30 @@ final readonly class ScaffoldRunner
         /** @var array<string, true> $seenTargets */
         $seenTargets = [];
 
+        $basePath = str_replace('\\', '/', $basePath);
+        if (! str_starts_with($basePath, '/')) {
+            $cwd = getcwd();
+            if ($cwd === false) {
+                throw new RuntimeException('Unable to resolve the working directory.');
+            }
+
+            $basePath = Layout::absolute($cwd, $basePath);
+        }
+
         $base = self::normalizePath($basePath);
+        $basePrefix = rtrim($base, '/').'/';
 
         foreach ($files as $file) {
-            $target = self::normalizePath(Layout::absolute($basePath, $file->relativePath));
+            $target = self::normalizePath(Layout::absolute($base, $file->relativePath));
 
-            if ($target !== $base && ! str_starts_with($target, $base.'/')) {
+            if ($target !== $base && ! str_starts_with($target, $basePrefix)) {
                 throw new RuntimeException('Scaffold target escapes the base path: '.$file->relativePath);
+            }
+
+            for ($path = $target; $path !== $base; $path = dirname($path)) {
+                if (is_link($path)) {
+                    throw new RuntimeException('Scaffold target uses a symbolic link: '.$file->relativePath);
+                }
             }
 
             if (is_dir($target)) {

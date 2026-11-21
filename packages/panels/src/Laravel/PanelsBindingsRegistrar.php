@@ -49,7 +49,7 @@ final class PanelsBindingsRegistrar implements PackageRegistrar
             return PanelsOptions::fromArray(array_replace_recursive($primary, $scoped));
         });
 
-        $app->singleton(PanelRegistry::class, static function (Application $app): PanelRegistry {
+        $app->singleton(PanelRegistry::class, static function (Application $app): PanelRegistryImpl {
             $compiler = new PanelCompiler(static fn (): array => $app->make(PanelsOptions::class)->defaults);
 
             return new PanelRegistryImpl($app, $compiler);
@@ -107,7 +107,7 @@ final class PanelsBindingsRegistrar implements PackageRegistrar
             self::registerExtensionPanels($app);
 
             if ($app->bound(PanelRegistry::class)) {
-                $registry = $app->make(PanelRegistry::class);
+                $registry = $app->get(PanelRegistry::class);
 
                 if ($registry instanceof PanelRegistryImpl) {
                     $registry->freeze();

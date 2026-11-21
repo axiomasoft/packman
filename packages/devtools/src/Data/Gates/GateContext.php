@@ -45,7 +45,7 @@ final readonly class GateContext
             throw new RuntimeException("Cannot read {$path}: ".$exception->getMessage(), $exception->getCode(), $exception);
         }
 
-        if (! is_array($decoded) || array_is_list($decoded)) {
+        if (! is_array($decoded) || ! str_starts_with(ltrim($raw), '{')) {
             throw new RuntimeException("Cannot read {$path}: composer.json must be a JSON object.");
         }
 

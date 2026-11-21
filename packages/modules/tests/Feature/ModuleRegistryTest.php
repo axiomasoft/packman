@@ -407,12 +407,14 @@ it('pins compiled() for one job and reloads only after flush', function (): void
 
     expect($registry->compiled())->not->toBe($pinned)
         ->and($registry->compiled()->toArray())->toBe($pinned->toArray())
-        ->and($registry->compiled()->fingerprint)->toBe($first->fingerprint);
+        ->and($registry->compiled()->fingerprint)->toBe($first->fingerprint)
+        ->and($registry->get('packman/alpha')->title)->toBe('Alpha');
 
     $registry->flush();
 
     expect($registry->compiled()->fingerprint)->toBe($second->fingerprint)
-        ->and($registry->compiled()->fingerprint)->not->toBe($first->fingerprint);
+        ->and($registry->compiled()->fingerprint)->not->toBe($first->fingerprint)
+        ->and($registry->get('packman/beta')->title)->toBe('Beta');
 
     unlink($path);
 });
@@ -445,9 +447,9 @@ it('rejects a corrupt compiled artifact and keeps activation off the fingerprint
     unlink($path);
 });
 
-it('fails closed when the compiled registry file does not return an array', function (bool $failIfMissing): void {
+it('fails closed on an invalid compiled registry payload', function (bool $failIfMissing, mixed $payload): void {
     $path = moduleRegistryCachePath();
-    file_put_contents($path, "<?php\n\nreturn 'not-an-array';\n");
+    file_put_contents($path, '<?php return '.var_export($payload, true).';');
 
     try {
         $registry = newModuleRegistry($path, new ArrayModuleStateReader, failIfMissing: $failIfMissing);
@@ -461,6 +463,12 @@ it('fails closed when the compiled registry file does not return an array', func
 })->with([
     'strict missing mode' => true,
     'lenient missing mode' => false,
+])->with([
+    'non-array' => ['not-an-array'],
+    'missing sections' => [[]],
+    'invalid module list' => [['modules' => 'invalid', 'registry' => []]],
+    'invalid module row' => [['modules' => [[]], 'registry' => []]],
+    'invalid extension sections' => [['modules' => [], 'registry' => 'invalid']],
 ]);
 
 it('reuses an unchanged compiled file after flush and reloads only after the file changes', function (): void {

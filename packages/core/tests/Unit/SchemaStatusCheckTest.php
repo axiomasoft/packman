@@ -122,14 +122,14 @@ it('includes the application database/migrations directory and a single migratio
     $container = new Container;
     $container->instance(ConnectionResolverInterface::class, schemaStatusResolver(true));
     $container->instance('migration.repository', schemaStatusRepository(true, []));
-    $container->instance('migrator', new class($single)
+    $container->instance('migrator', new class($single, $root.'/migrations')
     {
-        public function __construct(private string $file) {}
+        public function __construct(private string $file, private string $directory) {}
 
         /** @return list<string> */
         public function paths(): array
         {
-            return [$this->file];
+            return [$this->file, $this->directory];
         }
     });
     $container->instance('path.database', $root);

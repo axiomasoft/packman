@@ -41,7 +41,9 @@ final readonly class CapabilitiesRegistry implements Capabilities
             throw MissingExtensionException::capability($contract);
         }
 
-        $instance = $this->make($contract, $classes[0]);
+        $instance = $this->container->bound($contract)
+            ? $this->container->make($contract)
+            : $this->make($contract, $classes[0]);
 
         if (! $instance instanceof $contract) {
             throw MissingExtensionException::capability($contract);

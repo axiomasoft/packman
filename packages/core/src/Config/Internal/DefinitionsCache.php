@@ -160,7 +160,7 @@ final readonly class DefinitionsCache
         set_error_handler(static fn (int $severity, string $message, string $file, int $line): bool => true);
 
         try {
-            $failed = file_put_contents($tmp, $php, LOCK_EX) === false
+            $failed = file_put_contents($tmp, $php, LOCK_EX) !== strlen($php)
                 || ! chmod($tmp, 0666 & ~umask())
                 || ! rename($tmp, $this->path);
 
