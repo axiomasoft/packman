@@ -32,6 +32,9 @@ abstract class TestCase extends OrchestraTestCase
     /** @var list<string> */
     private array $isolatedDatabasePaths = [];
 
+    /** @var list<string> */
+    private array $isolatedModuleCaches = [];
+
     /** @return list<class-string> */
     protected function getPackageProviders($app): array
     {
@@ -55,13 +58,18 @@ abstract class TestCase extends OrchestraTestCase
             throw new RuntimeException('Unsafe test database: PGSQL_DATABASE must end in _test.');
         }
 
-        $path = sys_get_temp_dir().'/packman-test-database-'.bin2hex(random_bytes(16));
+        $testId = bin2hex(random_bytes(16));
+        $path = sys_get_temp_dir().'/packman-test-database-'.$testId;
         $filesystem = new Filesystem;
         $filesystem->makeDirectory($path.'/migrations', 0700, true);
         $filesystem->makeDirectory($path.'/bootstrap/cache', 0700, true);
         $this->isolatedDatabasePaths[] = $path;
         $app->useDatabasePath($path);
         $app->useBootstrapPath($path.'/bootstrap');
+
+        $moduleCache = 'bootstrap/cache/modules-'.$testId.'.php';
+        $app['config']->set('modules.cache_path', $moduleCache);
+        $this->isolatedModuleCaches[] = $app->basePath($moduleCache);
 
         $app->singletonIf(ContextResolverInterface::class, static fn (): ContextResolverInterface => new readonly class implements ContextResolverInterface
         {
@@ -120,6 +128,14 @@ abstract class TestCase extends OrchestraTestCase
             }
 
             $this->isolatedDatabasePaths = [];
+
+            foreach ($this->isolatedModuleCaches as $path) {
+                if (is_file($path)) {
+                    $filesystem->delete($path);
+                }
+            }
+
+            $this->isolatedModuleCaches = [];
         }
     }
 }

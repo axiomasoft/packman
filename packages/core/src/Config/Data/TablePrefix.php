@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Config\Data;
 
+use InvalidArgumentException;
 use Packman\Attributes\Api;
 use Packman\Config\Exceptions\InvalidConfiguration;
 use Stringable;
@@ -38,6 +39,10 @@ final readonly class TablePrefix implements Stringable
 
     public function table(string $logicalName): string
     {
+        if (preg_match('/\A[a-z][a-z0-9]*(_[a-z0-9]+)*\z/', $logicalName) !== 1) {
+            throw new InvalidArgumentException("Logical table '{$logicalName}' must be a lower-case snake name.");
+        }
+
         return $this->prefix.$logicalName;
     }
 

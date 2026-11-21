@@ -14,7 +14,7 @@ use Packman\Data\Data\JsonDocument;
 /**
  * Eloquent attribute cast converting JSON columns into immutable {@see JsonDocument} instances.
  *
- * @implements CastsAttributes<JsonDocument, JsonDocument|array<array-key, mixed>|string|null>
+ * @implements CastsAttributes<JsonDocument|null, mixed>
  */
 #[Spi(kind: SpiKind::Call, since: '1.0')]
 final class JsonDocumentCast implements CastsAttributes
@@ -54,6 +54,10 @@ final class JsonDocumentCast implements CastsAttributes
             return (new JsonDocument($value))->canonicalJson;
         }
 
-        return JsonDocuments::capture($value)->canonicalJson;
+        if (is_array($value)) {
+            return JsonDocuments::capture($value)->canonicalJson;
+        }
+
+        throw new InvalidArgumentException("Cannot cast attribute [{$key}] of type ".get_debug_type($value).' to JsonDocument.');
     }
 }

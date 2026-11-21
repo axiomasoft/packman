@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Application as FoundationApplication;
 use Packman\Panels\Builder\Panel;
 use Packman\Panels\Builder\PanelBuilder;
 use Packman\Panels\Builder\PanelProvider;
@@ -150,6 +153,15 @@ final class PanelTestOptionsPlugin implements PanelPlugin
     }
 }
 
+function panelCatalogApplication(): Application
+{
+    $previous = Container::getInstance();
+    $application = new FoundationApplication(dirname(__DIR__, 4));
+    Container::setInstance($previous);
+
+    return $application;
+}
+
 beforeEach(function (): void {
     PanelTestAdminProvider::$label = 'Admin';
     PanelTestAdminProvider::$default = false;
@@ -160,7 +172,7 @@ beforeEach(function (): void {
 });
 
 it('builds, compiles, fingerprints, and freezes panels through the two-phase PanelRegistry', function (): void {
-    $registry = new PanelRegistryImpl(app());
+    $registry = new PanelRegistryImpl(panelCatalogApplication());
     $registry->register(PanelTestAdminProvider::class);
     $registry->register(PanelTestCabinetProvider::class);
     $registry->replace(PanelTestAdminReplacementProvider::class);
@@ -188,7 +200,7 @@ it('builds, compiles, fingerprints, and freezes panels through the two-phase Pan
 });
 
 it('rejects duplicate panels, invalid panel ids, conflicting defaults, conflicting prefixes, and conflicting plugin values', function (): void {
-    $dup = new PanelRegistryImpl(app());
+    $dup = new PanelRegistryImpl(panelCatalogApplication());
     $dup->register(PanelTestAdminProvider::class);
     expect(fn () => $dup->register(PanelTestAdminReplacementProvider::class))->toThrow(DuplicatePanelException::class)
         ->and(fn () => $dup->register(PanelTestBadIdProvider::class))->toThrow(InvalidPanelIdException::class);
@@ -197,7 +209,7 @@ it('rejects duplicate panels, invalid panel ids, conflicting defaults, conflicti
     PanelTestCabinetProvider::$default = true;
     PanelTestAdminProvider::$custom = static fn (PanelBuilder $p): PanelBuilder => $p->for(PanelTestUser::class);
 
-    $conflictDefault = new PanelRegistryImpl(app());
+    $conflictDefault = new PanelRegistryImpl(panelCatalogApplication());
     $conflictDefault->register(PanelTestAdminProvider::class);
     $conflictDefault->register(PanelTestCabinetProvider::class);
     expect(fn () => $conflictDefault->freeze())->toThrow(DefaultPanelConflictException::class);
@@ -207,7 +219,7 @@ it('rejects duplicate panels, invalid panel ids, conflicting defaults, conflicti
     PanelTestAdminProvider::$prefix = 'shared';
     PanelTestCabinetProvider::$prefix = 'shared';
 
-    $conflictPrefix = new PanelRegistryImpl(app());
+    $conflictPrefix = new PanelRegistryImpl(panelCatalogApplication());
     $conflictPrefix->register(PanelTestAdminProvider::class);
     $conflictPrefix->register(PanelTestCabinetProvider::class);
     expect(fn () => $conflictPrefix->freeze())->toThrow(PrefixConflictException::class);
@@ -219,7 +231,7 @@ it('rejects duplicate panels, invalid panel ids, conflicting defaults, conflicti
         new PanelTestOptionsPlugin('acme/two', 'two', 'b'),
     ]);
     $compiler = new PanelCompiler;
-    $compiler->register($recipe, $builder, app(), 'test');
+    $compiler->register($recipe, $builder, panelCatalogApplication(), 'test');
 
     expect(fn (): Panel => $compiler->compile($recipe))->toThrow(PluginConflictException::class);
 });
@@ -238,7 +250,7 @@ it('enforces layer precedence, typed options, slots, and tenant/scope metadata o
         ->entry(PanelTestOrderPermission::View)
         ->slots([new PanelSlot('write', ['retry.ms'], ['retry.ms' => 250], inheritDefaults: false)]);
     $compiler = new PanelCompiler;
-    $compiler->register($recipe, $builder, app(), 'test');
+    $compiler->register($recipe, $builder, panelCatalogApplication(), 'test');
 
     $compiledA = $compiler->compile($recipe);
     $fingerprintA = PanelFingerprint::of($compiledA, $recipe);
@@ -266,7 +278,7 @@ it('strictly enforces precedence provider < plugin < configureAll < configure($i
         ->options(new PanelTestOptions('provider-mode', 10))
         ->plugins([new PanelTestOptionsPlugin('acme/opt', 'plugin-prefix', 'plugin-mode')]);
 
-    $registry = new PanelRegistryImpl(app());
+    $registry = new PanelRegistryImpl(panelCatalogApplication());
     $registry->register(PanelTestAdminProvider::class);
     $registry->configureAll(static fn (PanelBuilder $p): PanelBuilder => $p
         ->label('ConfigureAll Label')
@@ -292,7 +304,7 @@ it('strictly enforces precedence provider < plugin < configureAll < configure($i
         ->and($panel->presentation())->toBe(['theme' => 'dark', 'density' => 'spacious']);
 
     // Without configure($id) or configureAll, plugin beats provider.
-    $pluginWins = new PanelRegistryImpl(app());
+    $pluginWins = new PanelRegistryImpl(panelCatalogApplication());
     $pluginWins->register(PanelTestAdminProvider::class);
     $pluginWins->freeze();
 
@@ -303,7 +315,7 @@ it('strictly enforces precedence provider < plugin < configureAll < configure($i
         ->and($pluginPanel->options(PanelTestOptions::class)?->mode)->toBe('plugin-mode');
 
     // configure($id) explicitly setting null clears earlier layers.
-    $cleared = new PanelRegistryImpl(app());
+    $cleared = new PanelRegistryImpl(panelCatalogApplication());
     $cleared->register(PanelTestAdminProvider::class);
     $cleared->configure('admin', static fn (PanelBuilder $p): PanelBuilder => $p->description(null));
     $cleared->freeze();

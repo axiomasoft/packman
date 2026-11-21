@@ -65,6 +65,12 @@ it('normalizes a missing installed file and a list-shaped manifest', function ()
 
     expect(InstalledPackages::discoverVersions($path)['acme/list']->reference)->toBeNull()
         ->and(InstalledPackages::discover($path))->toBe(['acme/list']);
+
+    file_put_contents($path, json_encode([
+        ['name' => 'acme/rewritten', 'version' => '1.0.0'],
+    ], JSON_THROW_ON_ERROR));
+
+    expect(InstalledPackages::discover($path))->toBe(['acme/rewritten']);
 });
 
 it('accumulates repeatable replacement directives and rejects empty identity', function (): void {

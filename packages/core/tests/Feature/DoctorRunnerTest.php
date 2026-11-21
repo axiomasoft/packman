@@ -240,5 +240,8 @@ it('validates packman:doctor --json output including contributed HealthChecks ag
 
 it('prints doctor output and returns exit code 2 on unknown prefix', function (): void {
     expect(Artisan::call('packman:doctor', ['--prefix' => ['core.config']]))->toBe(0)
-        ->and(Artisan::call('packman:doctor', ['--prefix' => ['does.not.exist']]))->toBe(2);
+        ->and(Artisan::call('packman:doctor', ['--check' => ['core.config']]))->toBe(0)
+        ->and(Artisan::call('packman:doctor', ['--prefix' => ['does.not.exist']]))->toBe(2)
+        ->and(Artisan::call('packman:doctor', ['--sample' => '0']))->toBe(2)
+        ->and(Artisan::call('packman:doctor', ['--sample' => 'no']))->toBe(2);
 });

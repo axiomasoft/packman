@@ -442,6 +442,10 @@ final readonly class JournalingConfigReader implements ConfigReader
 
         $int = (int) $value;
 
+        if (is_string($value) && ! self::intStringRoundTrips($value, $int)) {
+            return $this->wrong($key, "must be between {$min} and {$max}", $value, $default);
+        }
+
         if ($int < $min || $int > $max) {
             return $this->wrong($key, "must be between {$min} and {$max}", $value, $default);
         }
@@ -482,6 +486,19 @@ final readonly class JournalingConfigReader implements ConfigReader
         }
 
         return $value;
+    }
+
+    private static function intStringRoundTrips(string $value, int $int): bool
+    {
+        $negative = str_starts_with($value, '-');
+        $digits = ltrim($negative ? substr($value, 1) : $value, '0');
+        $canonical = ($negative ? '-' : '').($digits === '' ? '0' : $digits);
+
+        if ($canonical === '-0') {
+            $canonical = '0';
+        }
+
+        return (string) $int === $canonical;
     }
 
     /** @phpstan-assert-if-true int|numeric-string $value */

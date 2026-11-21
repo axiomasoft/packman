@@ -132,7 +132,7 @@ final readonly class ReadRegistryIntrospection implements RegistryIntrospection
             );
         }
 
-        $edition = $this->resolveEdition($compiledModule);
+        $edition = $this->resolveEdition($compiledModule, $context);
         $gate = $this->activationGate->check(ctx: $context, module: $module, edition: $edition);
 
         if (! $gate->allowed) {
@@ -459,10 +459,18 @@ final readonly class ReadRegistryIntrospection implements RegistryIntrospection
         return true;
     }
 
-    private function resolveEdition(CompiledModule $module): string
+    private function resolveEdition(CompiledModule $module, ContextScopeInterface $context): string
     {
+        if ($this->registry instanceof CompiledModuleRegistry) {
+            $edition = $this->registry->editionFor($module->composerName, $context);
+
+            if ($edition !== null) {
+                return $edition;
+            }
+        }
+
         $editions = array_keys($module->editions);
 
-        return $editions[0] ?? 'default';
+        return $editions[0] ?? 'standard';
     }
 }

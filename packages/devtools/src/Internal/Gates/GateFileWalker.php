@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Packman\DevTools\Internal\Gates;
 
+use LogicException;
 use Packman\Attributes\Internal;
-use PhpParser\Node;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\GroupUse;
 use PhpParser\Node\Stmt\Namespace_;
@@ -21,15 +22,43 @@ use SplFileInfo;
 
 /**
  * Shared file walker and AST helper reused across devtools quality gates.
+ *
+ * Cache compressed copies of the trees when zlib is available. Decoding creates
+ * fresh nodes so caller mutations never affect subsequent reads.
  */
 #[Internal]
 final class GateFileWalker
 {
     private readonly Parser $parser;
 
+    /**
+     * Compressed, unresolved statement lists. Null means the parser produced no statements.
+     *
+     * @var array<string, string|null>
+     */
+    private static array $statements = [];
+
+    /** @var array<string, list<string>> */
+    private static array $imports = [];
+
+    /** @var array<string, list<string>> */
+    private static array $internals = [];
+
+    /** @var array<string, string|null> */
+    private static array $resolved = [];
+
     public function __construct()
     {
         $this->parser = (new ParserFactory)->createForHostVersion();
+    }
+
+    /** Clears parsed trees and cached symbol lists. */
+    public static function flushCaches(): void
+    {
+        self::$statements = [];
+        self::$imports = [];
+        self::$internals = [];
+        self::$resolved = [];
     }
 
     /** @return list<string> */
@@ -61,47 +90,89 @@ final class GateFileWalker
             : $fullPath;
     }
 
-    /** @return ?list<Node\Stmt> */
+    /** @return ?list<Stmt> */
     public function parseAst(string $phpFile): ?array
     {
-        $code = file_get_contents($phpFile);
+        $source = $this->source($phpFile);
 
-        if (! is_string($code) || $code === '') {
+        if ($source === null) {
             return null;
         }
 
-        $ast = $this->parser->parse($code);
+        return $this->statements($source['key'], $source['code']);
+    }
 
-        return $ast !== null ? array_values($ast) : null;
+    /**
+     * Name-resolved statements. The resolved tree is cached once per source hash
+     * and every caller receives its own copy.
+     *
+     * @return ?list<Stmt>
+     */
+    public function resolvedAst(string $phpFile): ?array
+    {
+        $source = $this->source($phpFile);
+
+        if ($source === null) {
+            return null;
+        }
+
+        return $this->resolvedStatements($source['key'], $source['code']);
     }
 
     /** @return list<string> */
     public function importedSymbols(string $phpFile): array
     {
-        $ast = $this->parseAst($phpFile);
+        $source = $this->source($phpFile);
+
+        if ($source === null) {
+            return [];
+        }
+
+        $key = $source['key'];
+
+        if (array_key_exists($key, self::$imports)) {
+            return self::$imports[$key];
+        }
+
+        $ast = $this->statements($key, $source['code']);
 
         if ($ast === null) {
+            self::$imports[$key] = [];
+
             return [];
         }
 
         $imports = [];
         $this->collectUseNodes($ast, $imports);
+        self::$imports[$key] = array_values(array_unique($imports));
 
-        return array_values(array_unique($imports));
+        return self::$imports[$key];
     }
 
     /** @return list<string> */
     public function internalSymbols(string $phpFile): array
     {
-        $ast = $this->parseAst($phpFile);
+        $source = $this->source($phpFile);
 
-        if ($ast === null) {
+        if ($source === null) {
             return [];
         }
 
-        $traverser = new NodeTraverser(new NameResolver);
-        $resolved = $traverser->traverse($ast);
-        $types = (new NodeFinder)->findInstanceOf($resolved, ClassLike::class);
+        $key = $source['key'];
+
+        if (array_key_exists($key, self::$internals)) {
+            return self::$internals[$key];
+        }
+
+        $ast = $this->resolvedStatements($key, $source['code']);
+
+        if ($ast === null) {
+            self::$internals[$key] = [];
+
+            return [];
+        }
+
+        $types = (new NodeFinder)->findInstanceOf($ast, ClassLike::class);
         $internal = [];
 
         foreach ($types as $type) {
@@ -118,11 +189,13 @@ final class GateFileWalker
             }
         }
 
-        return $internal;
+        self::$internals[$key] = $internal;
+
+        return self::$internals[$key];
     }
 
     /**
-     * @param  array<Node\Stmt>  $stmts
+     * @param  array<Stmt>  $stmts
      * @param  list<string>  $imports
      */
     private function collectUseNodes(array $stmts, array &$imports): void
@@ -151,5 +224,130 @@ final class GateFileWalker
                 }
             }
         }
+    }
+
+    /**
+     * Empty and unreadable files are not cached, so a later write is parsed.
+     *
+     * @return array{key: string, code: string}|null
+     */
+    private function source(string $phpFile): ?array
+    {
+        $code = file_get_contents($phpFile);
+
+        if (! is_string($code) || $code === '') {
+            return null;
+        }
+
+        return [
+            'key' => self::cacheKey($phpFile, $code),
+            'code' => $code,
+        ];
+    }
+
+    private static function cacheKey(string $phpFile, string $contents): string
+    {
+        $path = realpath($phpFile);
+
+        if ($path === false) {
+            $path = $phpFile;
+        }
+
+        return $path."\0".hash('sha256', $contents);
+    }
+
+    /**
+     * @return list<Stmt>|null
+     */
+    private function resolvedStatements(string $key, string $code): ?array
+    {
+        if (array_key_exists($key, self::$resolved)) {
+            return self::decodeStatements(self::$resolved[$key]);
+        }
+
+        $ast = $this->statements($key, $code);
+
+        if ($ast === null) {
+            self::$resolved[$key] = null;
+
+            return null;
+        }
+
+        $resolved = [];
+        foreach (new NodeTraverser(new NameResolver)->traverse($ast) as $node) {
+            if ($node instanceof Stmt) {
+                $resolved[] = $node;
+            }
+        }
+
+        self::cacheStatements(self::$resolved, $key, $resolved);
+
+        return $resolved;
+    }
+
+    /**
+     * @return list<Stmt>|null
+     */
+    private function statements(string $key, string $code): ?array
+    {
+        if (array_key_exists($key, self::$statements)) {
+            return self::decodeStatements(self::$statements[$key]);
+        }
+
+        $parsed = $this->parser->parse($code);
+        $statements = $parsed === null ? null : array_values($parsed);
+        self::cacheStatements(self::$statements, $key, $statements);
+
+        return $statements;
+    }
+
+    /**
+     * @param  array<string, string|null>  $cache
+     * @param  list<Stmt>|null  $statements
+     */
+    private static function cacheStatements(array &$cache, string $key, ?array $statements): void
+    {
+        if ($statements === null) {
+            $cache[$key] = null;
+
+            return;
+        }
+
+        if (function_exists('gzdeflate')) {
+            $compressed = gzdeflate(serialize($statements), 1);
+
+            if ($compressed !== false) {
+                $cache[$key] = $compressed;
+            }
+        }
+    }
+
+    /**
+     * @return list<Stmt>|null
+     */
+    private static function decodeStatements(?string $compressed): ?array
+    {
+        if ($compressed === null) {
+            return null;
+        }
+
+        // Only statement lists serialized by this process reach this cache.
+        $serialized = gzinflate($compressed);
+        $statements = $serialized === false ? false : unserialize($serialized);
+
+        if (! is_array($statements)) {
+            throw new LogicException('Unable to read the cached PHP statements.');
+        }
+
+        $decoded = [];
+        foreach ($statements as $statement) {
+            if (! $statement instanceof Stmt) {
+                throw new LogicException('Unable to read a cached PHP statement.');
+            }
+
+            $decoded[] = $statement;
+        }
+
+        return $decoded;
     }
 }

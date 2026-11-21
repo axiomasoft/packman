@@ -107,7 +107,7 @@ final class PanelsBindingsRegistrar implements PackageRegistrar
             self::registerExtensionPanels($app);
 
             if ($app->bound(PanelRegistry::class)) {
-                $registry = $app->make(PanelRegistry::class);
+                $registry = $app->get(PanelRegistry::class);
 
                 if ($registry instanceof PanelRegistryImpl) {
                     $registry->freeze();

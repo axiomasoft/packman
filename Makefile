@@ -1,4 +1,4 @@
-.PHONY: install lint lint-check analyse refactor refactor-check gate php-api error-codes config-schema ai-sync test test-pg test-arch fixtures ci
+.PHONY: install lint lint-check analyse refactor refactor-check gate php-api error-codes config-schema ai-sync security-audit test test-parallel test-pg test-arch fixtures ci
 
 PHP84 := ./bin/php84
 COMPOSER := $(PHP84) composer
@@ -36,8 +36,14 @@ config-schema:
 ai-sync:
 	$(COMPOSER) ai:sync
 
+security-audit:
+	$(COMPOSER) security:audit
+
 test:
 	$(COMPOSER) test
+
+test-parallel:
+	$(COMPOSER) test:parallel
 
 test-pg:
 	$(COMPOSER) test:pg
@@ -49,9 +55,13 @@ fixtures:
 	set -e; \
 	for dir in fixtures/*; do \
 		if [ -f "$$dir/composer.json" ]; then \
-			$(PHP84) composer --working-dir="$$dir" install --no-interaction || exit $$?; \
+			if [ -f "$$dir/composer.lock" ]; then \
+				$(PHP84) composer --working-dir="$$dir" install --no-interaction --prefer-dist || exit $$?; \
+			else \
+				$(PHP84) composer --working-dir="$$dir" update --no-interaction --prefer-dist || exit $$?; \
+			fi; \
 			$(PHP84) composer --working-dir="$$dir" test || exit $$?; \
 		fi; \
 	done
 
-ci: lint-check analyse refactor-check gate php-api test test-pg fixtures
+ci: lint-check analyse refactor-check gate php-api error-codes config-schema ai-sync security-audit test test-pg fixtures

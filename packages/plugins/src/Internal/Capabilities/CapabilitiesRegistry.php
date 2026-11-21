@@ -7,6 +7,7 @@ namespace Packman\Plugins\Internal\Capabilities;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Internal;
+use Packman\Config\Exceptions\InvalidConfiguration;
 use Packman\Plugins\Contracts\Contributions\Capabilities;
 use Packman\Plugins\Enums\Contributions\Cardinality;
 use Packman\Plugins\Exceptions\Graph\MissingExtensionException;
@@ -42,7 +43,7 @@ final readonly class CapabilitiesRegistry implements Capabilities
 
         $instance = $this->container->bound($contract)
             ? $this->container->make($contract)
-            : $this->container->make($classes[0]);
+            : $this->make($contract, $classes[0]);
 
         if (! $instance instanceof $contract) {
             throw MissingExtensionException::capability($contract);
@@ -90,11 +91,15 @@ final readonly class CapabilitiesRegistry implements Capabilities
         $config = $this->container->make(Repository::class);
         $value = $config->get($key);
 
-        if (is_string($value) && $value !== '' && class_exists($value)) {
-            return $value;
+        if (! is_string($value) || $value === '') {
+            return null;
         }
 
-        return null;
+        if (! class_exists($value)) {
+            throw new InvalidConfiguration(["{$key}: expected a class name."]);
+        }
+
+        return $value;
     }
 
     /**

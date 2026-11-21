@@ -144,7 +144,8 @@ final readonly class DefaultSchemaMigrator implements SchemaMigrator
                 }
                 $before = $repository->getRan();
                 $owners = [];
-                foreach (array_merge(...$batches) as $set) {
+                $selected = $batches === [] ? [] : array_merge(...$batches);
+                foreach ($selected as $set) {
                     if ($set->lifecycle === SchemaLifecycle::Module) {
                         foreach ($this->migrator->getMigrationFiles([$set->path]) as $file) {
                             $canonical = realpath($file);

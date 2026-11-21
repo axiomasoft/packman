@@ -215,6 +215,14 @@ it('refuses mixed scopes and unknown sets before running migrations', function (
         ->and(Schema::hasTable('schema_platform'))->toBeFalse();
 });
 
+it('treats a blank schema database option as the default connection', function (): void {
+    schemaRegistry(schemaFixture());
+
+    $this->artisan('packman:schema:status', ['--database' => '   '])->assertExitCode(1);
+    $this->artisan('packman:schema:migrate', ['--database' => ''])->assertSuccessful();
+    expect(Schema::hasTable('schema_platform'))->toBeTrue();
+});
+
 it('rejects unknown command scopes and requires production confirmation', function (): void {
     schemaRegistry(schemaFixture());
     $this->artisan('packman:schema:migrate', ['--scope' => 'unknown'])->assertExitCode(2);

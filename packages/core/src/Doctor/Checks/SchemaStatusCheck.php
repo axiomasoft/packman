@@ -53,30 +53,40 @@ final readonly class SchemaStatusCheck implements DoctorCheck
             ];
         }
 
-        if (! $this->container->bound('migration.repository')) {
+        try {
+            if (! $this->container->bound('migration.repository')) {
+                return [
+                    DoctorFinding::ok(
+                        code: 'core.database.connected',
+                        message: 'Database connection succeeded (migration repository not configured).',
+                    ),
+                ];
+            }
+
+            $repository = $this->container->make('migration.repository');
+
+            if (! $repository->repositoryExists()) {
+                return [
+                    DoctorFinding::at(
+                        status: $context->strictStatus(),
+                        severity: $context->strictSeverity(),
+                        code: 'core.schema.migrations_table_missing',
+                        message: 'The migrations table does not exist.',
+                        remediation: 'Run php artisan migrate.',
+                    ),
+                ];
+            }
+
+            $pending = $this->pendingMigrations($repository);
+        } catch (Throwable) {
             return [
-                DoctorFinding::ok(
-                    code: 'core.database.connected',
-                    message: 'Database connection succeeded (migration repository not configured).',
+                DoctorFinding::error(
+                    code: 'core.schema.inspection_failed',
+                    message: 'The migration repository could not be read.',
+                    remediation: 'Verify the migrations table and the database user privileges.',
                 ),
             ];
         }
-
-        $repository = $this->container->make('migration.repository');
-
-        if (! $repository->repositoryExists()) {
-            return [
-                DoctorFinding::at(
-                    status: $context->strictStatus(),
-                    severity: $context->strictSeverity(),
-                    code: 'core.schema.migrations_table_missing',
-                    message: 'The migrations table does not exist.',
-                    remediation: 'Run php artisan migrate.',
-                ),
-            ];
-        }
-
-        $pending = $this->pendingMigrations($repository);
 
         if ($pending === []) {
             return [
@@ -102,22 +112,35 @@ final readonly class SchemaStatusCheck implements DoctorCheck
     /** @return list<string> */
     private function pendingMigrations(MigrationRepositoryInterface $repository): array
     {
-        $applied = array_map(self::bareName(...), $repository->getRan());
-        $paths = [];
+        $applied = array_fill_keys($repository->getRan(), true);
+        $paths = $this->container->bound('migrator')
+            ? $this->container->make('migrator')->paths()
+            : [];
 
-        if ($this->container->bound('migrator')) {
-            $migrator = $this->container->make('migrator');
-            $paths = $migrator->paths();
+        if ($this->container->bound('path.database')) {
+            $databasePath = $this->container->make('path.database');
+
+            if (is_string($databasePath) && $databasePath !== '') {
+                $paths[] = rtrim($databasePath, '/').'/migrations';
+            }
         }
 
         $files = [];
         foreach ($paths as $directory) {
-            if (is_dir($directory)) {
-                $matched = glob(rtrim($directory, '/').'/*.php');
+            if (is_file($directory) && str_ends_with($directory, '.php')) {
+                $files[] = $directory;
 
-                if (is_array($matched)) {
-                    array_push($files, ...$matched);
-                }
+                continue;
+            }
+
+            if (! is_dir($directory)) {
+                continue;
+            }
+
+            $matched = glob(rtrim($directory, '/').'/*_*.php');
+
+            if (is_array($matched)) {
+                array_push($files, ...$matched);
             }
         }
 
@@ -125,18 +148,14 @@ final readonly class SchemaStatusCheck implements DoctorCheck
         foreach ($files as $file) {
             $name = basename($file, '.php');
 
-            if (! in_array(self::bareName($name), $applied, true)) {
+            if (! isset($applied[$name]) && is_file($file)) {
                 $pending[] = $name;
             }
         }
 
-        sort($pending);
+        $pending = array_unique($pending, SORT_STRING);
+        sort($pending, SORT_STRING);
 
         return $pending;
-    }
-
-    private static function bareName(string $name): string
-    {
-        return preg_replace('/^\d{4}_\d{2}_\d{2}_\d{6}_/', '', $name) ?? $name;
     }
 }

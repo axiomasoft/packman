@@ -1,14 +1,20 @@
 {
     "name": "axiomasoft/packman-monorepo",
     "description": "Development monorepo for Packman — universal ecosystem foundation kernel, modules, plugins, schema, panels, filament integration, testkit, and devtools.",
-    "license": "MIT",
     "type": "project",
+    "license": "MIT",
     "authors": [
         {
             "name": "Dmitry Vostrikov",
             "email": "dv.vostrikov@gmail.com"
         }
     ],
+    "homepage": "https://github.com/axiomasoft/packman",
+    "support": {
+        "issues": "https://github.com/axiomasoft/packman/issues",
+        "source": "https://github.com/axiomasoft/packman",
+        "security": "https://github.com/axiomasoft/packman/blob/main/SECURITY.md"
+    },
     "repositories": [
         {
             "type": "path",
@@ -99,8 +105,10 @@
         "refactor": "vendor/bin/rector process",
         "refactor:check": "vendor/bin/rector process --dry-run",
         "test": "vendor/bin/pest --exclude-group=pg",
+        "test:parallel": "vendor/bin/pest --parallel --exclude-group=pg",
         "test:pg": "vendor/bin/pest --group=pg",
         "test:arch": "vendor/bin/pest --testsuite=Arch",
+        "security:audit": "@composer audit --abandoned=report --no-interaction",
         "gate": "@php bin/packman gate",
         "php-api": "@php bin/packman php-api --check",
         "error-codes": "@php bin/packman error-codes --check",

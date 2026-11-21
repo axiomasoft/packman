@@ -62,7 +62,7 @@ final class AuthorizesActions
                     return $otherwise ?? Response::allow();
                 }
 
-                return $otherwise ?? ($livewire instanceof Widget ? Response::deny() : Response::allow());
+                return $otherwise ?? Response::deny();
             }
 
             if (self::changesRelation($action) || (self::writesOwnerRow($action) && FilamentContext::ownerOf($livewire) !== null)) {

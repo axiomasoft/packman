@@ -47,7 +47,9 @@ it('validates TablePrefix and OptionsFactory in one pass', function (): void {
 
     expect($options->tablePrefix->table('records'))->toBe('abc_records')
         ->and((string) $options->tablePrefix)->toBe('abc_')
-        ->and($options->cacheTtl)->toBeNull();
+        ->and($options->cacheTtl)->toBeNull()
+        ->and(fn () => $options->tablePrefix->table('Users'))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => $options->tablePrefix->table(''))->toThrow(InvalidArgumentException::class);
 
     try {
         StubSampleOptions::fromArray(['table_prefix' => 'INVALID', 'cache_ttl' => -1]);
@@ -100,6 +102,11 @@ it('enforces replacement maps in ConfigNormalizer without dot-merging defaults',
 
     expect($repo->get('pkg.mode'))->toBe('strict')
         ->and($repo->get('pkg.strategies'))->toBe(['custom' => 'CustomHandler']);
+
+    $missing = new ConfigNormalizer;
+    $missing->registerDefaults('pkg', sys_get_temp_dir().'/packman-missing-config-'.bin2hex(random_bytes(4)).'.php');
+
+    expect(fn () => $missing->packageDefaults())->toThrow(InvalidConfiguration::class, 'does not exist');
 });
 
 it('seals ConfigSections on read and rejects unknown root sections', function (): void {

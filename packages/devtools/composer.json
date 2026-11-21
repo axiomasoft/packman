@@ -3,6 +3,18 @@
     "description": "Shared monorepo quality gates, API/error/config scanners, scaffolding stubs, Rector rules, AI pack sync, and subtree split tools for Packman.",
     "type": "library",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Dmitry Vostrikov",
+            "email": "dv.vostrikov@gmail.com"
+        }
+    ],
+    "homepage": "https://github.com/axiomasoft/packman",
+    "support": {
+        "issues": "https://github.com/axiomasoft/packman/issues",
+        "source": "https://github.com/axiomasoft/packman",
+        "security": "https://github.com/axiomasoft/packman/blob/main/SECURITY.md"
+    },
     "bin": [
         "bin/packman"
     ],

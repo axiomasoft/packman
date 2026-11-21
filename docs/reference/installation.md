@@ -19,11 +19,28 @@ For application-scoped plugins in a Laravel application:
 composer require axiomasoft/packman-plugins:0.1.2
 ```
 
+Add the other packages only for the capability you use:
+
+```sh
+composer require axiomasoft/packman-schema:0.1.2
+composer require axiomasoft/packman-modules:0.1.2
+composer require axiomasoft/packman-panels:0.1.2
+composer require axiomasoft/packman-filament:0.1.2
+```
+
+`axiomasoft/packman-testkit` and `axiomasoft/packman-devtools` are development
+tools. Require them in `require-dev`, not in the production runtime of an
+application. Devtools publishes the `packman` executable used by the quality
+gates and the scaffolding commands.
+
 Laravel's ordinary Composer discovery registers the installed adapters. The
 kernel itself requires only PHP and `psr/clock`. Plugin support adds the declared
 Laravel components, without requiring a database package. Schema, modules,
 panels and Filament remain separate selections. Requiring Filament installs its
-own declared dependencies.
+own declared dependencies. Each package README states the public entry point:
+[kernel](../../packages/core/README.md), [plugins](../../packages/plugins/README.md),
+[modules](../../packages/modules/README.md), [schema](../../packages/schema/README.md),
+[panels](../../packages/panels/README.md), and [Filament](../../packages/filament/README.md).
 
 The feed preserves each package's actual `require`, `conflict`, `suggest` and
 discovery metadata. All eight package versions refer to the same `v0.1.2` tag of
@@ -65,6 +82,8 @@ its own future commit SHA. Publication order is: finish local verification,
 commit and push `main`, verify remote `main`, publish `v0.1.2`, then install from
 the public versioned feed in a clean application. Do not move a published tag.
 For a later release, generate a new version and use its corresponding feed URL.
+Each package manifest records the repository homepage, issue tracker, and security policy.
+Those fields travel with the generated feed. The already published `v0.1.2` tag keeps the feed that was current when that tag was created.
 
 This feed distributes Packman only. Other ecosystem owners may still require
 explicit repositories with reviewed, pinned source metadata; dependency-level

@@ -7,12 +7,12 @@ namespace Packman\DevTools\Scanners\Errors;
 use Packman\Attributes\Api;
 use Packman\DevTools\Data\Errors\ErrorCodeEntry;
 use Packman\DevTools\Data\Errors\ErrorScanReport;
+use Packman\DevTools\Internal\Gates\GateFileWalker;
 use Packman\DevTools\Internal\ProjectAutoload;
 use Packman\Errors\Contracts\ErrorCode;
 use Packman\Errors\Contracts\ProblemDefinitionProvider;
 use Packman\Errors\Data\ErrorDescriptor;
 use Packman\Errors\Data\ProblemDefinition;
-use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\New_;
@@ -23,14 +23,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\EnumCase;
 use PhpParser\NodeFinder;
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitor\NameResolver;
-use PhpParser\Parser;
-use PhpParser\ParserFactory;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use ReflectionClass;
-use SplFileInfo;
 use Throwable;
 
 /**
@@ -41,11 +34,11 @@ final class ErrorSourceScanner
 {
     private const string WIRE_CODE_PATTERN = '/\A[a-z0-9]+(?:[-_][a-z0-9]+)*(?:\.[a-z0-9]+(?:[-_][a-z0-9]+)*)+\z/';
 
-    private readonly Parser $parser;
+    private readonly GateFileWalker $walker;
 
     public function __construct()
     {
-        $this->parser = (new ParserFactory)->createForHostVersion();
+        $this->walker = new GateFileWalker;
     }
 
     /**
@@ -105,40 +98,18 @@ final class ErrorSourceScanner
             return ['entries' => [], 'diagnostics' => []];
         }
 
-        $files = [];
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($srcDir));
-        foreach ($iterator as $file) {
-            if ($file instanceof SplFileInfo && $file->isFile() && $file->getExtension() === 'php') {
-                $files[] = $file->getPathname();
-            }
-        }
-
-        sort($files, SORT_STRING);
-
         $enumCases = [];
         $providers = [];
         $descriptorCodes = [];
         $diagnostics = [];
+        $finder = new NodeFinder;
 
-        foreach ($files as $file) {
-            $code = file_get_contents($file);
+        foreach ($this->walker->phpFiles($srcDir) as $file) {
+            $resolved = $this->walker->resolvedAst($file);
 
-            if (! is_string($code) || $code === '') {
+            if ($resolved === null) {
                 continue;
             }
-
-            $ast = $this->parser->parse($code);
-
-            if ($ast === null) {
-                continue;
-            }
-
-            $traverser = new NodeTraverser;
-            $traverser->addVisitor(new NameResolver);
-            /** @var list<Node\Stmt> $resolved */
-            $resolved = $traverser->traverse($ast);
-
-            $finder = new NodeFinder;
 
             /** @var list<Enum_> $enums */
             $enums = $finder->findInstanceOf($resolved, Enum_::class);

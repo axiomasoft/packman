@@ -29,7 +29,9 @@ A module that supplies code can return `ModuleManifest::make('acme/reports')->ti
 
 Generate a code-only extension in a Composer project with `vendor/bin/packman make packman-module acme/reports --minimal` or `vendor/bin/packman make packman-plugin acme/reports --minimal`.
 
-`make fixtures` runs a standalone PHP consumer, a standalone Laravel 13 plugin consumer, and a Laravel 12 modular platform consumer. Each installs its own dependencies.
+`make fixtures` runs a standalone PHP consumer, a standalone Laravel 13 plugin consumer, and a Laravel 12 modular platform consumer. Each installs its own dependencies. A fixture with `composer.lock` installs that lock; a fixture without one resolves dependencies first.
+
+GitHub Actions (`.github/workflows/ci.yml`) runs the static checks, both database lanes, the consumer fixtures, and `composer audit`. Dependabot is not configured. Development setup is in [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
 
 `./bin/php84 python3 scripts/verify-ecosystem.py` verifies archived snapshots of all nine
 real consumers with ordinary Laravel discovery, simultaneous hosts, a Corex Media/Vaulter

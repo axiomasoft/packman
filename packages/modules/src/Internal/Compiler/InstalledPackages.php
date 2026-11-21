@@ -22,6 +22,9 @@ use Packman\Modules\Data\Compiler\InstalledPackageVersion;
 #[Internal]
 final class InstalledPackages
 {
+    /** @var array<string, list<mixed>> */
+    private static array $decoded = [];
+
     /** @return list<string> */
     public static function discover(?string $installedJsonPath = null): array
     {
@@ -86,7 +89,19 @@ final class InstalledPackages
             return [];
         }
 
-        $data = json_decode((string) file_get_contents($path), associative: true, flags: JSON_THROW_ON_ERROR);
+        $raw = @file_get_contents($path);
+
+        if (! is_string($raw) || $raw === '') {
+            return [];
+        }
+
+        $key = $path."\0".hash('sha256', $raw);
+
+        if (isset(self::$decoded[$key])) {
+            return self::$decoded[$key];
+        }
+
+        $data = json_decode($raw, associative: true, flags: JSON_THROW_ON_ERROR);
 
         if (! is_array($data)) {
             return [];
@@ -95,7 +110,7 @@ final class InstalledPackages
         /** @var list<mixed> $packages */
         $packages = is_array($data['packages'] ?? null) ? $data['packages'] : $data;
 
-        return $packages;
+        return self::$decoded[$key] = $packages;
     }
 
     /** @param array<array-key, mixed> $package */

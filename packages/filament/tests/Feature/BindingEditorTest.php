@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Filament\Schemas\Components\Section;
 use Illuminate\Validation\ValidationException;
 use Packman\Filament\Exceptions\Binding\BindingAuthorizationException;
+use Packman\Filament\Exceptions\Binding\InvalidBindingStateException;
 use Packman\Filament\Forms\BindingEditor;
 use Packman\Panels\Builder\PanelBuilder;
 use Packman\Panels\Builder\PanelProvider;
@@ -218,6 +219,23 @@ it('refuses cross-tenant, tampered ciphertext, and non-editable field modificati
 
     expect(fn () => $editor->save($tamperedNonEditable, 'tenant-a', static function (): void {}))
         ->toThrow(BindingAuthorizationException::class, 'not editable');
+});
+
+it('applies numeric bounds while still accepting a nullable value', function (): void {
+    $harness = bindingEditorHarness();
+    $editor = $harness['editor'];
+    $opened = $editor->open('tenant-a', 'proxy', $harness['subject'], 'read', 'target-1');
+    $opened['reason'] = 'Update timeout';
+    $key = BindingEditor::fieldId('timeout.ms');
+    $rules = ['timeout.ms' => ['nullable' => true, 'minimum' => 100, 'maximum' => 500]];
+
+    $opened['fields'][$key] = ['mode' => 'set', 'value' => 501];
+    expect(fn () => $editor->prepareSave($opened, 'tenant-a', $rules))
+        ->toThrow(InvalidBindingStateException::class, 'above the maximum');
+
+    $opened['fields'][$key]['value'] = null;
+    expect($editor->prepareSave($opened, 'tenant-a', $rules)['changes']['timeout.ms'])
+        ->toBe(['operation' => 'set', 'value' => null]);
 });
 
 it('converts stale editVersion and unexpected fields into ValidationException', function (): void {

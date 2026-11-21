@@ -84,9 +84,22 @@ every PostgreSQL product operation. The research reproduced these focused owner 
 
 AzGuard's existing core-only archive fixture also passed its four consumer checks; its
 original fixture uses Packman `v0.1.1`, so it does not substitute for candidate acceptance.
-Financial behavior, CI/GitHub Actions, FlexCRM and FlexCMS are outside this verification.
+Financial behavior, FlexCRM, and FlexCMS are outside this verification. GitHub Actions runs the monorepo suite described below.
 Physical PostgreSQL tenant cloning, all optional Filament surfaces, and the complete
 Sockit/Proxyma/Commerz PostgreSQL protocols are not certified by the joint SQLite case.
+
+## 5. GitHub Actions
+
+[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) runs on pushes to `main`, pull requests, and a weekly schedule. Four jobs share one PHP 8.4 setup:
+
+| Job | What it runs |
+|:--|:--|
+| Static analysis and gates | Pint, PHPStan, Rector, `bin/packman gate`, API / error-code / config-schema checks, `ai:sync`, and `composer audit` |
+| SQLite tests | `composer test:parallel` (every test outside the `pg` group) |
+| PostgreSQL tests | `composer test:pg` against PostgreSQL 16 published on `127.0.0.1:54329` as database `packman_test` |
+| Consumer fixtures | The three applications under `fixtures/`, including the modular platform's PostgreSQL lifecycle test |
+
+The workflow does not install Dependabot. Abandoned packages are reported and do not fail the job by themselves; a security advisory does. The monorepo does not commit `composer.lock`, so CI resolves dependencies with `composer update`. `make ci` is the same sequence locally, and it also runs the fixtures.
 
 The public release installation is a separate proof. Follow the
 [versioned Composer repository instructions](../reference/installation.md) after the

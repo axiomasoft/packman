@@ -230,7 +230,7 @@ it('modules:compile writes the compiled registry file for the discovered modules
 
     expect($exitCode)->toBe(0);
 
-    $cachePath = base_path(CompiledModuleRegistry::CACHE_PATH);
+    $cachePath = base_path(resolve(ModulesOptions::class)->cachePath);
     $data = require $cachePath;
 
     expect($data['modules'])->toHaveCount(1)
@@ -248,7 +248,7 @@ it('modules:compile persists the entity, permissions and menu slices, not just a
 
     expect(Artisan::call('modules:compile'))->toBe(0);
 
-    $cachePath = base_path(CompiledModuleRegistry::CACHE_PATH);
+    $cachePath = base_path(resolve(ModulesOptions::class)->cachePath);
 
     // File is a plain-array payload — no object was var_export'd into it.
     expect(file_get_contents($cachePath))->not->toContain('::__set_state');
@@ -270,8 +270,7 @@ it('projects the compiled entities into EntityRegistry at boot — runtime path,
         ModuleDiscovery::class,
         new ModuleDiscovery(fallbackModules: [P15CompiledStubModule::class]),
     );
-    Artisan::call('modules:compile');
-    $cachePath = base_path(CompiledModuleRegistry::CACHE_PATH);
+    expect(Artisan::call('modules:compile'))->toBe(0);
 
     // Re-boot the provider so its app.booted projection reads the file we just
     // wrote (force re-register drops the stale singletons bound before it).
@@ -282,8 +281,6 @@ it('projects the compiled entities into EntityRegistry at boot — runtime path,
     expect($registry->has('pft.thing'))->toBeTrue()
         ->and($registry->get('pft.thing')->model)->toBe(Widget::class)
         ->and($registry->get('pft.thing')->labelPlural)->toBe('Things');
-
-    unlink($cachePath);
 });
 
 it('adds the compiled entity handle to the morph map at boot, spanning the whole registry', function (): void {
@@ -291,14 +288,11 @@ it('adds the compiled entity handle to the morph map at boot, spanning the whole
         ModuleDiscovery::class,
         new ModuleDiscovery(fallbackModules: [P15CompiledStubModule::class]),
     );
-    Artisan::call('modules:compile');
-    $cachePath = base_path(CompiledModuleRegistry::CACHE_PATH);
+    expect(Artisan::call('modules:compile'))->toBe(0);
 
     $this->app->register(new ModulesServiceProvider($this->app), force: true);
 
     expect(Relation::getMorphedModel('pft.thing'))->toBe(Widget::class);
-
-    unlink($cachePath);
 });
 
 it('reads the persisted registry back through compiled()', function (): void {
@@ -413,12 +407,14 @@ it('pins compiled() for one job and reloads only after flush', function (): void
 
     expect($registry->compiled())->not->toBe($pinned)
         ->and($registry->compiled()->toArray())->toBe($pinned->toArray())
-        ->and($registry->compiled()->fingerprint)->toBe($first->fingerprint);
+        ->and($registry->compiled()->fingerprint)->toBe($first->fingerprint)
+        ->and($registry->get('packman/alpha')->title)->toBe('Alpha');
 
     $registry->flush();
 
     expect($registry->compiled()->fingerprint)->toBe($second->fingerprint)
-        ->and($registry->compiled()->fingerprint)->not->toBe($first->fingerprint);
+        ->and($registry->compiled()->fingerprint)->not->toBe($first->fingerprint)
+        ->and($registry->get('packman/beta')->title)->toBe('Beta');
 
     unlink($path);
 });
@@ -447,6 +443,63 @@ it('rejects a corrupt compiled artifact and keeps activation off the fingerprint
     $registry->flush();
 
     expect(fn () => $registry->compiled())->toThrow(CompilationException::class, 'missing schema');
+
+    unlink($path);
+});
+
+it('fails closed on an invalid compiled registry payload', function (bool $failIfMissing, mixed $payload): void {
+    $path = moduleRegistryCachePath();
+    file_put_contents($path, '<?php return '.var_export($payload, true).';');
+
+    try {
+        $registry = newModuleRegistry($path, new ArrayModuleStateReader, failIfMissing: $failIfMissing);
+
+        expect(fn () => $registry->all())->toThrow(RuntimeException::class, 'corrupt')
+            ->and(fn () => $registry->all())->toThrow(RuntimeException::class, $path)
+            ->and(fn () => $registry->compiled())->toThrow(RuntimeException::class, 'corrupt');
+    } finally {
+        unlink($path);
+    }
+})->with([
+    'strict missing mode' => true,
+    'lenient missing mode' => false,
+])->with([
+    'non-array' => ['not-an-array'],
+    'missing sections' => [[]],
+    'invalid module list' => [['modules' => 'invalid', 'registry' => []]],
+    'invalid module row' => [['modules' => [[]], 'registry' => []]],
+    'invalid extension sections' => [['modules' => [], 'registry' => 'invalid']],
+]);
+
+it('reuses an unchanged compiled file after flush and reloads only after the file changes', function (): void {
+    $path = moduleRegistryCachePath();
+    CompiledModuleRegistry::writeAtomic($path, [
+        new CompiledModule('packman/alpha', 'Alpha', 'alp', [], [], []),
+    ]);
+
+    $registry = newModuleRegistry($path, new ArrayModuleStateReader);
+    $names = static fn (): array => array_map(
+        static fn (CompiledModule $module): string => $module->composerName,
+        $registry->all(),
+    );
+
+    expect($names())->toBe(['packman/alpha']);
+
+    $registry->flush();
+
+    // flush() drops the projection only. The file stamp is unchanged, so
+    // this read is the memoized payload and does not require the file again.
+    expect($names())->toBe(['packman/alpha']);
+
+    CompiledModuleRegistry::writeAtomic($path, [
+        new CompiledModule('packman/beta', 'Beta', 'bet', [], [], []),
+    ]);
+
+    expect($names())->toBe(['packman/alpha']);
+
+    $registry->flush();
+
+    expect($names())->toBe(['packman/beta']);
 
     unlink($path);
 });

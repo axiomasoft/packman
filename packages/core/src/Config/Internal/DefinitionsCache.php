@@ -14,7 +14,8 @@ use Throwable;
 
 /**
  * Compiled definitions cache with SHA-256 input fingerprinting, round-trip codec verification,
- * atomic file replacement (`tempnam` + `chmod` + `rename`), and OPcache invalidation.
+ * atomic file replacement (`tempnam` + `chmod` + `rename`, partial file removed on failure),
+ * and OPcache invalidation when the cache is written or cleared.
  */
 #[Internal]
 final readonly class DefinitionsCache
@@ -136,13 +137,41 @@ final readonly class DefinitionsCache
         $php = '<?php return '.var_export(['format' => self::FORMAT, 'fingerprint' => $fingerprint, 'definitions' => $encoded], true).';'.PHP_EOL;
         $dir = dirname($this->path);
 
-        if (! is_dir($dir) && ! mkdir($dir, 0755, true) && ! is_dir($dir)) {
+        set_error_handler(static fn (int $severity, string $message): bool => true);
+
+        try {
+            $directoryReady = is_dir($dir) || mkdir($dir, 0755, true) || is_dir($dir);
+        } finally {
+            restore_error_handler();
+        }
+
+        if (! $directoryReady) {
             throw new LogicException("Cannot create {$dir}.");
         }
 
         $tmp = tempnam($dir, $this->tempPrefix);
 
-        if ($tmp === false || file_put_contents($tmp, $php) === false || ! chmod($tmp, 0666 & ~umask()) || ! rename($tmp, $this->path)) {
+        if ($tmp === false) {
+            throw new LogicException("Cannot write {$this->path}.");
+        }
+
+        // A failed rename warns (EISDIR, for example). Handle it here so the
+        // warning does not replace the LogicException below.
+        set_error_handler(static fn (int $severity, string $message, string $file, int $line): bool => true);
+
+        try {
+            $failed = file_put_contents($tmp, $php, LOCK_EX) !== strlen($php)
+                || ! chmod($tmp, 0666 & ~umask())
+                || ! rename($tmp, $this->path);
+
+            if ($failed && is_file($tmp)) {
+                unlink($tmp);
+            }
+        } finally {
+            restore_error_handler();
+        }
+
+        if ($failed) {
             throw new LogicException("Cannot write {$this->path}.");
         }
 
@@ -153,7 +182,19 @@ final readonly class DefinitionsCache
 
     public function clear(): bool
     {
-        return ! is_file($this->path) || unlink($this->path);
+        if (! is_file($this->path)) {
+            return true;
+        }
+
+        if (! unlink($this->path)) {
+            return false;
+        }
+
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($this->path, true);
+        }
+
+        return true;
     }
 
     /**
