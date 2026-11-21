@@ -13,7 +13,7 @@ use Packman\Modules\Exceptions\Compiler\CompilationException;
 use Packman\Modules\Internal\Compiler\RegistryCompiler;
 use Packman\Modules\Internal\Discovery\ModuleDiscovery;
 use Packman\Modules\Internal\Events\ManifestListeners;
-use Packman\Modules\Internal\Registry\CompiledModuleRegistry;
+use Packman\Modules\Internal\Support\ModulesOptions;
 use Packman\Modules\ModulesServiceProvider;
 use Packman\Modules\Testing\ArrayEntityRegistry;
 
@@ -91,7 +91,7 @@ it('can compile a missing production registry while ordinary console boot still 
         $this->app->register(ModulesServiceProvider::class, true);
         $this->app->instance(ModuleDiscovery::class, new ModuleDiscovery(installedJsonPath: '/nonexistent-test-installed.json'));
         $this->artisan('modules:compile')->assertSuccessful();
-        $path = base_path(CompiledModuleRegistry::CACHE_PATH);
+        $path = base_path(resolve(ModulesOptions::class)->cachePath);
         expect(is_file($path))->toBeTrue();
         unlink($path);
         resolve(ModuleRegistry::class)->flush();
@@ -107,7 +107,7 @@ it('exempts cold production modules:compile with leading CLI flags and optimize 
     $previousArgv = $_SERVER['argv'] ?? null;
     $this->app->detectEnvironment(static fn (): string => 'production');
     $this->app->useBootstrapPath(database_path('bootstrap'));
-    $path = base_path(CompiledModuleRegistry::CACHE_PATH);
+    $path = base_path(resolve(ModulesOptions::class)->cachePath);
 
     try {
         if (is_file($path)) {

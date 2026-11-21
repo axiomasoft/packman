@@ -1,5 +1,5 @@
 name: Setup PHP
-description: Install PHP 8.4, required extensions, and Composer dependencies.
+description: Install PHP 8.4 and restore Composer package downloads.
 
 runs:
   using: composite
@@ -13,13 +13,16 @@ runs:
         extensions: bcmath, ctype, curl, dom, fileinfo, gd, gmp, intl, mbstring, pcntl, pdo_pgsql, pdo_sqlite, sqlite3, tokenizer, xml, zip
         ini-values: memory_limit=2G, assert.exception=1
 
-    - name: Cache Composer package downloads
-      uses: actions/cache@v4
-      with:
-        path: ~/.composer/cache/files
-        key: composer-files-${{ hashFiles('composer.json', 'packages/*/composer.json', 'fixtures/*/composer.json') }}
-        restore-keys: composer-files-
-
-    - name: Install monorepo dependencies
+    - name: Locate Composer download cache
+      id: composer-cache
       shell: bash
-      run: composer update --no-interaction --prefer-dist --no-progress --ansi
+      run: printf 'path=%s\n' "$(composer config cache-files-dir --absolute)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache Composer package downloads
+      uses: actions/cache@v5
+      with:
+        path: ${{ steps.composer-cache.outputs.path }}
+        key: composer-files-${{ runner.os }}-${{ github.job == 'fixtures' && 'fixtures' || 'monorepo' }}-${{ hashFiles('composer.json', 'packages/*/composer.json', 'fixtures/**/composer.json') }}-${{ github.run_id }}
+        restore-keys: |
+          composer-files-${{ runner.os }}-${{ github.job == 'fixtures' && 'fixtures' || 'monorepo' }}-${{ hashFiles('composer.json', 'packages/*/composer.json', 'fixtures/**/composer.json') }}-
+          composer-files-${{ runner.os }}-${{ github.job == 'fixtures' && 'fixtures' || 'monorepo' }}-

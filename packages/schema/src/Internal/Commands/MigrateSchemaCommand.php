@@ -33,7 +33,7 @@ final class MigrateSchemaCommand extends Command
 
             return self::INVALID;
         }
-        $ran = $migrator->migrate(scope: $scope, connection: $this->connectionName(), includeModules: (bool) $this->option('modules'));
+        $ran = $migrator->migrate(scope: $scope, connection: $this->connectionName(), includeModules: $this->input->getOption('modules') === true);
         $this->line($ran === [] ? 'Nothing to migrate.' : implode(PHP_EOL, $ran));
 
         return self::SUCCESS;

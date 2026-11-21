@@ -23,7 +23,7 @@ final class RepairModuleCommand extends Command
 
     public function handle(ModuleLifecycle $lifecycle): int
     {
-        $rawModule = $this->argument('module');
+        $rawModule = $this->input->getArgument('module');
         $module = is_string($rawModule) ? trim($rawModule) : '';
 
         if (preg_match('/^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*$/', $module) !== 1) {

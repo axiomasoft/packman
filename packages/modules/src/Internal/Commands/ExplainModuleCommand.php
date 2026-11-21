@@ -25,7 +25,7 @@ final class ExplainModuleCommand extends Command
 
     public function handle(RegistryIntrospection $introspection): int
     {
-        $rawModule = $this->argument('module');
+        $rawModule = $this->input->getArgument('module');
         $module = is_string($rawModule) ? $rawModule : '';
         [$scopeId, $conflict] = $this->scopeSelection();
 
@@ -44,7 +44,7 @@ final class ExplainModuleCommand extends Command
         );
         $explanation = $introspection->why(module: $module, context: $context);
 
-        if ((bool) $this->option('json')) {
+        if ($this->input->getOption('json') === true) {
             $this->line(json_encode([
                 'schemaVersion' => $explanation->schemaVersion,
                 'module' => $explanation->module,

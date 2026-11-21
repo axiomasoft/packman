@@ -230,7 +230,7 @@ it('modules:compile writes the compiled registry file for the discovered modules
 
     expect($exitCode)->toBe(0);
 
-    $cachePath = base_path(CompiledModuleRegistry::CACHE_PATH);
+    $cachePath = base_path(resolve(ModulesOptions::class)->cachePath);
     $data = require $cachePath;
 
     expect($data['modules'])->toHaveCount(1)
@@ -248,7 +248,7 @@ it('modules:compile persists the entity, permissions and menu slices, not just a
 
     expect(Artisan::call('modules:compile'))->toBe(0);
 
-    $cachePath = base_path(CompiledModuleRegistry::CACHE_PATH);
+    $cachePath = base_path(resolve(ModulesOptions::class)->cachePath);
 
     // File is a plain-array payload — no object was var_export'd into it.
     expect(file_get_contents($cachePath))->not->toContain('::__set_state');
@@ -270,8 +270,7 @@ it('projects the compiled entities into EntityRegistry at boot — runtime path,
         ModuleDiscovery::class,
         new ModuleDiscovery(fallbackModules: [P15CompiledStubModule::class]),
     );
-    Artisan::call('modules:compile');
-    $cachePath = base_path(CompiledModuleRegistry::CACHE_PATH);
+    expect(Artisan::call('modules:compile'))->toBe(0);
 
     // Re-boot the provider so its app.booted projection reads the file we just
     // wrote (force re-register drops the stale singletons bound before it).
@@ -282,8 +281,6 @@ it('projects the compiled entities into EntityRegistry at boot — runtime path,
     expect($registry->has('pft.thing'))->toBeTrue()
         ->and($registry->get('pft.thing')->model)->toBe(Widget::class)
         ->and($registry->get('pft.thing')->labelPlural)->toBe('Things');
-
-    unlink($cachePath);
 });
 
 it('adds the compiled entity handle to the morph map at boot, spanning the whole registry', function (): void {
@@ -291,14 +288,11 @@ it('adds the compiled entity handle to the morph map at boot, spanning the whole
         ModuleDiscovery::class,
         new ModuleDiscovery(fallbackModules: [P15CompiledStubModule::class]),
     );
-    Artisan::call('modules:compile');
-    $cachePath = base_path(CompiledModuleRegistry::CACHE_PATH);
+    expect(Artisan::call('modules:compile'))->toBe(0);
 
     $this->app->register(new ModulesServiceProvider($this->app), force: true);
 
     expect(Relation::getMorphedModel('pft.thing'))->toBe(Widget::class);
-
-    unlink($cachePath);
 });
 
 it('reads the persisted registry back through compiled()', function (): void {

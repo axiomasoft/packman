@@ -169,12 +169,13 @@ it('compiles and activates a code-only module using host bindings without SQL', 
 
 it('modules:compile fails cleanly when the registry directory cannot be created', function (): void {
     $installedJson = tempnam(sys_get_temp_dir(), 'packman-modules-');
-    $blocker = $this->app->basePath('bootstrap/cache-blocker');
+    $relativeBlocker = 'bootstrap/cache/blocker-'.bin2hex(random_bytes(6));
+    $blocker = $this->app->basePath($relativeBlocker);
     file_put_contents($installedJson, '{"packages":[]}');
     file_put_contents($blocker, 'not a directory');
     $this->app->instance(ModuleDiscovery::class, new ModuleDiscovery(installedJsonPath: $installedJson));
     $this->app->instance(ModulesOptions::class, ModulesOptions::fromArray([
-        'cache_path' => 'bootstrap/cache-blocker/modules.php',
+        'cache_path' => $relativeBlocker.'/modules.php',
     ]));
 
     try {

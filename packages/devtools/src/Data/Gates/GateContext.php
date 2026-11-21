@@ -42,7 +42,7 @@ final readonly class GateContext
         try {
             $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
-            throw new RuntimeException("Cannot read {$path}: ".$exception->getMessage(), previous: $exception);
+            throw new RuntimeException("Cannot read {$path}: ".$exception->getMessage(), $exception->getCode(), $exception);
         }
 
         if (! is_array($decoded) || array_is_list($decoded)) {

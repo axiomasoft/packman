@@ -90,7 +90,7 @@ Sockit/Proxyma/Commerz PostgreSQL protocols are not certified by the joint SQLit
 
 ## 5. GitHub Actions
 
-[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) runs on pushes, pull requests, and a weekly schedule. Four jobs share one PHP 8.4 setup:
+[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) runs on pushes to `main`, pull requests, and a weekly schedule. Four jobs share one PHP 8.4 setup:
 
 | Job | What it runs |
 |:--|:--|
