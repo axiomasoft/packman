@@ -32,8 +32,10 @@ final readonly class ScaffoldRunner
         $seenTargets = [];
 
         $basePath = str_replace('\\', '/', $basePath);
+
         if (! str_starts_with($basePath, '/')) {
             $cwd = getcwd();
+
             if ($cwd === false) {
                 throw new RuntimeException('Unable to resolve the working directory.');
             }
