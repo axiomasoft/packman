@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Packman\DevTools\Data\Gates;
 
+use JsonException;
 use Packman\Attributes\Api;
 use Packman\DevTools\Gates\Runner\OwnersCatalogue;
+use RuntimeException;
 
 /** Shared execution context passed to every QualityGate run. */
 #[Api(since: '1.0')]
@@ -34,13 +36,17 @@ final readonly class GateContext
         $raw = file_get_contents($path);
 
         if (! is_string($raw) || $raw === '') {
-            return [];
+            throw new RuntimeException("Cannot read {$path}: composer.json is empty or unreadable.");
         }
 
-        $decoded = json_decode($raw, true);
+        try {
+            $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            throw new RuntimeException("Cannot read {$path}: ".$exception->getMessage(), previous: $exception);
+        }
 
-        if (! is_array($decoded)) {
-            return [];
+        if (! is_array($decoded) || array_is_list($decoded)) {
+            throw new RuntimeException("Cannot read {$path}: composer.json must be a JSON object.");
         }
 
         /** @var array<string, mixed> $decoded */

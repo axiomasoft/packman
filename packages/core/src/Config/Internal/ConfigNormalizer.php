@@ -72,6 +72,10 @@ final class ConfigNormalizer
     /** @return array<string, mixed> */
     private function loadDefaults(string $path): array
     {
+        if (! is_file($path)) {
+            throw InvalidConfiguration::forMessage('Package config file "'.$path.'" does not exist.');
+        }
+
         $values = require $path;
 
         if (! is_array($values)) {

@@ -187,6 +187,15 @@ it('renders deterministic CLI output and requires account for tenant verdict (IN
         ->and($json['module'])->toBe('example/demo')
         ->and($json['hasTenantVerdict'])->toBeFalse()
         ->and($withAccount)->toContain('Tenant verdict: yes');
+
+    Artisan::call('modules:why', ['module' => 'example/demo', '--scope' => '   ', '--account' => 'acct-1']);
+
+    expect(Artisan::output())->toContain('Tenant verdict: yes')
+        ->and(Artisan::call('modules:why', [
+            'module' => 'example/demo',
+            '--scope' => 'acct-1',
+            '--account' => 'acct-2',
+        ]))->toBe(2);
 });
 
 it('redacts internal class references and sensitive topology (INTRO-04)', function (): void {

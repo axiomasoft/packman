@@ -24,7 +24,14 @@ final class RepairModuleCommand extends Command
     public function handle(ModuleLifecycle $lifecycle): int
     {
         $rawModule = $this->argument('module');
-        $module = is_string($rawModule) ? $rawModule : '';
+        $module = is_string($rawModule) ? trim($rawModule) : '';
+
+        if (preg_match('/^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*$/', $module) !== 1) {
+            $this->error('Module name must be a Composer package name.');
+
+            return self::INVALID;
+        }
+
         $lifecycle->repair($module);
         $this->info(sprintf('Reconciled module [%s] with the schema.', $module));
 

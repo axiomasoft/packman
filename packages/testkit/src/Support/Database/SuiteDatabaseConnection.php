@@ -10,15 +10,15 @@ use Packman\Testkit\Internal\EnvLookup;
 use PDO;
 use Throwable;
 
-/** Resolves PostgreSQL and SQLite connection identities and PDO handles from PGSQL_* / DB_* env. */
+/** Resolves PostgreSQL connection identities and PDO handles from PGSQL_* / DB_* env, with libpq fallbacks and PACKMAN_PGSQL_CONNECT_TIMEOUT. */
 #[Api(since: '1.0')]
 final class SuiteDatabaseConnection
 {
     public static function pgsqlIdentity(): TestDatabaseIdentity
     {
-        $host = EnvLookup::string('PGSQL_HOST', 'DB_HOST') ?? '127.0.0.1';
-        $port = (int) (EnvLookup::string('PGSQL_PORT', 'DB_PORT') ?? '5432');
-        $databaseName = EnvLookup::string('PGSQL_DATABASE');
+        $host = EnvLookup::string('PGSQL_HOST', 'DB_HOST', 'PGHOST') ?? '127.0.0.1';
+        $port = (int) (EnvLookup::string('PGSQL_PORT', 'DB_PORT', 'PGPORT') ?? '5432');
+        $databaseName = EnvLookup::string('PGSQL_DATABASE', 'PGDATABASE');
 
         if ($databaseName === null) {
             $dbConnection = EnvLookup::string('DB_CONNECTION');
@@ -31,7 +31,7 @@ final class SuiteDatabaseConnection
         }
 
         $database = DatabaseLaneEnvironment::isolatedDatabaseName($databaseName);
-        $username = EnvLookup::string('PGSQL_USERNAME', 'DB_USERNAME') ?? 'postgres';
+        $username = EnvLookup::string('PGSQL_USERNAME', 'DB_USERNAME', 'PGUSER') ?? 'postgres';
         $schema = EnvLookup::string('PGSQL_SCHEMA') ?? 'public';
 
         return new TestDatabaseIdentity(
@@ -46,7 +46,7 @@ final class SuiteDatabaseConnection
 
     public static function pgsqlPassword(): string
     {
-        return EnvLookup::string('PGSQL_PASSWORD', 'DB_PASSWORD') ?? '';
+        return EnvLookup::string('PGSQL_PASSWORD', 'DB_PASSWORD', 'PGPASSWORD') ?? '';
     }
 
     public static function pgsqlDsn(?TestDatabaseIdentity $identity = null): string
@@ -85,15 +85,16 @@ final class SuiteDatabaseConnection
     {
         $target = $identity ?? self::pgsqlIdentity();
         TestDatabaseGuard::assertSafe($target);
+        $timeout = self::pgsqlConnectTimeout();
 
         return new PDO(
-            self::pgsqlDsn($target),
+            sprintf('%s;connect_timeout=%d', self::pgsqlDsn($target), $timeout),
             $target->username,
             self::pgsqlPassword(),
             [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_TIMEOUT => 3,
+                PDO::ATTR_TIMEOUT => $timeout,
             ],
         );
     }
@@ -107,5 +108,22 @@ final class SuiteDatabaseConnection
         } catch (Throwable) {
             return false;
         }
+    }
+
+    private static function pgsqlConnectTimeout(): int
+    {
+        $raw = EnvLookup::string('PACKMAN_PGSQL_CONNECT_TIMEOUT');
+
+        if ($raw === null || ! ctype_digit($raw)) {
+            return 3;
+        }
+
+        $timeout = (int) $raw;
+
+        if ($timeout < 1) {
+            return 3;
+        }
+
+        return $timeout > 120 ? 120 : $timeout;
     }
 }

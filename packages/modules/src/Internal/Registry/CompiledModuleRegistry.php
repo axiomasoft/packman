@@ -45,7 +45,12 @@ use RuntimeException;
  * memo before a job; the first `compiled()` pins that artifact for the job.
  * Octane and long-lived workers do not hot-reload mid-request: deploy must
  * run `octane:reload` and restart queue workers. Tenant activation epochs
- * never rewrite this fingerprint.
+ * never rewrite this fingerprint. `flush()` drops that projection only.
+ * The decoded file stays memoized with its `stat` stamp (inode, mtime,
+ * size) and is not `require`d again while the stamp is unchanged. A changed
+ * stamp invalidates OPcache when `opcache_invalidate` exists, so a redeploy
+ * is visible even when `opcache.validate_timestamps=0`. A missing file is
+ * not cached. A non-array payload is corrupt and fails closed.
  *
  * @internal spec: B-10 §5.2/§7.1, AC-3/AC-4, D39, D30/A1/A2, P1.15, A10
  */
@@ -56,6 +61,11 @@ final class CompiledModuleRegistry implements ModuleRegistry
     private ?array $modules = null;
 
     private ?CompiledRegistry $registry = null;
+
+    /** @var array<array-key, mixed>|null */
+    private ?array $compiledPayload = null;
+
+    private ?string $compiledStamp = null;
 
     /**
      * @param  ModuleStateReader|(Closure(): ModuleStateReader)  $stateReader
@@ -96,6 +106,13 @@ final class CompiledModuleRegistry implements ModuleRegistry
         ));
     }
 
+    public function editionFor(string $name, ContextScopeInterface $ctx): ?string
+    {
+        $edition = $this->enabledFor($ctx)[$name]['edition'] ?? null;
+
+        return is_string($edition) && $edition !== '' ? $edition : null;
+    }
+
     public function isActive(string $name, ContextScopeInterface $ctx): bool
     {
         // A45/A46: active iff enabled AND still present in the compiled
@@ -126,9 +143,11 @@ final class CompiledModuleRegistry implements ModuleRegistry
     }
 
     /**
-     * Drop the per-process memo of the compiled file: a long-running
-     * `queue:work` must re-read a redeploy's recompiled registry on the next
-     * job instead of serving hours-old code state. Wired to `JobProcessing` in
+     * Drop the per-process projection of the compiled file: a long-running
+     * `queue:work` must observe a redeploy's recompiled registry on the next
+     * job instead of serving hours-old code state. The decoded payload and
+     * its file stamp survive this call, so an unchanged file is not
+     * `require`d again. Wired to `JobProcessing` in
      * {@see ModulesServiceProvider}. The enabled-set is NOT
      * memoized in a property — it lives in the epoch-keyed cache and is
      * refreshed against the DB epoch on every read, so worker freshness does
@@ -186,16 +205,24 @@ final class CompiledModuleRegistry implements ModuleRegistry
     }
 
     /**
-     * Read and decode the compiled file once. Missing file is a hard failure
-     * in production (`$failIfMissing`) — a silent empty payload would ship a
-     * runtime with no entities and no morph map, exactly the class of defect
-     * A10 was, only quieter.
+     * Decode the compiled file. A successful payload is memoized with its
+     * stat stamp and reused across {@see flush()} while the stamp is
+     * unchanged. Every fresh `require` invalidates the OPcache entry first,
+     * including the first load of a worker.
+     *
+     * A missing file is a hard failure in production (`$failIfMissing`) and
+     * is not memoized — a silent empty payload would ship a runtime with no
+     * entities and no morph map, and a file created later must still be
+     * read. A non-array payload is corrupt and fails closed without being
+     * cached.
      *
      * @return array<array-key, mixed>
      */
     private function readCache(): array
     {
-        if (! is_file($this->cachePath)) {
+        $stamp = $this->fileStamp();
+
+        if ($stamp === null) {
             if ($this->failIfMissing) {
                 throw new RuntimeException(sprintf(
                     'Compiled module registry not found at [%s]. Run `php artisan %s` (or `php artisan optimize`) as part of the deploy.',
@@ -207,10 +234,70 @@ final class CompiledModuleRegistry implements ModuleRegistry
             return [];
         }
 
-        /** @var mixed $data */
+        if ($this->compiledPayload !== null && $this->compiledStamp === $stamp) {
+            return $this->compiledPayload;
+        }
+
+        // Always drop the OPcache entry before require. The first load of a
+        // worker can still see a previous deploy when validate_timestamps=0,
+        // and a later unchanged stamp then skips require entirely.
+        self::invalidateOpcache($this->cachePath);
+
         $data = require $this->cachePath;
 
-        return is_array($data) ? $data : [];
+        if (! is_array($data)) {
+            throw new RuntimeException(sprintf(
+                'Compiled module registry at [%s] is corrupt.',
+                $this->cachePath,
+            ));
+        }
+
+        $this->compiledPayload = $data;
+        $this->compiledStamp = $stamp;
+
+        return $data;
+    }
+
+    /**
+     * `stat` identity of the compiled file (inode, mtime, size).
+     * Null when the path is not a regular file, so an empty miss is not a
+     * reusable payload.
+     */
+    private function fileStamp(): ?string
+    {
+        clearstatcache(true, $this->cachePath);
+
+        if (! is_file($this->cachePath)) {
+            return null;
+        }
+
+        $stat = @stat($this->cachePath);
+
+        if ($stat === false) {
+            return null;
+        }
+
+        $contents = @file_get_contents($this->cachePath);
+
+        if (! is_string($contents)) {
+            return null;
+        }
+
+        return $stat['ino'].':'.$stat['mtime'].':'.$stat['size'].':'.hash('sha256', $contents);
+    }
+
+    /**
+     * Drop a stale OPcache entry after the compiled file changes.
+     * `opcache_invalidate` returns false when OPcache is disabled or the
+     * path is not cached; that must not fail the caller.
+     */
+    private static function invalidateOpcache(string $path): void
+    {
+        if (! function_exists('opcache_invalidate')) {
+            return;
+        }
+
+        opcache_invalidate($path, true);
     }
 
     /** @param  list<CompiledModule>  $modules */
@@ -223,7 +310,7 @@ final class CompiledModuleRegistry implements ModuleRegistry
 
         $directory = dirname($path);
 
-        if (! is_dir($directory) && ! mkdir($directory, recursive: true) && ! is_dir($directory)) {
+        if (! is_dir($directory) && ! @mkdir($directory, recursive: true) && ! is_dir($directory)) {
             throw new RuntimeException(sprintf('Unable to create compiled registry directory [%s].', $directory));
         }
 
@@ -245,5 +332,7 @@ final class CompiledModuleRegistry implements ModuleRegistry
 
             throw new RuntimeException(sprintf('Unable to move compiled registry into place [%s].', $path));
         }
+
+        self::invalidateOpcache($path);
     }
 }

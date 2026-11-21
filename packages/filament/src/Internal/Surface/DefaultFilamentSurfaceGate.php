@@ -223,6 +223,13 @@ final readonly class DefaultFilamentSurfaceGate implements FilamentSurfaceGate
             return $query->whereKey([]);
         }
 
+        $viewAnyKey = $context->resourceKey($resource, 'view_any');
+
+        if (in_array('view_any', $plugin->getAbilities(), true)
+            && (! $this->gate->has($viewAnyKey) || $this->gate->forUser($user)->denies($viewAnyKey))) {
+            return $query->whereKey([]);
+        }
+
         $viewKey = $context->resourceKey($resource, 'view');
 
         if ($this->gate->has($viewKey) && $this->gate->forUser($user)->denies($viewKey)) {
@@ -336,7 +343,7 @@ final readonly class DefaultFilamentSurfaceGate implements FilamentSurfaceGate
                 default => $entryPermission->name,
             };
 
-            if ($this->gate->has($key) && $this->gate->forUser($user)->denies($key)) {
+            if (! $this->gate->has($key) || $this->gate->forUser($user)->denies($key)) {
                 return false;
             }
         }
@@ -357,7 +364,9 @@ final readonly class DefaultFilamentSurfaceGate implements FilamentSurfaceGate
             return false;
         }
 
-        return $this->admission->admit($panel, $user, $scope) !== null;
+        $admitted = $this->admission->admit($panel, $user, $scope);
+
+        return $admitted !== null && ! $admitted->scopedWitness;
     }
 
     private function resolveScope(): ContextScopeInterface

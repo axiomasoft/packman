@@ -14,6 +14,7 @@ use Packman\Modules\Exceptions\Compiler\InvalidManifestException;
 use Packman\Modules\Internal\Registry\CompiledModuleRegistry;
 use Packman\Modules\Internal\Support\ModulesOptions;
 use Packman\Modules\ModulesServiceProvider;
+use RuntimeException;
 
 /**
  * Deploy-hook compile pipeline: discovers module manifests, validates
@@ -71,11 +72,18 @@ final class CompileModulesCommand extends Command
         }
 
         $cachePath = $this->laravel->basePath($relativeCachePath);
-        CompiledModuleRegistry::writeAtomic(
-            path: $cachePath,
-            modules: array_map(CompiledModule::fromManifest(...), $manifests),
-            registry: $compiled,
-        );
+
+        try {
+            CompiledModuleRegistry::writeAtomic(
+                path: $cachePath,
+                modules: array_map(CompiledModule::fromManifest(...), $manifests),
+                registry: $compiled,
+            );
+        } catch (RuntimeException $exception) {
+            $this->components->error($exception->getMessage());
+
+            return self::FAILURE;
+        }
 
         $this->components->info(sprintf('Wrote compiled registry to %s.', $cachePath));
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Packman\Plugins\Internal\Graph;
 
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Packman\Attributes\Internal;
 use Packman\Config\Exceptions\InvalidConfiguration;
@@ -114,7 +115,11 @@ final class PluginCatalog
         $this->compiling = true;
 
         try {
-            $compiler = new PluginGraphCompiler($container, activationGate: $this->activationGate($container));
+            $compiler = new PluginGraphCompiler(
+                $container,
+                database: self::configuredDriver($container),
+                activationGate: $this->activationGate($container),
+            );
 
             $registry = $compiler->compile($this->entries($configured), $disabled);
             $this->sealed = true;
@@ -147,5 +152,23 @@ final class PluginCatalog
         }
 
         return $entries;
+    }
+
+    private static function configuredDriver(Container $container): ?string
+    {
+        if (! $container->bound(Repository::class)) {
+            return null;
+        }
+
+        $config = $container->make(Repository::class);
+        $default = $config->get('database.default');
+
+        if (! is_string($default) || $default === '') {
+            return null;
+        }
+
+        $driver = $config->get('database.connections.'.$default.'.driver');
+
+        return is_string($driver) && $driver !== '' ? $driver : null;
     }
 }

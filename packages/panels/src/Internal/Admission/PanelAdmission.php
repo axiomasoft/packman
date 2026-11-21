@@ -42,10 +42,8 @@ final readonly class PanelAdmission implements PanelAdmitter
             return null;
         }
 
-        if ($panel->scopeMode() === AssignmentScopeMode::Required && ($scopeType === null || $scopeId === null)) {
-            if ($panel->scopeTypes() === []) {
-                return null;
-            }
+        if ($panel->scopeMode() === AssignmentScopeMode::Required && ($scopeType === null || $scopeType === '' || $scopeId === null || $scopeId === '')) {
+            return null;
         }
 
         if (! $this->gate->isMember($panel, $subject, $tenant, $scopeType, $scopeId)) {
@@ -83,7 +81,7 @@ final readonly class PanelAdmission implements PanelAdmitter
         ?string $scopeType,
         ?string $scopeId,
     ): bool {
-        if ($scopeType !== null || $scopeId !== null || $panel->scopeMode() === AssignmentScopeMode::None) {
+        if ($panel->scopeMode() !== AssignmentScopeMode::Inherit || $scopeType !== null || $scopeId !== null) {
             return false;
         }
 

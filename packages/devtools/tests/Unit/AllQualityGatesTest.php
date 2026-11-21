@@ -40,6 +40,20 @@ function runGateIds(TempWorkspace $ws, string ...$gateIds): array
     return $indexed;
 }
 
+it('refuses a package composer.json that is not a JSON object', function (): void {
+    $ws = new TempWorkspace;
+
+    try {
+        $pkg = $ws->seedCleanMonorepoPackage('acme/external', 'packages/external', 'Acme\\GateWorkspace\\');
+        $ws->writePackmanJson([$pkg]);
+        $ws->write('packages/external/composer.json', '{');
+
+        expect(fn () => runGateIds($ws, 'package-graph'))->toThrow(RuntimeException::class, 'composer.json');
+    } finally {
+        $ws->cleanup();
+    }
+});
+
 it('shares the target Composer loader across gates and releases it when a gate fails', function (): void {
     $ws = new TempWorkspace;
     $initialLoaders = spl_autoload_functions();

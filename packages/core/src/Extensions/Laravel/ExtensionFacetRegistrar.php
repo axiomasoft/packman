@@ -256,7 +256,7 @@ final class ExtensionFacetRegistrar
     private static function mergeConfigDefaults(array $defaults, array $existing): array
     {
         if (array_is_list($defaults) || array_is_list($existing)) {
-            return $existing !== [] ? $existing : $defaults;
+            return $existing;
         }
 
         $merged = $defaults;

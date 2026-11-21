@@ -19,6 +19,12 @@
             "email": "dv.vostrikov@gmail.com"
         }
     ],
+    "homepage": "https://github.com/axiomasoft/packman",
+    "support": {
+        "issues": "https://github.com/axiomasoft/packman/issues",
+        "source": "https://github.com/axiomasoft/packman",
+        "security": "https://github.com/axiomasoft/packman/blob/main/SECURITY.md"
+    },
     "require": {
         "php": "^8.4",
         "psr/clock": "^1.0"

@@ -3,6 +3,18 @@
     "description": "Shared testing harnesses, PostgreSQL database isolation, concurrency barriers, contract assertions, and fake recorders for Packman packages.",
     "type": "library",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Dmitry Vostrikov",
+            "email": "dv.vostrikov@gmail.com"
+        }
+    ],
+    "homepage": "https://github.com/axiomasoft/packman",
+    "support": {
+        "issues": "https://github.com/axiomasoft/packman/issues",
+        "source": "https://github.com/axiomasoft/packman",
+        "security": "https://github.com/axiomasoft/packman/blob/main/SECURITY.md"
+    },
     "require": {
         "php": "^8.4",
         "axiomasoft/packman": "^0.1",

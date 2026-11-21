@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Artisan;
 use Packman\Config\Contracts\ConfigReportSectionInterface;
 use Packman\Config\Contracts\OptionsFactory;
 use Packman\Config\Contracts\RuntimeConfigCheck;
@@ -86,6 +87,19 @@ function runValidateConfigCommand(): array
         'exit' => $exit,
     ];
 }
+
+it('validates configuration when no report sections are registered', function (): void {
+    $property = new ReflectionProperty($this->app, 'tags');
+    $previous = $property->getValue($this->app);
+
+    try {
+        $property->setValue($this->app, []);
+
+        expect(Artisan::call('packman:config:validate'))->toBe(0);
+    } finally {
+        $property->setValue($this->app, $previous);
+    }
+});
 
 it('exits zero on valid configuration and reports drivers and absent secrets', function (): void {
     config(['probe' => ['driver' => 'null']]);

@@ -7,6 +7,7 @@ use Packman\Data\Laravel\JsonDocuments;
 use Packman\Events\DomainEvent;
 use Packman\Features\Contracts\FeatureFlagsInterface;
 use Packman\Features\Data\FeatureFlagDefinition;
+use Packman\Features\Internal\NullFeatureFlags;
 use Packman\Settings\Contracts\SettingDefaultsProviderInterface;
 
 it('constructs DomainEvent with UUIDv7, UTC timestamp, and optional scopeId', function (): void {
@@ -46,6 +47,8 @@ it('builds immutable FeatureFlagDefinition and fulfills FeatureFlagsInterface', 
         ->and($def->key)->toBe('billing.enabled')
         ->and($def->default)->toBeTrue()
         ->and($def->module)->toBe('acme/billing');
+
+    (new NullFeatureFlags)->define($def);
 });
 
 it('supports SettingDefaultsProviderInterface lookups', function (): void {

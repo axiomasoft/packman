@@ -82,6 +82,7 @@ Defined in [`composer.json`](../../composer.json) and [`Makefile`](../../Makefil
 | `composer refactor` | `make refactor` | `vendor/bin/rector process` |
 | `composer refactor:check` | `make refactor:check` | `vendor/bin/rector process --dry-run` |
 | `composer test` | `make test` | `vendor/bin/pest --exclude-group=pg` |
+| `composer test:parallel` | `make test-parallel` | `vendor/bin/pest --parallel --exclude-group=pg` |
 | `composer test:pg` | `make test:pg` | `vendor/bin/pest --group=pg` |
 | `composer test:arch` | `make test-arch` | `vendor/bin/pest --testsuite=Arch` |
 | `composer gate` | `make gate` | `@php bin/packman gate` |
@@ -89,5 +90,6 @@ Defined in [`composer.json`](../../composer.json) and [`Makefile`](../../Makefil
 | `composer error-codes` | `make error-codes` | `@php bin/packman error-codes --check` |
 | `composer config-schema` | `make config-schema` | `@php bin/packman config-schema --check` |
 | `composer ai:sync` | `make ai-sync` | `@php bin/packman ai:sync --dry-run` |
-| — | `make fixtures` | Runs `composer install` and `composer test` inside each `fixtures/*` consumer |
-| — | `make ci` | Runs `lint-check analyse refactor-check gate php-api test test-pg fixtures` |
+| `composer security:audit` | `make security-audit` | `composer audit --abandoned=report` |
+| — | `make fixtures` | Installs each `fixtures/*` consumer (`install` when a lockfile exists, otherwise `update`) and runs its tests |
+| — | `make ci` | Runs the static checks, contract checks, `security-audit`, both test lanes, and fixtures |

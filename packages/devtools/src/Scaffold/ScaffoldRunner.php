@@ -31,8 +31,14 @@ final readonly class ScaffoldRunner
         /** @var array<string, true> $seenTargets */
         $seenTargets = [];
 
+        $base = self::normalizePath($basePath);
+
         foreach ($files as $file) {
             $target = self::normalizePath(Layout::absolute($basePath, $file->relativePath));
+
+            if ($target !== $base && ! str_starts_with($target, $base.'/')) {
+                throw new RuntimeException('Scaffold target escapes the base path: '.$file->relativePath);
+            }
 
             if (is_dir($target)) {
                 throw ScaffoldCollisionException::targetIsDirectory($target);

@@ -6,7 +6,6 @@ namespace Packman\Modules\Internal\Commands;
 
 use Illuminate\Console\Command;
 use Packman\Attributes\Internal;
-use Packman\Context\Contracts\ContextScopeInterface;
 use Packman\Context\Data\ScopeRef;
 use Packman\Modules\Contracts\Registry\RegistryIntrospection;
 
@@ -28,7 +27,21 @@ final class ExplainModuleCommand extends Command
     {
         $rawModule = $this->argument('module');
         $module = is_string($rawModule) ? $rawModule : '';
-        $context = $this->resolveContext();
+        [$scopeId, $conflict] = $this->scopeSelection();
+
+        if ($conflict) {
+            $this->error('--scope and --account name different tenants.');
+
+            return self::INVALID;
+        }
+
+        $context = $scopeId === null ? null : new ScopeRef(
+            id: $scopeId,
+            attributes: [
+                'slug' => $scopeId,
+                'status' => 'active',
+            ],
+        );
         $explanation = $introspection->why(module: $module, context: $context);
 
         if ((bool) $this->option('json')) {
@@ -57,20 +70,33 @@ final class ExplainModuleCommand extends Command
         return self::SUCCESS;
     }
 
-    private function resolveContext(): ?ContextScopeInterface
+    /**
+     * A blank option is absent. When both names are present they must agree.
+     *
+     * @return array{0: ?string, 1: bool}
+     */
+    private function scopeSelection(): array
     {
-        $scopeId = $this->option('scope') ?? $this->option('account');
+        $scope = $this->presentOption('scope');
+        $account = $this->presentOption('account');
 
-        if (! is_string($scopeId) || $scopeId === '') {
+        if ($scope !== null && $account !== null && $scope !== $account) {
+            return [null, true];
+        }
+
+        return [$scope ?? $account, false];
+    }
+
+    private function presentOption(string $name): ?string
+    {
+        $value = $this->option($name);
+
+        if (! is_string($value)) {
             return null;
         }
 
-        return new ScopeRef(
-            id: $scopeId,
-            attributes: [
-                'slug' => $scopeId,
-                'status' => 'active',
-            ],
-        );
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 }

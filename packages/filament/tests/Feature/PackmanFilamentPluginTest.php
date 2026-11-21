@@ -314,9 +314,11 @@ it('fails closed when guardPanel enforces admission without PanelAdmissionGate o
         {
             public bool $allow = true;
 
+            public bool $witness = false;
+
             public function admit(Panel $panel, object $subject, ContextScopeInterface $tenant, ?string $scopeType = null, ?string $scopeId = null): ?AdmissionResult
             {
-                return $this->allow ? new AdmissionResult($tenant, $scopeType, $scopeId, false) : null;
+                return $this->allow ? new AdmissionResult($tenant, $scopeType, $scopeId, $this->witness) : null;
             }
         };
         app()->instance(PanelAdmitter::class, $admitter);
@@ -335,6 +337,12 @@ it('fails closed when guardPanel enforces admission without PanelAdmissionGate o
 
         $this->activatePanel($tenantPanel);
         expect(FilamentTestOrderResource::canViewAny())->toBeTrue();
+
+        $admitter->witness = true;
+        app()->forgetInstance(FilamentSurfaceGate::class);
+        expect(FilamentTestOrderResource::canViewAny())->toBeFalse();
+        $admitter->witness = false;
+        app()->forgetInstance(FilamentSurfaceGate::class);
 
         // Even with a permissive custom PanelAdmitter, TenantMode::Required fails closed on global/absent scope.
         $resolver->scope = new ScopeRef('global');

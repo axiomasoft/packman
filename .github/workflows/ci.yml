@@ -1,0 +1,111 @@
+# Dependency advisories are checked with Composer (`composer security:audit`).
+# Dependabot is intentionally not configured.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  COMPOSER_NO_INTERACTION: "1"
+
+jobs:
+  quality:
+    name: Static analysis and gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-php
+      - name: Cache PHPStan results
+        uses: actions/cache@v4
+        with:
+          path: build/phpstan
+          key: phpstan-${{ hashFiles('phpstan.neon', 'packages/*/src/**/*.php', 'packages/*/extension.neon') }}
+          restore-keys: phpstan-
+      - run: composer lint:check
+      - run: composer analyse
+      - run: composer refactor:check
+      - run: composer gate
+      - run: composer php-api
+      - run: composer error-codes
+      - run: composer config-schema
+      - run: composer ai:sync
+      - run: composer security:audit
+
+  tests:
+    name: SQLite tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-php
+      - run: composer test:parallel
+
+  postgresql:
+    name: PostgreSQL tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: skm
+          POSTGRES_PASSWORD: skm_dev
+          POSTGRES_DB: packman_test
+        ports:
+          - 54329:5432
+        options: >-
+          --health-cmd "pg_isready -U skm -d packman_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-php
+      - run: composer test:pg
+
+  fixtures:
+    name: Consumer fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: skm
+          POSTGRES_PASSWORD: skm_dev
+          POSTGRES_DB: packman_test
+        ports:
+          - 54329:5432
+        options: >-
+          --health-cmd "pg_isready -U skm -d packman_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-php
+      - name: Install and test each consumer fixture
+        run: |
+          set -euo pipefail
+          for dir in fixtures/*; do
+            if [ -f "$dir/composer.json" ]; then
+              if [ -f "$dir/composer.lock" ]; then
+                composer install --working-dir="$dir" --no-interaction --prefer-dist --no-progress --ansi
+              else
+                composer update --working-dir="$dir" --no-interaction --prefer-dist --no-progress --ansi
+              fi
+              composer test --working-dir="$dir" --no-interaction --ansi
+            fi
+          done

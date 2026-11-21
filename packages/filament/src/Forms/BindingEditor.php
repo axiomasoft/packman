@@ -42,7 +42,7 @@ use Packman\Panels\Exceptions\Subjects\SubjectResolutionFailed;
  *     edit_version: string,
  *     authority_version: int,
  * }
- * @phpstan-type DescriptorRule array{nullable?: bool, optional?: bool}
+ * @phpstan-type DescriptorRule array{nullable?: bool, optional?: bool, minimum?: int|float, maximum?: int|float}
  */
 #[Api(since: '1.0')]
 final readonly class BindingEditor
@@ -208,6 +208,19 @@ final readonly class BindingEditor
             : [];
 
         $changes = [];
+        $editable = false;
+
+        foreach ($projection->fields as $field) {
+            if ($field['editable']) {
+                $editable = true;
+
+                break;
+            }
+        }
+
+        if (! $editable) {
+            throw BindingAuthorizationException::nonEditable('form');
+        }
 
         foreach ($projection->fields as $key => $field) {
             $state = $submittedFields[self::fieldId($key)] ?? null;
@@ -423,9 +436,43 @@ final readonly class BindingEditor
             'disable' => ($rule['optional'] ?? false) === true
                 ? ['operation' => 'disable', 'value' => null]
                 : throw InvalidBindingStateException::invalidPatch('Field "'.$key.'" is not optional.'),
-            'set' => ['operation' => 'set', 'value' => $state['value'] ?? null],
+            'set' => self::setValue($key, $state, $rule),
             default => throw InvalidBindingStateException::invalidPatch('Unsupported mode for field "'.$key.'".'),
         };
+    }
+
+    /**
+     * @param  array<mixed, mixed>  $state
+     * @param  DescriptorRule  $rule
+     * @return array{operation: string, value: mixed}
+     */
+    private static function setValue(string $key, array $state, array $rule): array
+    {
+        $value = $state['value'] ?? null;
+        $nullable = ($rule['nullable'] ?? false) === true;
+
+        if ($value === null && ! $nullable) {
+            throw InvalidBindingStateException::invalidPatch('Field "'.$key.'" does not allow null.');
+        }
+
+        $minimum = $rule['minimum'] ?? null;
+        $maximum = $rule['maximum'] ?? null;
+
+        if ($minimum !== null || $maximum !== null) {
+            if (! is_int($value) && ! is_float($value)) {
+                throw InvalidBindingStateException::invalidPatch('Field "'.$key.'" must be a number.');
+            }
+
+            if ($minimum !== null && $value < $minimum) {
+                throw InvalidBindingStateException::invalidPatch('Field "'.$key.'" is below the minimum.');
+            }
+
+            if ($maximum !== null && $value > $maximum) {
+                throw InvalidBindingStateException::invalidPatch('Field "'.$key.'" is above the maximum.');
+            }
+        }
+
+        return ['operation' => 'set', 'value' => $value];
     }
 
     /**

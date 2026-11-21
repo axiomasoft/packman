@@ -34,7 +34,8 @@ it('fails loudly when StubStore leaves unresolved placeholders and formats Pint-
         $store = new StubStore($ws->path('stubs'));
 
         expect(static fn () => $store->render('sample.stub', ['resolved' => 'world']))
-            ->toThrow(RuntimeException::class, 'Unresolved placeholder');
+            ->toThrow(RuntimeException::class, 'Unresolved placeholder')
+            ->and(static fn () => $store->render('../sample.stub', []))->toThrow(RuntimeException::class, 'stub root');
 
         expect(StubStore::imports(['Zeta\\Bar', 'Alpha\\Foo', 'Zeta\\Bar']))
             ->toBe("use Alpha\\Foo;\nuse Zeta\\Bar;");

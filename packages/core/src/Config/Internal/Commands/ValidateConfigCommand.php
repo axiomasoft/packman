@@ -153,19 +153,25 @@ final class ValidateConfigCommand extends Command
     /** @return list<string> */
     private function secretKeys(): array
     {
-        return array_merge([], ...array_map(static fn (ConfigReportSectionInterface $section): array => $section->secretKeys(), $this->sections));
+        $parts = array_map(static fn (ConfigReportSectionInterface $section): array => $section->secretKeys(), $this->sections);
+
+        return $parts === [] ? [] : array_merge([], ...$parts);
     }
 
     /** @return array<string, string> */
     private function secretDefaults(): array
     {
-        return array_merge([], ...array_map(static fn (ConfigReportSectionInterface $section): array => $section->secretDefaults(), $this->sections));
+        $parts = array_map(static fn (ConfigReportSectionInterface $section): array => $section->secretDefaults(), $this->sections);
+
+        return $parts === [] ? [] : array_merge([], ...$parts);
     }
 
     /** @return array<class-string, list<string>> */
     private function optionSources(): array
     {
-        return array_merge([], ...array_map(static fn (ConfigReportSectionInterface $section): array => $section->options(), $this->sections));
+        $parts = array_map(static fn (ConfigReportSectionInterface $section): array => $section->options(), $this->sections);
+
+        return $parts === [] ? [] : array_merge([], ...$parts);
     }
 
     private function writeRuntimeChecks(): void

@@ -27,15 +27,27 @@ final class SchemaStatusCommand extends Command
 
             return self::INVALID;
         }
-        $database = $this->option('database');
         $rows = [];
         $pending = false;
-        foreach ($migrator->status(scope: $scope, connection: is_string($database) ? $database : null) as $status) {
+        foreach ($migrator->status(scope: $scope, connection: $this->connectionName()) as $status) {
             $rows[] = [$status->set->id(), $status->set->scope->value, $status->set->lifecycle->value, $status->set->version, count($status->applied), count($status->pending), count($status->unknown)];
             $pending = $pending || $status->pending !== [] || $status->unknown !== [];
         }
         $this->table(['set', 'scope', 'lifecycle', 'version', 'applied', 'pending', 'unknown'], $rows);
 
         return $pending ? self::FAILURE : self::SUCCESS;
+    }
+
+    private function connectionName(): ?string
+    {
+        $database = $this->option('database');
+
+        if (! is_string($database)) {
+            return null;
+        }
+
+        $name = trim($database);
+
+        return $name === '' ? null : $name;
     }
 }

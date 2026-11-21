@@ -96,6 +96,14 @@ it('admits through graceful child scope role witness and enforces tenant & entry
 
     $gate->entryAllowed = false;
     expect($admission->admit($panel, $user, new ScopeRef('tenant-1')))->toBeNull();
+
+    $required = compileAdmissionPanel(static fn (PanelBuilder $b): PanelBuilder => $b
+        ->for(AdmissionTestUser::class)
+        ->tenantMode(TenantMode::None)
+        ->scopeMode(AssignmentScopeMode::Required)
+        ->scopeTypes(['team']));
+
+    expect($admission->admit($required, $user, new ScopeRef('tenant-1')))->toBeNull();
 });
 
 it('rejects spoofed ancestry chains and orphan subjects in PanelSubjects', function (): void {

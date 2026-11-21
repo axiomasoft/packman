@@ -451,6 +451,57 @@ it('rejects a corrupt compiled artifact and keeps activation off the fingerprint
     unlink($path);
 });
 
+it('fails closed when the compiled registry file does not return an array', function (bool $failIfMissing): void {
+    $path = moduleRegistryCachePath();
+    file_put_contents($path, "<?php\n\nreturn 'not-an-array';\n");
+
+    try {
+        $registry = newModuleRegistry($path, new ArrayModuleStateReader, failIfMissing: $failIfMissing);
+
+        expect(fn () => $registry->all())->toThrow(RuntimeException::class, 'corrupt')
+            ->and(fn () => $registry->all())->toThrow(RuntimeException::class, $path)
+            ->and(fn () => $registry->compiled())->toThrow(RuntimeException::class, 'corrupt');
+    } finally {
+        unlink($path);
+    }
+})->with([
+    'strict missing mode' => true,
+    'lenient missing mode' => false,
+]);
+
+it('reuses an unchanged compiled file after flush and reloads only after the file changes', function (): void {
+    $path = moduleRegistryCachePath();
+    CompiledModuleRegistry::writeAtomic($path, [
+        new CompiledModule('packman/alpha', 'Alpha', 'alp', [], [], []),
+    ]);
+
+    $registry = newModuleRegistry($path, new ArrayModuleStateReader);
+    $names = static fn (): array => array_map(
+        static fn (CompiledModule $module): string => $module->composerName,
+        $registry->all(),
+    );
+
+    expect($names())->toBe(['packman/alpha']);
+
+    $registry->flush();
+
+    // flush() drops the projection only. The file stamp is unchanged, so
+    // this read is the memoized payload and does not require the file again.
+    expect($names())->toBe(['packman/alpha']);
+
+    CompiledModuleRegistry::writeAtomic($path, [
+        new CompiledModule('packman/beta', 'Beta', 'bet', [], [], []),
+    ]);
+
+    expect($names())->toBe(['packman/alpha']);
+
+    $registry->flush();
+
+    expect($names())->toBe(['packman/beta']);
+
+    unlink($path);
+});
+
 it('builds the registry cache from configured Options — store, ttl and prefix are read, not hardcoded (A45/A46)', function (): void {
     // Point the module cache at a named array store and a custom prefix, then
     // assert the resolved cache writes the epoch-stamped key THERE — proving

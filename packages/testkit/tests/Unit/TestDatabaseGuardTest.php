@@ -112,7 +112,7 @@ it('computes worker lane database names when per-process isolation is active', f
 });
 
 it('does not treat sqlite :memory: DB_DATABASE as PGSQL_DATABASE in SuiteDatabaseConnection', function (): void {
-    $keys = ['PGSQL_DATABASE', 'DB_CONNECTION', 'DB_DATABASE'];
+    $keys = ['PGSQL_DATABASE', 'DB_CONNECTION', 'DB_DATABASE', 'PGDATABASE', 'PGHOST', 'PGPORT', 'PGUSER', 'PGPASSWORD'];
     $saved = [];
 
     foreach ($keys as $key) {
@@ -123,8 +123,10 @@ it('does not treat sqlite :memory: DB_DATABASE as PGSQL_DATABASE in SuiteDatabas
         ];
     }
 
-    putenv('PGSQL_DATABASE');
-    unset($_ENV['PGSQL_DATABASE'], $_SERVER['PGSQL_DATABASE']);
+    foreach (['PGSQL_DATABASE', 'PGDATABASE', 'PGHOST', 'PGPORT', 'PGUSER', 'PGPASSWORD'] as $key) {
+        putenv($key);
+        unset($_ENV[$key], $_SERVER[$key]);
+    }
     putenv('DB_CONNECTION=sqlite');
     $_ENV['DB_CONNECTION'] = 'sqlite';
     $_SERVER['DB_CONNECTION'] = 'sqlite';

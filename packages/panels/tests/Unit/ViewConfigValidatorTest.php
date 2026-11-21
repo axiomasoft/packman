@@ -45,4 +45,13 @@ it('preserves supported sort data while validating the field and direction', fun
     $validated = (new ViewConfigValidator)->validate(['version' => 'saved-view/1', 'sorts' => [$sort]], $schema);
 
     expect($validated['sorts'])->toBe([$sort]);
+
+    $hidden = new ViewSchema('neutral/1', 'lab.sample', [
+        new ViewField('secret', 'string', ['eq'], false, true, true, true, 'secret'),
+    ]);
+
+    expect(fn (): array => (new ViewConfigValidator)->validate([
+        'version' => 'saved-view/1',
+        'groupBy' => 'secret',
+    ], $hidden))->toThrow(InvalidArgumentException::class, 'group');
 });

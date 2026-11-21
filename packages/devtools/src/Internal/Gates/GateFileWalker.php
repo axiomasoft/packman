@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Packman\DevTools\Internal\Gates;
 
 use Packman\Attributes\Internal;
-use PhpParser\Node;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\GroupUse;
 use PhpParser\Node\Stmt\Namespace_;
@@ -21,15 +21,42 @@ use SplFileInfo;
 
 /**
  * Shared file walker and AST helper reused across devtools quality gates.
+ *
+ * Each path plus source hash is parsed once. Callers receive a clone so later mutations stay local.
  */
 #[Internal]
 final class GateFileWalker
 {
     private readonly Parser $parser;
 
+    /**
+     * Canonical, unresolved statement lists. Null means the parser recovered nothing.
+     *
+     * @var array<string, list<Stmt>|null>
+     */
+    private static array $statements = [];
+
+    /** @var array<string, list<string>> */
+    private static array $imports = [];
+
+    /** @var array<string, list<string>> */
+    private static array $internals = [];
+
+    /** @var array<string, list<Stmt>|null> */
+    private static array $resolved = [];
+
     public function __construct()
     {
         $this->parser = (new ParserFactory)->createForHostVersion();
+    }
+
+    /** Clears parsed trees and cached symbol lists. */
+    public static function flushCaches(): void
+    {
+        self::$statements = [];
+        self::$imports = [];
+        self::$internals = [];
+        self::$resolved = [];
     }
 
     /** @return list<string> */
@@ -61,47 +88,91 @@ final class GateFileWalker
             : $fullPath;
     }
 
-    /** @return ?list<Node\Stmt> */
+    /** @return ?list<Stmt> */
     public function parseAst(string $phpFile): ?array
     {
-        $code = file_get_contents($phpFile);
+        $source = $this->source($phpFile);
 
-        if (! is_string($code) || $code === '') {
+        if ($source === null) {
             return null;
         }
 
-        $ast = $this->parser->parse($code);
+        return $this->clonedStatements($source['key'], $source['code']);
+    }
 
-        return $ast !== null ? array_values($ast) : null;
+    /**
+     * Name-resolved statements. The resolved tree is cached once per source hash
+     * and every caller receives its own clone.
+     *
+     * @return ?list<Stmt>
+     */
+    public function resolvedAst(string $phpFile): ?array
+    {
+        $source = $this->source($phpFile);
+
+        if ($source === null) {
+            return null;
+        }
+
+        $resolved = $this->canonicalResolved($source['key'], $source['code']);
+
+        return $resolved === null ? null : AstCloner::cloneStatements($resolved);
     }
 
     /** @return list<string> */
     public function importedSymbols(string $phpFile): array
     {
-        $ast = $this->parseAst($phpFile);
+        $source = $this->source($phpFile);
+
+        if ($source === null) {
+            return [];
+        }
+
+        $key = $source['key'];
+
+        if (array_key_exists($key, self::$imports)) {
+            return self::$imports[$key];
+        }
+
+        $ast = $this->clonedStatements($key, $source['code']);
 
         if ($ast === null) {
+            self::$imports[$key] = [];
+
             return [];
         }
 
         $imports = [];
         $this->collectUseNodes($ast, $imports);
+        self::$imports[$key] = array_values(array_unique($imports));
 
-        return array_values(array_unique($imports));
+        return self::$imports[$key];
     }
 
     /** @return list<string> */
     public function internalSymbols(string $phpFile): array
     {
-        $ast = $this->parseAst($phpFile);
+        $source = $this->source($phpFile);
 
-        if ($ast === null) {
+        if ($source === null) {
             return [];
         }
 
-        $traverser = new NodeTraverser(new NameResolver);
-        $resolved = $traverser->traverse($ast);
-        $types = (new NodeFinder)->findInstanceOf($resolved, ClassLike::class);
+        $key = $source['key'];
+
+        if (array_key_exists($key, self::$internals)) {
+            return self::$internals[$key];
+        }
+
+        $ast = $this->canonicalResolved($key, $source['code']);
+
+        if ($ast === null) {
+            self::$internals[$key] = [];
+
+            return [];
+        }
+
+        $types = (new NodeFinder)->findInstanceOf($ast, ClassLike::class);
         $internal = [];
 
         foreach ($types as $type) {
@@ -118,11 +189,13 @@ final class GateFileWalker
             }
         }
 
-        return $internal;
+        self::$internals[$key] = $internal;
+
+        return self::$internals[$key];
     }
 
     /**
-     * @param  array<Node\Stmt>  $stmts
+     * @param  array<Stmt>  $stmts
      * @param  list<string>  $imports
      */
     private function collectUseNodes(array $stmts, array &$imports): void
@@ -151,5 +224,88 @@ final class GateFileWalker
                 }
             }
         }
+    }
+
+    /**
+     * Empty and unreadable files are not cached, so a later write is parsed.
+     *
+     * @return array{key: string, code: string}|null
+     */
+    private function source(string $phpFile): ?array
+    {
+        $code = file_get_contents($phpFile);
+
+        if (! is_string($code) || $code === '') {
+            return null;
+        }
+
+        return [
+            'key' => self::cacheKey($phpFile, $code),
+            'code' => $code,
+        ];
+    }
+
+    private static function cacheKey(string $phpFile, string $contents): string
+    {
+        $path = realpath($phpFile);
+
+        if ($path === false) {
+            $path = $phpFile;
+        }
+
+        return $path."\0".hash('sha256', $contents);
+    }
+
+    /**
+     * @return list<Stmt>|null
+     */
+    private function canonicalResolved(string $key, string $code): ?array
+    {
+        if (! array_key_exists($key, self::$resolved)) {
+            $ast = $this->clonedStatements($key, $code);
+
+            if ($ast === null) {
+                self::$resolved[$key] = null;
+            } else {
+                $resolvedNodes = [];
+
+                foreach (new NodeTraverser(new NameResolver)->traverse($ast) as $node) {
+                    if ($node instanceof Stmt) {
+                        $resolvedNodes[] = $node;
+                    }
+                }
+
+                self::$resolved[$key] = $resolvedNodes;
+            }
+        }
+
+        return self::$resolved[$key];
+    }
+
+    /**
+     * @return list<Stmt>|null
+     */
+    private function canonicalStatements(string $key, string $code): ?array
+    {
+        if (! array_key_exists($key, self::$statements)) {
+            $parsed = $this->parser->parse($code);
+            self::$statements[$key] = $parsed === null ? null : array_values($parsed);
+        }
+
+        return self::$statements[$key];
+    }
+
+    /**
+     * @return list<Stmt>|null
+     */
+    private function clonedStatements(string $key, string $code): ?array
+    {
+        $canonical = $this->canonicalStatements($key, $code);
+
+        if ($canonical === null) {
+            return null;
+        }
+
+        return AstCloner::cloneStatements($canonical);
     }
 }

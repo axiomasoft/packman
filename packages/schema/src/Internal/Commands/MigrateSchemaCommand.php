@@ -33,10 +33,22 @@ final class MigrateSchemaCommand extends Command
 
             return self::INVALID;
         }
-        $database = $this->option('database');
-        $ran = $migrator->migrate(scope: $scope, connection: is_string($database) ? $database : null, includeModules: (bool) $this->option('modules'));
+        $ran = $migrator->migrate(scope: $scope, connection: $this->connectionName(), includeModules: (bool) $this->option('modules'));
         $this->line($ran === [] ? 'Nothing to migrate.' : implode(PHP_EOL, $ran));
 
         return self::SUCCESS;
+    }
+
+    private function connectionName(): ?string
+    {
+        $database = $this->option('database');
+
+        if (! is_string($database)) {
+            return null;
+        }
+
+        $name = trim($database);
+
+        return $name === '' ? null : $name;
     }
 }

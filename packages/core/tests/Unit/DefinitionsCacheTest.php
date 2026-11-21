@@ -81,6 +81,60 @@ it('writes the cache readable by other users according to the umask', function (
     }
 });
 
+it('throws when the cache parent path is a file instead of a directory', function (): void {
+    $dir = sys_get_temp_dir().'/packman-cache-'.bin2hex(random_bytes(8));
+    mkdir($dir);
+    $parent = $dir.'/parent';
+    file_put_contents($parent, 'not a directory');
+    $cache = new DefinitionsCache($parent.'/packman.php');
+
+    try {
+        expect(fn () => $cache->write(new CompiledSections([], [], []), 'same'))
+            ->toThrow(LogicException::class, 'Cannot create '.$parent.'.');
+    } finally {
+        if (is_file($parent)) {
+            unlink($parent);
+        }
+        @rmdir($dir);
+    }
+});
+
+it('throws when the cache destination is a directory and leaves no temporary file', function (): void {
+    // Destination is an existing directory — rename(tmpFile, dir) fails with
+    // EISDIR, so the failed-rename branch is the one exercised.
+    $dir = sys_get_temp_dir().'/packman-cache-'.bin2hex(random_bytes(8));
+    $destination = $dir.'/packman.php';
+    mkdir($dir);
+    mkdir($destination);
+    $cache = new DefinitionsCache($destination);
+
+    try {
+        expect(fn () => $cache->write(new CompiledSections([], [], []), 'same'))
+            ->toThrow(LogicException::class, 'Cannot write '.$destination.'.');
+
+        // packman* also matches the destination directory named packman.php.
+        $leftover = array_values(array_filter(
+            glob($dir.'/packman*') ?: [],
+            static fn (string $path): bool => $path !== $destination,
+        ));
+
+        expect(is_dir($destination))->toBeTrue()
+            ->and($leftover)->toBe([]);
+    } finally {
+        if (is_dir($destination)) {
+            @rmdir($destination);
+        }
+
+        foreach (glob($dir.'/packman*') ?: [] as $path) {
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        @rmdir($dir);
+    }
+});
+
 it('ignores a matching cache that no longer decodes against the installed code', function (): void {
     $dir = sys_get_temp_dir().'/packman-cache-'.bin2hex(random_bytes(8));
     $cache = new DefinitionsCache($dir.'/packman.php');

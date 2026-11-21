@@ -70,7 +70,7 @@ final class ViewConfigValidator
 
         $groupBy = $config['groupBy'] ?? null;
 
-        if ($groupBy !== null && (! is_string($groupBy) || ! isset($fields[$groupBy]) || ! $fields[$groupBy]->projectable)) {
+        if ($groupBy !== null && (! is_string($groupBy) || ! isset($fields[$groupBy]) || ! $fields[$groupBy]->visible || ! $fields[$groupBy]->projectable)) {
             throw new InvalidArgumentException('View group is not permitted.');
         }
 
@@ -128,8 +128,14 @@ final class ViewConfigValidator
             throw new InvalidArgumentException('View filter is not permitted.');
         }
 
-        if ($node['op'] === 'in' && (! is_array($node['value'] ?? null) || count($node['value']) > 100)) {
-            throw new InvalidArgumentException('View filter list is invalid.');
+        if ($node['op'] === 'in') {
+            $values = $node['value'] ?? null;
+
+            if (! is_array($values) || ! array_is_list($values) || count($values) > 100 || array_any($values, static fn (mixed $item): bool => ! is_scalar($item))) {
+                throw new InvalidArgumentException('View filter list is invalid.');
+            }
+        } elseif ($node['op'] !== 'is_null' && (! array_key_exists('value', $node) || ! is_scalar($node['value']))) {
+            throw new InvalidArgumentException('View filter is not permitted.');
         }
     }
 }

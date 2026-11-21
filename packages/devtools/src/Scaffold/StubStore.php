@@ -23,7 +23,13 @@ final readonly class StubStore
     /** @param array<string, string> $variables */
     public function render(string $stubRelativePath, array $variables): string
     {
-        $fullPath = rtrim($this->stubsRoot, '/').'/'.ltrim($stubRelativePath, '/');
+        $relative = str_replace('\\', '/', $stubRelativePath);
+
+        if ($relative === '' || str_starts_with($relative, '/') || str_contains('/'.$relative.'/', '/../')) {
+            throw new RuntimeException('Scaffold stub path must stay inside the stub root.');
+        }
+
+        $fullPath = rtrim($this->stubsRoot, '/').'/'.ltrim($relative, '/');
 
         if (! is_file($fullPath)) {
             throw new RuntimeException("Scaffold stub not found: {$fullPath}");

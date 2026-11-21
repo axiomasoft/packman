@@ -10,6 +10,7 @@ use Packman\Attributes\Spi;
 use Packman\DevTools\Data\Surface\SourceType;
 use Packman\DevTools\Data\Surface\SurfaceDiagnostic;
 use Packman\DevTools\Data\Surface\SurfaceReport;
+use Packman\DevTools\Internal\Gates\GateFileWalker;
 use PhpParser\Node;
 use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\ComplexType;
@@ -31,14 +32,7 @@ use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\Node\UnionType;
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitor\NameResolver;
-use PhpParser\Parser;
-use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use SplFileInfo;
 
 /**
  * AST scanner extracting #[Api], #[Spi], and #[Internal] surfaces into deterministic php-api/1 manifests.
@@ -46,14 +40,14 @@ use SplFileInfo;
 #[Api(since: '1.0')]
 final class SurfaceScanner
 {
-    private readonly Parser $parser;
-
     private readonly Standard $printer;
+
+    private readonly GateFileWalker $walker;
 
     public function __construct()
     {
-        $this->parser = (new ParserFactory)->createForHostVersion();
         $this->printer = new Standard;
+        $this->walker = new GateFileWalker;
     }
 
     public function scanPackage(string $packageName, string $srcDirectory): SurfaceReport
@@ -172,34 +166,13 @@ final class SurfaceScanner
             return [];
         }
 
-        $files = [];
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($srcDirectory));
-        foreach ($iterator as $file) {
-            if ($file instanceof SplFileInfo && $file->isFile() && $file->getExtension() === 'php') {
-                $files[] = $file->getPathname();
-            }
-        }
-
-        sort($files, SORT_STRING);
-
         $types = [];
-        foreach ($files as $path) {
-            $code = file_get_contents($path);
+        foreach ($this->walker->phpFiles($srcDirectory) as $path) {
+            $resolved = $this->walker->resolvedAst($path);
 
-            if (! is_string($code) || $code === '') {
+            if ($resolved === null) {
                 continue;
             }
-
-            $ast = $this->parser->parse($code);
-
-            if ($ast === null) {
-                continue;
-            }
-
-            $traverser = new NodeTraverser;
-            $traverser->addVisitor(new NameResolver);
-            /** @var list<Stmt> $resolved */
-            $resolved = $traverser->traverse($ast);
 
             foreach ($this->extractFromStatements($resolved, $path) as $type) {
                 $types[] = $type;

@@ -2,6 +2,22 @@
 
 All notable changes to `axiomasoft/packman-monorepo` will be documented in this file.
 
+## Unreleased
+
+- Run GitHub Actions for static analysis, quality gates, contract manifests, SQLite tests, PostgreSQL tests, consumer fixtures, and Composer advisories. Dependabot is not used.
+- Reuse parsed sources across quality gates, fail closed on a partial definitions cache or a corrupt module registry, and reload a changed module registry when OPcache is not checking timestamps.
+- Resolve each source file's names once for the surface and error scanners, and decode an unchanged `installed.json` once per process.
+- Accept libpq environment variables and a bounded connect timeout in the PostgreSQL test lane.
+- Run SQLite tests in parallel, and install a consumer fixture from its lockfile when one is present.
+- Record the repository homepage, issue tracker, and security policy on every package manifest and in the generated Composer feed.
+- Compare pending migrations by their full filename, keep `JsonDocumentCast` reads and writes on the same set of values, and document every publishable package in the installation guide.
+- Reject an invalid `modules:repair` name, disagreeing `modules:why` tenant options, and a non-positive `packman:doctor --sample`. An empty schema batch no longer spreads into `array_merge`.
+- Keep config validation alive with no report sections, reject unsafe logical table names, treat a blank schema `--database` as the default connection, and fail `modules:compile` cleanly when the registry file cannot be written.
+- Fail quality gates on a broken package `composer.json`, and report a definitions-cache directory that cannot be created.
+- Refuse a scaffold file that resolves outside its destination directory, and a stub path that leaves the stub root.
+- Deny panel resource access for a child-scope witness, require a scope in required mode, fail closed on a missing entry permission, and check `view_any` before listing records.
+- Read the enabled module edition from the tenant row, include `database/migrations` in doctor, replace default lists with an explicit empty list, and reject integers that do not fit the platform range.
+
 ## 0.1.2
 
 - Discover plugin manifests before inspecting active facets or registering contributions. Applications can supply a configured instance of the declared class while preserving its manifest.
