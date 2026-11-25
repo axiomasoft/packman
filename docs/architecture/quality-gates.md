@@ -106,5 +106,5 @@ The public release installation is a separate proof. Follow the
 tag is published; verify the resolved version and remote tag SHA without local package
 repositories or cached workspace source. Other ecosystem owners still need reviewed
 snapshot metadata because a monorepository URL does not expose its nested Composer
-packages. AzGuard's [source repository](https://github.com/axiomasoft/azguard-private)
+packages. AzGuard's [source repository](https://github.com/axiomasoft/azguard)
 is public; downloading it does not require authorization.
