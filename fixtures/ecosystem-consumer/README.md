@@ -68,5 +68,5 @@ physical PostgreSQL profile or install a new Sockit Laravel layer. PostgreSQL-on
 product persistence, physical database cloning and financial behavior are outside
 this fixture. Local archives do not by themselves verify remote downloads or
 publication of consumer versions; the release installation check is separate.
-AzGuard's [source repository](https://github.com/axiomasoft/azguard-private) is public.
+AzGuard's [source repository](https://github.com/axiomasoft/azguard) is public.
 Source availability and discovery of nested Composer packages are separate concerns.
